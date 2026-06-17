@@ -183,21 +183,26 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
   <p><strong>Higher leverage: isolate the build server (A08).</strong></p>
   <p>Lockfile pinning stops one attack vector — dependency substitution. But if the build server is reachable from compromised endpoints, an attacker doesn't need to poison a package. They can inject code directly into the build process, modify artifacts, or exfiltrate secrets from CI environment variables.</p>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0">
-    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--red)">before — shared VLAN</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="cm">┌──────────────┐
-│  Dev laptops  │──┐
-└──────────────┘  │  same VLAN
-┌──────────────┐  │
-│  Build srv   │──┘
-│  (build-01)  │
-└──────────────┘</span></div></div></div>
-    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">after — isolated VPC</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="cm">┌──────────────┐
-│  Dev laptops  │  corp network
-└──────────────┘
-       ✗ no route
-┌──────────────┐
-│  Build srv   │  isolated VPC
-│  webhook in  │→ artifacts out
-└──────────────┘</span></div></div></div>
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--red)">before — .github/workflows/build.yml</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="fn">jobs</span>:
+  <span class="fn">build</span>:
+    <span class="fn">runs-on</span>: <span class="st">self-hosted</span>   <span class="cm"># on-prem runner</span>
+    <span class="fn">steps</span>:
+      - <span class="fn">uses</span>: <span class="st">actions/checkout@v4</span>
+      - <span class="fn">run</span>: <span class="op">npm install</span>   <span class="cm"># not npm ci</span>
+        <span class="cm"># no lockfile integrity</span>
+        <span class="cm"># runner on corp VLAN</span>
+        <span class="cm"># reachable from dev laptops</span>
+      - <span class="fn">run</span>: <span class="op">npm run build</span></div></div></div>
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">after — isolated runner + lockfile</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="fn">jobs</span>:
+  <span class="fn">build</span>:
+    <span class="fn">runs-on</span>: <span class="st">ubuntu-latest</span>  <span class="cm"># ephemeral cloud</span>
+    <span class="fn">permissions</span>:
+      <span class="fn">contents</span>: <span class="st">read</span>       <span class="cm"># least privilege</span>
+    <span class="fn">steps</span>:
+      - <span class="fn">uses</span>: <span class="st">actions/checkout@v4</span>
+      - <span class="fn">run</span>: <span class="op">npm ci</span>          <span class="cm"># lockfile enforced</span>
+      - <span class="fn">run</span>: <span class="op">npm audit --audit-level=high</span>
+      - <span class="fn">run</span>: <span class="op">npm run build</span></div></div></div>
   </div>
   <div class="persona-row">
     <div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">A compromised build server is game over — it touches every artifact we ship. Lockfile pinning matters, but it only covers one supply chain vector. Isolation covers them all.</div></div>
@@ -417,6 +422,13 @@ req.user = {
   });
 }</div></div></div>
   </div>
+  <div class="cbox" style="font-size:13px;margin-top:8px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">Dockerfile — the blast-radius fix (second priority)</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="kw">FROM</span> <span class="st">node:20-alpine</span>
+<span class="kw">WORKDIR</span> <span class="st">/app</span>
+<span class="kw">COPY</span> --chown=node:node . .
+<span class="kw">RUN</span> npm ci --production
+<span class="kw">USER</span> <span class="st">node</span>                   <span class="cm"># not root</span>
+<span class="kw">RUN</span> <span class="fn">apk add</span> --no-cache dumb-init
+<span class="kw">ENTRYPOINT</span> [<span class="st">"dumb-init"</span>, <span class="st">"node"</span>, <span class="st">"server.js"</span>]</div></div></div>
   <div class="persona-row">
     <div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">The JWT validation is the vulnerability. Running as root is a severity multiplier. Always fix the vulnerability before reducing the blast radius — you can't contain what you can't prevent.</div></div>
     <div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">Added jwt.verify() with the gateway's public key — 4 lines of code. The Dockerfile USER change was a separate PR the same day. Both shipped, but the signature check was the blocker.</div></div>
@@ -428,16 +440,16 @@ req.user = {
 <div class="scr" id="s17">
   <h3>// the ten habits — one from each module</h3>
   <div class="habit-grid">
-    <div class="habit-card"><div class="habit-badge" style="background:#1a56a0">A01</div><div class="habit-text"><strong>Check ownership, not just authentication.</strong> Every endpoint that takes a resource ID must verify the requestor owns that resource.</div></div>
-    <div class="habit-card"><div class="habit-badge" style="background:#5a7a3a">A02</div><div class="habit-text"><strong>Audit default credentials on every new service.</strong> Before go-live, check admin panels, databases, and monitoring tools.</div></div>
-    <div class="habit-card"><div class="habit-badge" style="background:#7a5a8a">A03</div><div class="habit-text"><strong>Pin your dependencies.</strong> Commit lockfiles with exact hashes. Run <code>npm audit</code> / <code>pip audit</code> in CI.</div></div>
-    <div class="habit-card"><div class="habit-badge" style="background:#8a6a3a">A04</div><div class="habit-text"><strong>Check the cost parameter.</strong> "We use bcrypt" isn't enough. bcrypt at cost 4 is weaker than PBKDF2 at 100K iterations.</div></div>
-    <div class="habit-card"><div class="habit-badge" style="background:#1a56a0">A05</div><div class="habit-text"><strong>Parameterize every query.</strong> No string concatenation of user input into SQL, LDAP, OS commands, or template engines.</div></div>
-    <div class="habit-card"><div class="habit-badge" style="background:#6a3a3a">A06</div><div class="habit-text"><strong>Write one abuse case per feature.</strong> Before building, ask: "How would an attacker use this feature against us?</div></div>
-    <div class="habit-card"><div class="habit-badge" style="background:#3a6a5a">A07</div><div class="habit-text"><strong>Require MFA on login.</strong> It's the single highest-impact authentication control. No exceptions for internal tools.</div></div>
-    <div class="habit-card"><div class="habit-badge" style="background:#5a3a7a">A08</div><div class="habit-text"><strong>Isolate the build server.</strong> CI/CD should be unreachable from developer workstations. Build artifacts are the only output.</div></div>
-    <div class="habit-card"><div class="habit-badge" style="background:#6a6a3a">A09</div><div class="habit-text"><strong>Alert on auth failures.</strong> If 50 failed logins don't trigger a page, your logging is decoration.</div></div>
-    <div class="habit-card"><div class="habit-badge" style="background:#6a3a3a">A10</div><div class="habit-text"><strong>Audit every catch block.</strong> Does it deny or allow? If a catch block on a security path calls <code>next()</code>, it's a fail-open vulnerability.</div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#1a56a0">A01</div><div class="habit-text"><strong>Check ownership, not just authentication.</strong> Every endpoint that takes a resource ID must verify the requestor owns that resource. <code>CWE-639</code></div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#5a7a3a">A02</div><div class="habit-text"><strong>Audit default credentials on every new service.</strong> Before go-live, check admin panels, databases, and monitoring tools. <code>CWE-1188</code></div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#7a5a8a">A03</div><div class="habit-text"><strong>Pin your dependencies.</strong> Commit lockfiles with exact hashes. Run <code>npm audit</code> / <code>pip audit</code> in CI. <code>CWE-1357</code></div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#8a6a3a">A04</div><div class="habit-text"><strong>Check the cost parameter.</strong> "We use bcrypt" isn't enough. bcrypt at cost 4 is weaker than PBKDF2 at 100K iterations. <code>CWE-916</code></div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#1a56a0">A05</div><div class="habit-text"><strong>Parameterize every query.</strong> No string concatenation of user input into SQL, LDAP, OS commands, or template engines. <code>CWE-89</code></div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#6a3a3a">A06</div><div class="habit-text"><strong>Write one abuse case per feature.</strong> Before building, ask: "How would an attacker use this feature against us?" <code>CWE-840</code></div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#3a6a5a">A07</div><div class="habit-text"><strong>Require MFA on login.</strong> It's the single highest-impact authentication control. No exceptions for internal tools. <code>CWE-308</code></div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#5a3a7a">A08</div><div class="habit-text"><strong>Isolate the build server.</strong> CI/CD should be unreachable from developer workstations. Build artifacts are the only output. <code>CWE-829</code></div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#6a6a3a">A09</div><div class="habit-text"><strong>Alert on auth failures.</strong> If 50 failed logins don't trigger a page, your logging is decoration. <code>CWE-778</code></div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#6a3a3a">A10</div><div class="habit-text"><strong>Audit every catch block.</strong> Does it deny or allow? If a catch block on a security path calls <code>next()</code>, it's a fail-open. <code>CWE-636</code></div></div>
   </div>
   <div class="nav"><button class="btn btn-g" onclick="go(16)">← Scenario 5</button><button class="btn btn-p" onclick="go(18)">Finish →</button></div>
 </div>
@@ -445,11 +457,14 @@ req.user = {
 <!-- ══ S18: CLOSING ══ -->
 <div class="scr" id="s18">
   <h3>// capstone complete</h3>
-  <div class="score-bar"><div class="score-num" id="finalScore">0/5</div><div class="score-label" id="finalLabel">Loading…</div></div>
-  <p id="finalMsg"></p>
-  <div class="card" style="border-left:3px solid var(--accent)">
-    <p style="font-size:15px;color:var(--ink-mid);margin:0;line-height:1.6"><strong style="color:var(--accent)">The pattern across all five scenarios:</strong> Fix the <em>vulnerability</em> before reducing the <em>blast radius</em>. Close the open door before building the alarm. Stop the active leak before adding defense-in-depth. When two categories intersect, the one that's exploitable <em>right now</em> almost always wins.</p>
+  <div class="rule-card" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px 28px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px">
+    <span style="font-family:var(--mono);font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.14em;font-weight:700">the leverage rule</span>
+    <p style="font-size:clamp(18px,2.4vw,22px);font-weight:700;color:var(--ink);line-height:1.4;max-width:540px;margin:0">Fix the <span style="color:var(--accent)">exploit</span> before reducing the <span style="color:var(--accent)">blast radius</span>.</p>
+    <p style="font-size:14px;color:var(--ink-dim);margin:0;line-height:1.55;max-width:500px">When two categories intersect, the one that's exploitable right now almost always has higher leverage. Close the open door before building the alarm. Stop the active leak before adding defense-in-depth.</p>
+    <span style="font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--adim);padding:3px 10px;border-radius:3px;border:1px solid rgba(74,90,106,.22);letter-spacing:.05em">CAPSTONE · Cross-Category Prioritization</span>
   </div>
+  <div class="score-bar"><div class="score-num" id="finalScore">0 / 5</div><div class="score-label" id="finalLabel"></div></div>
+  <p id="finalMsg"></p>
   <div class="nav"><button class="btn btn-g" onclick="go(17)">← The 10 Habits</button><button class="btn btn-fin" onclick="finish()">Complete Course ✓</button></div>
 </div>
 
@@ -494,14 +509,14 @@ function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cu
 function renderFinal(){
   document.getElementById('finalScore').textContent=score+' / 5';
   const msgs=[
-    'Every scenario was a genuine tradeoff. Revisit the ones you missed — the tradeoff explanations are where the real insight lives.',
-    'Strong security judgment. You identified the higher-leverage fix in most scenarios. Review the ones you missed.',
-    'Solid. You got the majority right — you\'re reading risk correctly.',
-    'Excellent. You consistently identified which fix has the highest leverage across intersecting categories.',
-    'Outstanding. Near-perfect prioritization across all five scenarios. You\'re thinking like a security lead.',
-    'Perfect score. You identified the higher-leverage fix in every scenario. The pattern is clear to you: fix the vulnerability before reducing the blast radius.'
+    'Your prioritization diverged from the panel\'s in every scenario. That\'s worth examining — revisit the tradeoff screens to see where the reasoning differs.',
+    'Your prioritization matched the panel\'s in 1 of 5 cases. The tradeoff explanations break down the reasoning — they\'re where the real learning is.',
+    'Your prioritization matched the panel\'s in 2 of 5 cases. You\'re engaging with genuine tradeoffs. Review the ones where you diverged.',
+    'Your prioritization matched the panel\'s in 3 of 5 cases. Solid security judgment — you\'re reading intersecting risks correctly.',
+    'Your prioritization matched the panel\'s in 4 of 5 cases. Near-perfect — you consistently identified which fix had higher leverage.',
+    'Your prioritization matched the panel\'s in all 5 cases. The leverage rule is clear to you: fix the exploit before the blast radius.'
   ];
-  document.getElementById('finalLabel').textContent = score===5?'Perfect':'Score';
+  document.getElementById('finalLabel').textContent = 'matched the panel';
   document.getElementById('finalMsg').innerHTML = msgs[score];
 }
 
