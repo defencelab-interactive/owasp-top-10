@@ -312,6 +312,10 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
     <div class="dleg"><div class="dleg-item"><div class="dleg-dash" style="background:var(--red)"></div>flawed design</div><div class="dleg-item"><div class="dleg-dash" style="background:var(--green)"></div>secure design</div></div>
   </div>
   <p style="font-size:13px;color:var(--ink-mid);margin:0">The fix isn't a code patch. It's a redesign of the verification flow — changing the token space, attempt limits, and failure behaviour.</p>
+  <div style="background:var(--adim);border:1px solid rgba(106,58,58,.22);border-radius:6px;padding:14px 18px;margin:4px 0">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:700">🎯 the one habit</div>
+    <p style="font-size:16px;color:var(--ink);line-height:1.6;margin:0;font-weight:600">For every flow you design, write the abuse case: what happens if someone runs this a million times? Out of order? As someone else? If you can’t answer in 30 seconds, the design isn’t ready for code.</p>
+  </div>
   <div class="lang-tabs">
     <div class="lang-tab active" onclick="switchLang(0)">Token redesign</div>
     <div class="lang-tab" onclick="switchLang(1)">Rate limiting</div>
