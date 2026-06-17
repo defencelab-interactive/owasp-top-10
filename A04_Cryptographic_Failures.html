@@ -429,7 +429,7 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
 <div class="scr" id="s6">
   <div class="atk-header">
     <div class="atk-label">// knowledge check</div>
-    <div class="atk-step">1 / 3</div>
+    <div class="atk-step">1 / 4</div>
   </div>
   <p class="tq-prompt">A team stores passwords using SHA-256 with a unique salt per password. Is this secure?</p>
   <div class="tq-options" id="q1opts">
@@ -443,7 +443,7 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
 <div class="scr" id="s7">
   <div class="atk-header">
     <div class="atk-label">// knowledge check</div>
-    <div class="atk-step">2 / 3</div>
+    <div class="atk-step">2 / 4</div>
   </div>
   <p class="tq-prompt">What does the "cost factor" in bcrypt control?</p>
   <div class="tq-options" id="q2opts">
@@ -457,7 +457,7 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
 <div class="scr" id="s8">
   <div class="atk-header">
     <div class="atk-label">// knowledge check</div>
-    <div class="atk-step">3 / 3</div>
+    <div class="atk-step">3 / 4</div>
   </div>
   <p class="tq-prompt">In 2025, OWASP moved Cryptographic Failures from #2 to #4. What does this reflect?</p>
   <div class="tq-options" id="q3opts">
@@ -466,11 +466,35 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
     <div class="tq-opt" onclick="answer(3,2,false)">C — Quantum computing advances have made the current generation of symmetric and asymmetric algorithms effectively obsolete</div>
   </div>
   <div class="tq-fb" id="q3fb"></div>
-  <div class="nav"><button class="btn btn-p" id="q3next" onclick="go(9)" disabled>See Results →</button></div>
+  <div class="nav"><button class="btn btn-p" id="q3next" onclick="go(9)" disabled>Next Question →</button></div>
 </div>
 
-<!-- ══ S9: SUMMARY ══ -->
 <div class="scr" id="s9">
+  <div class="atk-header">
+    <div class="atk-label">// knowledge check</div>
+    <div class="atk-step">4 / 4</div>
+  </div>
+  <p class="tq-prompt">Which password-hashing setup is stronger?</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0">
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">Option A</span></div><div class="cbody" style="padding:8px 12px"><div class="cl" style="cursor:default"><span class="lc" style="font-size:13px;white-space:pre-wrap"><span class="fn">bcrypt</span>(password, <span class="nm">cost=4</span>)
+<span class="cm">// ~15 hashes/ms
+// 2⁴ = 16 iterations</span></span></div></div></div>
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">Option B</span></div><div class="cbody" style="padding:8px 12px"><div class="cl" style="cursor:default"><span class="lc" style="font-size:13px;white-space:pre-wrap"><span class="fn">SHA-256</span>(salt + password)
+  × <span class="nm">100,000</span> iterations
+<span class="cm">// unique salt per user
+// PBKDF2-HMAC-SHA256</span></span></div></div></div>
+  </div>
+  <div class="tq-options" id="q4opts">
+    <div class="tq-opt" onclick="answer(4,0,false)">A — bcrypt at cost 4 — bcrypt is always superior to SHA-based functions regardless of parameters</div>
+    <div class="tq-opt" onclick="answer(4,1,true)">B — PBKDF2 with 100K iterations — the cost parameter matters more than the algorithm name</div>
+    <div class="tq-opt" onclick="answer(4,2,false)">C — They're equivalent — both use salting, so the attacker can't use rainbow tables against either</div>
+  </div>
+  <div class="tq-fb" id="q4fb"></div>
+  <div class="nav"><button class="btn btn-p" id="q4next" onclick="go(10)" disabled>See Results →</button></div>
+</div>
+
+<!-- ══ S10: SUMMARY ══ -->
+<div class="scr" id="s10">
   <div class="atk-header">
     <div class="atk-label">// self-check complete</div>
   </div>
@@ -478,12 +502,12 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
   <div class="sum-msg" id="sumMsg"></div>
   <div class="nav">
     <button class="btn btn-g" id="rerunBtn" onclick="rerunCheck()" style="display:none">↺ Rerun self-check</button>
-    <button class="btn btn-p" id="toRuleBtn" onclick="go(10)" style="display:none">The Rule →</button>
+    <button class="btn btn-p" id="toRuleBtn" onclick="go(11)" style="display:none">The Rule →</button>
   </div>
 </div>
 
 <!-- ══ S10: RULE ══ -->
-<div class="scr" id="s10">
+<div class="scr" id="s11">
   <h3>// the mental model</h3>
   <div class="rule-card">
     <div class="rule-ambient" id="ruleAmbient"></div>
@@ -510,12 +534,12 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
   </div>
   <div class="nav">
     <button class="btn btn-g" onclick="rerun()">↺ Run again</button>
-    <button class="btn btn-p" onclick="go(11)">One more thing →</button>
+    <button class="btn btn-p" onclick="go(12)">One more thing →</button>
   </div>
 </div>
 
-<!-- ══ S11: CHECKLIST ══ -->
-<div class="scr" id="s11">
+<!-- ══ S12: CHECKLIST ══ -->
+<div class="scr" id="s12">
   <h3>// check your cryptography today</h3>
   <p>Five things you can verify right now.</p>
   <div class="card" style="padding:0">
@@ -529,7 +553,7 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
     <div class="ck-progress"><div class="ck-progress-bar"><div class="ck-progress-fill" id="cl1-fill" style="width:0%"></div></div><div class="ck-progress-text" id="cl1-text">0 / 5</div></div>
   </div>
   <div class="nav">
-    <button class="btn btn-g" onclick="go(10)">← The Rule</button>
+    <button class="btn btn-g" onclick="go(11)">← The Rule</button>
     <button class="btn btn-fin" onclick="finish()">Complete Module ✓</button>
   </div>
 </div>
@@ -619,11 +643,13 @@ const Q_FB=[null,
   {right:"<strong>✓ Iteration count.</strong> bcrypt's cost parameter is exponential: cost 10 = 1,024 iterations, cost 12 = 4,096, cost 14 = 16,384. Each increment doubles the computation time. This means you can increase the cost as hardware gets faster, keeping the hash just slow enough for legitimate logins (~250ms) while making brute force computationally infeasible.",
    wrong:"The cost factor controls <strong>iteration count</strong> — each increment doubles the computation time. Cost 12 = 4,096 iterations (~250ms). This lets you increase the work as hardware improves, keeping pace with Moore's Law without re-hashing existing passwords."},
   {right:"<strong>✓ Better TLS, persistent password problems.</strong> The drop reflects real progress: Let's Encrypt made certificates free, CPU AES acceleration made encryption cheap, and most traffic is now encrypted in transit. But password storage failures (MD5, SHA-1, hardcoded keys) persist. OWASP's 2025 data still shows 32 CWEs and 1.6 million occurrences — the problem has narrowed, not disappeared.",
-   wrong:"The drop to #4 reflects <strong>better TLS adoption</strong> — not fewer crypto problems overall. Transport encryption improved dramatically (Let's Encrypt, HSTS adoption). But password storage and key management failures persist at scale. The category narrowed, it didn't go away."}
+   wrong:"The drop to #4 reflects <strong>better TLS adoption</strong> — not fewer crypto problems overall. Transport encryption improved dramatically (Let's Encrypt, HSTS adoption). But password storage and key management failures persist at scale. The category narrowed, it didn't go away."},
+  {right:"<strong>✓ Cost parameter matters more than algorithm name.</strong> bcrypt at cost 4 runs only 16 internal iterations — roughly 15 hashes per millisecond. PBKDF2-HMAC-SHA256 at 100K iterations is orders of magnitude slower. The lesson: 'we use bcrypt' is not a security property. 'We use bcrypt at cost 12+' is. A deliberately slow function with a low cost parameter can be weaker than a fast function with enough iterations to compensate.",
+   wrong:"<strong>PBKDF2 at 100K iterations is stronger here.</strong> bcrypt at cost 4 is dangerously weak — only 16 iterations, ~15 hashes/ms. The algorithm name alone doesn't determine security. What matters is the <em>effective work factor</em>: how long does one hash take? PBKDF2 at 100K iterations forces a meaningful computational cost per guess. bcrypt at cost 12+ (~250ms) would beat it — but cost 4 doesn't. Always check the parameter, not just the function name."}
 ];
-let tqScore=0,tqAnswers=[null,null,null];
+let tqScore=0,tqAnswers=[null,null,null,null];
 function answer(qIdx,optIdx,isRight){if(tqAnswers[qIdx-1]!==null)return;tqAnswers[qIdx-1]=isRight;if(isRight)tqScore++;document.querySelectorAll('#q'+qIdx+'opts .tq-opt').forEach((o,i)=>{if(i===optIdx)o.classList.add(isRight?'opt-right':'opt-wrong');else o.classList.add('opt-dim');});const fb=document.getElementById('q'+qIdx+'fb');fb.className='tq-fb on '+(isRight?'fb-right':'fb-wrong');fb.innerHTML=isRight?Q_FB[qIdx].right:Q_FB[qIdx].wrong;setTimeout(()=>{document.getElementById('q'+qIdx+'next').disabled=false;},500);}
-function resetTest(){tqScore=0;tqAnswers=[null,null,null];[1,2,3].forEach(i=>{document.querySelectorAll('#q'+i+'opts .tq-opt').forEach(o=>o.className='tq-opt');const fb=document.getElementById('q'+i+'fb');if(fb){fb.className='tq-fb';fb.innerHTML='';}const nb=document.getElementById('q'+i+'next');if(nb)nb.disabled=true;});}
+function resetTest(){tqScore=0;tqAnswers=[null,null,null,null];[1,2,3,4].forEach(i=>{document.querySelectorAll('#q'+i+'opts .tq-opt').forEach(o=>o.className='tq-opt');const fb=document.getElementById('q'+i+'fb');if(fb){fb.className='tq-fb';fb.innerHTML='';}const nb=document.getElementById('q'+i+'next');if(nb)nb.disabled=true;});}
 
 /* ═══ SUMMARY ═══ */
 const CRYPTO_LINES=[
@@ -634,14 +660,14 @@ const CRYPTO_LINES=[
 function renderSummary(){
   const msg=document.getElementById('sumMsg'),hs=document.getElementById('hackStage');
   const rerunBtn=document.getElementById('rerunBtn'),toRuleBtn=document.getElementById('toRuleBtn');
-  if(tqScore===3){
+  if(tqScore===4){
     hs.innerHTML='<div class="lock-wrap"><svg width="72" height="80" viewBox="0 0 72 80"><rect x="8" y="34" width="56" height="38" rx="6" fill="var(--green)" opacity=".8"/><path d="M20,36 L20,22 A16,16 0 0,1 52,22 L52,36" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round" stroke-dasharray="60" stroke-dashoffset="60" style="animation:shClose .5s ease .3s forwards"/><polyline points="24,52 32,61 48,46" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20" style="animation:chDraw .35s ease .7s forwards"/></svg><span class="lock-label">properly hashed</span></div>';
-    msg.innerHTML='<div class="sum-score">3 / 3</div><strong>Well done.</strong> You identified the speed problem, the cost factor, and the 2025 TLS progress. Click The Rule to finish.';
+    msg.innerHTML='<div class="sum-score">4 / 4</div><strong>Well done.</strong> You identified the speed problem, the cost factor, the 2025 TLS progress, and why parameters matter more than algorithm names. Click The Rule to finish.';
     rerunBtn.style.display='none';toRuleBtn.style.display='';
   } else {
-    const missed=3-tqScore;
-    hs.innerHTML='<div class="crypto-stage">'+CRYPTO_LINES.slice(0,missed).map((l,i)=>'<div class="crypto-line" style="animation-delay:'+(i*.4)+'s"><span class="cr-hash">'+l.hash+'</span> → <span class="cr-plain">'+l.plain+'</span> '+l.icon+'\n<span class="cr-comment"># '+l.comment+'</span></div>').join('')+'</div>';
-    msg.innerHTML='<div class="sum-score sum-score-miss">'+tqScore+' / 3</div><strong>'+(missed===1?'One question':'Two questions')+' missed.</strong> Your hashes are still reversible — the GPU is already running. Go through again to lock them down.';
+    const missed=4-tqScore;
+    hs.innerHTML='<div class="crypto-stage">'+CRYPTO_LINES.slice(0,Math.min(missed,3)).map((l,i)=>'<div class="crypto-line" style="animation-delay:'+(i*.4)+'s"><span class="cr-hash">'+l.hash+'</span> → <span class="cr-plain">'+l.plain+'</span> '+l.icon+'\n<span class="cr-comment"># '+l.comment+'</span></div>').join('')+'</div>';
+    msg.innerHTML='<div class="sum-score sum-score-miss">'+tqScore+' / 4</div><strong>'+(missed===1?'One question':missed+' questions')+' missed.</strong> Your hashes are still reversible — the GPU is already running. Go through again to lock them down.';
     rerunBtn.style.display='';toRuleBtn.style.display='none';
   }
 }
@@ -651,10 +677,10 @@ function rerunCheck(){document.getElementById('hackStage').innerHTML='';resetTes
 function clToggle(i){const items=document.querySelectorAll('#cl1 .ck-item');items[i].classList.toggle('checked');const total=items.length,checked=document.querySelectorAll('#cl1 .ck-item.checked').length;document.getElementById('cl1-fill').style.width=(checked/total*100)+'%';document.getElementById('cl1-text').textContent=checked+' / '+total;}
 
 /* ═══ NAV ═══ */
-let cur=0;const TOTAL=11;const visited={0:true};
-const SCREEN_LABELS=['Cover','Case Study','Question','Code Review','Exploit','Fix','Q1','Q2','Q3','Results','Rule','Checklist'];
-function buildStrip(){const strip=document.getElementById('navstrip');if(!strip)return;const sections=[{screens:[0],type:'pip-cover'},'sep',{screens:[1,2,3,4,5],type:''},'sep',{screens:[6,7,8,9],type:''},'sep',{screens:[10,11],type:'pip-wide'}];strip.innerHTML='';sections.forEach(sec=>{if(sec==='sep'){const s=document.createElement('div');s.className='ns-sep';strip.appendChild(s);return;}sec.screens.forEach(n=>{const pip=document.createElement('button');pip.className='ns-pip '+sec.type;if(n===cur)pip.classList.add('active');else if(visited[n])pip.classList.add('visited');pip.title=SCREEN_LABELS[n]||'';pip.onclick=()=>go(n);strip.appendChild(pip);});});}
-function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');cur=n;visited[n]=true;const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');document.getElementById('wrap').scrollTop=0;document.getElementById('pf').style.width=(n/TOTAL*100)+'%';document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;if(n===4)renderExploit();if(n===9)renderSummary();if(n===10){revealRule();buildRuleAmbient();}buildStrip();}
+let cur=0;const TOTAL=12;const visited={0:true};
+const SCREEN_LABELS=['Cover','Case Study','Question','Code Review','Exploit','Fix','Q1','Q2','Q3','Q4','Results','Rule','Checklist'];
+function buildStrip(){const strip=document.getElementById('navstrip');if(!strip)return;const sections=[{screens:[0],type:'pip-cover'},'sep',{screens:[1,2,3,4,5],type:''},'sep',{screens:[6,7,8,9,10],type:''},'sep',{screens:[11,12],type:'pip-wide'}];strip.innerHTML='';sections.forEach(sec=>{if(sec==='sep'){const s=document.createElement('div');s.className='ns-sep';strip.appendChild(s);return;}sec.screens.forEach(n=>{const pip=document.createElement('button');pip.className='ns-pip '+sec.type;if(n===cur)pip.classList.add('active');else if(visited[n])pip.classList.add('visited');pip.title=SCREEN_LABELS[n]||'';pip.onclick=()=>go(n);strip.appendChild(pip);});});}
+function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');cur=n;visited[n]=true;const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');document.getElementById('wrap').scrollTop=0;document.getElementById('pf').style.width=(n/TOTAL*100)+'%';document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;if(n===4)renderExploit();if(n===10)renderSummary();if(n===11){revealRule();buildRuleAmbient();}buildStrip();}
 function revealRule(){const rt=document.querySelector('.rt');if(!rt||rt.dataset.revealed)return;rt.dataset.revealed='1';const html=rt.innerHTML;rt.innerHTML='';const tmp=document.createElement('div');tmp.innerHTML=html;let delay=0;tmp.childNodes.forEach(node=>{if(node.nodeType===3){node.textContent.split(/(\s+)/).forEach(tok=>{if(!tok)return;if(/^\s+$/.test(tok)){rt.appendChild(document.createTextNode(tok));return;}const sp=document.createElement('span');sp.className='w';sp.style.animationDelay=delay+'ms';sp.textContent=tok;rt.appendChild(sp);delay+=42;});}else{node.textContent.split(/(\s+)/).forEach(tok=>{if(!tok)return;if(/^\s+$/.test(tok)){rt.appendChild(document.createTextNode(tok));return;}const sp=document.createElement('span');sp.className='w ra';sp.style.animationDelay=delay+'ms';sp.textContent=tok;rt.appendChild(sp);delay+=42;});}});}
 function buildRuleAmbient(){const el=document.getElementById('ruleAmbient');if(!el||el.dataset.built)return;el.dataset.built='1';el.textContent=['await bcrypt.hash(password, 12)','crypto.createCipheriv("aes-256-gcm", key, iv)','ssl_protocols TLSv1.2 TLSv1.3','await bcrypt.compare(password, hash)','add_header Strict-Transport-Security "max-age=31536000"','const iv = crypto.randomBytes(12)'].join('\n').repeat(4);}
 function finish(){window.parent.postMessage({type:'course-next'},'*');}

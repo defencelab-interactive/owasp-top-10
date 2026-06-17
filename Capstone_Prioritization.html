@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capstone · Cross-Category Prioritization</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f2f0ec;--surface:#fdfcfa;--surface2:#ece9e2;--border:#dbd6cc;--border2:#bfb8ac;--ink:#181614;--ink-mid:#3d3830;--ink-dim:#7a7268;--accent:#4a5a6a;--adim:rgba(74,90,106,.09);--aglow:rgba(74,90,106,.3);--red:#b83232;--rdim:rgba(184,50,50,.1);--green:#1e6e47;--gdim:rgba(30,110,71,.1);--yellow:#b89820;--code-bg:#16181f;--code-surface:#1e2028;--code-border:#2a2d38;--dark:#1a1c22;--dark2:#22252e;--dark-border:#2e3240;--dark-text:#c8ccd8;--dark-dim:#6a7088;--mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans)}body{display:flex;flex-direction:column;overflow-x:hidden;background-image:repeating-linear-gradient(90deg,transparent,transparent 119px,rgba(0,0,0,.022) 119px,rgba(0,0,0,.022) 120px)}
+.topbar{height:44px;min-height:44px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;flex-shrink:0}.badge{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);background:var(--adim);border:1px solid var(--accent);border-radius:2px;padding:3px 10px;letter-spacing:.07em}.topbar-title{font-family:var(--mono);font-size:13px;color:var(--ink-dim)}.sep{color:var(--border2)}.screen-lbl{font-family:var(--mono);font-size:12px;color:var(--ink-dim);margin-left:auto}.prog{height:3px;background:var(--border);flex-shrink:0}.prog-fill{height:100%;background:var(--accent);transition:width .4s cubic-bezier(.4,0,.2,1)}.navstrip{display:flex;align-items:center;gap:2px;padding:5px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}.navstrip::-webkit-scrollbar{display:none}.ns-pip{height:4px;border-radius:2px;border:none;padding:0;cursor:pointer;flex-shrink:0;background:var(--border);transition:all .18s;appearance:none;width:16px}.ns-pip:hover{background:var(--border2);transform:scaleY(1.5)}.ns-pip.visited{background:var(--border2)}.ns-pip.active{background:var(--accent);transform:scaleY(2)}.ns-pip.pip-cover{width:8px;height:8px;border-radius:50%}.ns-pip.pip-wide{width:22px}.ns-sep{width:1px;height:10px;background:var(--border);flex-shrink:0;margin:0 3px}.wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;position:relative}.wrap::-webkit-scrollbar{display:none}
+.scr{display:none;padding:24px 28px 18px;flex-direction:column;gap:14px;width:100%;min-height:100%}.scr.on{display:flex;animation:fadeUp .2s ease}@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em}p{font-size:17px;line-height:1.75;color:var(--ink-mid)}code{font-family:var(--mono);font-size:14px;color:var(--accent);background:var(--adim);padding:2px 6px;border-radius:2px}strong{color:var(--ink)}.card{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:12px 16px}
+.nav{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;padding:14px 0 6px;border-top:1px solid var(--border);margin-top:10px}.btn{display:inline-flex;align-items:center;gap:6px;padding:12px 26px;border-radius:5px;font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;border:none;transition:all .14s;letter-spacing:.01em}.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:#3a4a5a;transform:translateY(-1px);box-shadow:0 3px 12px var(--aglow)}.btn-g{background:transparent;color:var(--ink-mid);border:1px solid var(--border2)}.btn-g:hover{border-color:var(--ink-dim);color:var(--ink)}.btn-fin{background:var(--accent);color:#fff;padding:12px 28px;font-size:15px;font-weight:700}.btn-fin:hover{background:#3a4a5a}.btn:disabled{opacity:.3;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.atk-header{display:flex;align-items:center;justify-content:space-between;background:var(--accent);border-radius:6px;padding:18px 24px;flex-shrink:0}.atk-label{font-family:var(--mono);font-size:14px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.12em}.atk-step{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.7);letter-spacing:.05em}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0}.choice-card{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:18px 20px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}.choice-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 16px rgba(74,90,106,.12)}.choice-card.picked{border-color:var(--accent);background:var(--adim);cursor:default;transform:none;box-shadow:none}.choice-card.dimmed{opacity:.25;cursor:default;pointer-events:none;transform:none}.choice-card.picked.wrong{border-color:var(--red);background:var(--rdim)}.choice-tag{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}.choice-title{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:4px;line-height:1.3}.choice-desc{font-size:15px;color:var(--ink-mid);line-height:1.55}
+.reveal-box{border-radius:8px;max-height:0;overflow:hidden;opacity:0;transition:max-height .4s cubic-bezier(.4,0,.2,1),opacity .3s ease,padding .3s ease;padding:0 20px}.reveal-box.on{max-height:600px;opacity:1;padding:18px 20px}.reveal-box.fb-right{background:var(--gdim);border:1px solid rgba(30,110,71,.25);color:var(--ink-mid)}.reveal-box.fb-wrong{background:var(--rdim);border:1px solid rgba(184,50,50,.22);color:var(--ink-mid)}.reveal-box strong{color:var(--ink)}
+.persona-row{display:flex;gap:12px;margin-top:10px}.persona{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px}.persona-name{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}.persona-text{font-size:14px;color:var(--ink-mid);line-height:1.55;font-style:italic}
+.cbox{background:var(--code-bg);border:1px solid var(--code-border);border-radius:5px;font-family:var(--mono);display:flex;flex-direction:column;overflow:hidden}.chead{background:var(--code-surface);border-bottom:1px solid var(--code-border);padding:6px 13px;display:flex;align-items:center;gap:8px;flex-shrink:0}.dots{display:flex;gap:4px}.dot{width:8px;height:8px;border-radius:50%}.dr{background:#e0585844;border:1px solid #e0585888}.dy{background:#f0a50044;border:1px solid #f0a50088}.dg{background:#3ecf7244;border:1px solid #3ecf7288}.cfn{font-family:var(--mono);font-size:11.5px;color:#555a6a;margin-left:3px}.cbody{padding:8px 12px;overflow-y:auto;flex:1}.lc{color:#c8ccd8;line-height:1.85;white-space:pre;font-size:14px}.kw{color:#c792ea}.fn{color:#82aaff}.st{color:#c3e88d}.cm{color:#546e7a;font-style:italic}.nm{color:#f78c6c}.op{color:#f07178}
+.habit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.habit-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start}.habit-badge{font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;padding:3px 8px;border-radius:3px;flex-shrink:0;letter-spacing:.05em}.habit-text{font-size:14px;color:var(--ink-mid);line-height:1.5}.habit-text strong{color:var(--ink);font-size:15px;display:block;margin-bottom:2px}
+.score-bar{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px 22px}.score-num{font-size:clamp(36px,5vw,48px);font-weight:800;color:var(--accent);letter-spacing:-.02em;line-height:1;font-family:var(--mono)}.score-label{font-size:16px;color:var(--ink-mid);line-height:1.5}
+/* cover */
+.cover{display:none;flex-direction:column;align-items:center;justify-content:center;position:absolute;inset:0;background:var(--dark);overflow:hidden;padding:24px 24px 40px;z-index:30}.cover.on{display:flex}.cover::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(255,255,255,.018) 59px,rgba(255,255,255,.018) 60px),repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,255,255,.018) 59px,rgba(255,255,255,.018) 60px);pointer-events:none}.cover::after{content:'';position:absolute;width:400px;height:400px;top:40%;left:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(74,90,106,.15) 0%,transparent 70%);pointer-events:none;animation:cvGlow 4s ease-in-out infinite}@keyframes cvGlow{0%,100%{opacity:.4}50%{opacity:.9}}@keyframes cvFadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.cv-visual{position:relative;z-index:1;margin-bottom:20px;width:240px;height:180px;display:flex;align-items:center;justify-content:center}
+.cv-badge{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.1em;padding:5px 14px;border-radius:3px;z-index:2;margin-bottom:8px;color:#fff;background:var(--accent);opacity:0;animation:cvFadeUp .4s ease .6s forwards}.cv-tag{font-family:var(--mono);font-size:13px;letter-spacing:.15em;text-transform:uppercase;z-index:2;margin-bottom:6px;color:var(--accent);opacity:0;animation:cvFadeUp .4s ease .7s forwards}.cv-title{font-size:clamp(30px,5.5vw,46px);font-weight:800;color:#f0ede8;letter-spacing:-.02em;line-height:1.15;text-align:center;z-index:2;margin-bottom:4px;opacity:0;animation:cvFadeUp .4s ease .8s forwards}.cv-sub{font-size:16px;color:var(--dark-dim);text-align:center;z-index:2;line-height:1.6;max-width:480px;opacity:0;animation:cvFadeUp .4s ease 1s forwards}.cv-start{z-index:2;margin-top:24px;opacity:0;animation:cvFadeUp .4s ease 1.2s forwards}.cv-start .btn{background:var(--accent);color:#fff;padding:14px 32px;font-size:16px}
+.fs-btn{background:none;border:1px solid var(--border);border-radius:3px;color:var(--ink-dim);cursor:pointer;padding:4px 5px;display:flex;align-items:center;justify-content:center;transition:color .12s,border-color .12s;margin-left:8px;flex-shrink:0}.fs-btn:hover{color:var(--ink);border-color:var(--border2)}html:fullscreen,html:-webkit-full-screen{background:var(--bg)}html:fullscreen body,html:-webkit-full-screen body{height:100vh}
+@media(max-width:620px){.scr{padding:12px 14px 10px}.choice-grid{grid-template-columns:1fr}.habit-grid{grid-template-columns:1fr}.persona-row{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="topbar"><span class="badge">CAP</span><span class="sep">/</span><span class="topbar-title">Capstone — Cross-Category Prioritization</span><span class="screen-lbl" id="lbl">00 / 18</span><button class="fs-btn" id="fsBtn" onclick="toggleFS()" title="Toggle fullscreen" aria-label="Toggle fullscreen"><svg id="fsIco" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,5 1,1 5,1"/><polyline points="9,1 13,1 13,5"/><polyline points="13,9 13,13 9,13"/><polyline points="5,13 1,13 1,9"/></svg><svg id="fsIcoExit" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polyline points="5,1 5,5 1,5"/><polyline points="9,5 13,5 9,1"/><polyline points="9,13 9,9 13,9"/><polyline points="1,9 5,9 5,13"/></svg></button></div>
+<div class="navstrip" id="navstrip"></div>
+<div class="prog"><div class="prog-fill" id="pf" style="width:0%"></div></div>
+<div class="wrap" id="wrap">
+
+<div class="cover on" id="s0">
+  <div class="cv-visual">
+    <svg width="140" height="160" viewBox="0 0 100 120">
+      <path d="M50,8 L12,28 L12,60 Q12,95 50,112 Q88,95 88,60 L88,28 Z" fill="none" stroke="var(--accent)" stroke-width="2" opacity=".3" stroke-dasharray="4 3"/>
+      <line x1="50" y1="20" x2="50" y2="100" stroke="var(--accent)" stroke-width="1" opacity=".2"/>
+      <line x1="20" y1="55" x2="80" y2="55" stroke="var(--accent)" stroke-width="1" opacity=".2"/>
+      <circle cx="35" cy="42" r="4" fill="var(--accent)" opacity=".5"/>
+      <circle cx="65" cy="42" r="4" fill="var(--accent)" opacity=".5"/>
+      <circle cx="35" cy="72" r="4" fill="var(--accent)" opacity=".5"/>
+      <circle cx="65" cy="72" r="4" fill="var(--accent)" opacity=".5"/>
+      <circle cx="50" cy="55" r="6" fill="var(--accent)" opacity=".8"/>
+    </svg>
+  </div>
+  <span class="cv-badge">CAPSTONE</span><div class="cv-tag">OWASP Top 10 · 2025</div>
+  <div class="cv-title">Which fix<br>comes first?</div>
+  <div class="cv-sub">Two categories are in play. Budget for one fix. Five real tradeoffs that test your security judgment.</div>
+  <div class="cv-start"><button class="btn" onclick="go(1)">Begin Capstone →</button></div>
+</div>
+
+<!-- ══ S1: INTRO ══ -->
+<div class="scr" id="s1">
+  <div class="atk-header"><div class="atk-label">// the rules</div></div>
+  <p style="font-size:20px;line-height:1.8">You've completed 10 modules. Each one taught a category in isolation. Production systems don't work that way — vulnerabilities overlap, resources are finite, and you can't fix everything at once.</p>
+  <p>Five scenarios follow. In each one, two OWASP categories intersect. Both fixes are real. Both matter. But you have budget for one. Pick the higher-leverage fix.</p>
+  <div class="card" style="border-left:3px solid var(--accent)">
+    <p style="font-size:15px;color:var(--ink-mid);margin:0;line-height:1.6"><strong style="color:var(--accent)">How this works:</strong> There are no trick questions. Both options in every scenario are defensible. The "right" answer is the one with higher leverage — the fix that reduces the most risk per unit of effort. Reasonable people can disagree. The tradeoff explanation after each choice is where the real learning happens.</p>
+  </div>
+  <div class="nav"><button class="btn btn-g" onclick="go(0)">← Cover</button><button class="btn btn-p" onclick="go(2)">Scenario 1 →</button></div>
+</div>
+
+<!-- ══ SCENARIO 1: A05 + A10 ══ -->
+<div class="scr" id="s2">
+  <div class="atk-header"><div class="atk-label">// scenario 1 of 5</div></div>
+  <h2>The search endpoint that talks too much</h2>
+  <p>An internal API accepts user input in a search query and passes it to a SQL backend. The input is parameterized — but the error handler is not. When a query fails, the endpoint returns detailed error messages: table names, column types, query structure. When a query targets a nonexistent table, it returns a different error than when it targets an existing table with wrong permissions.</p>
+  <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">search.controller.js</span></div><div class="cbody"><div class="lc"><span class="kw">try</span> {
+  <span class="kw">const</span> results = <span class="kw">await</span> db.<span class="fn">query</span>(
+    <span class="st">'SELECT * FROM products WHERE name ILIKE $1'</span>,
+    [<span class="st">`%${req.query.q}%`</span>]
+  );
+  res.<span class="fn">json</span>(results.rows);
+} <span class="kw">catch</span> (err) {
+  res.<span class="fn">status</span>(<span class="nm">500</span>).<span class="fn">json</span>({
+    error: err.message,        <span class="cm">// "relation 'users' does not exist"</span>
+    detail: err.detail,        <span class="cm">// column types, constraint names</span>
+    query: err.query            <span class="cm">// the failed SQL</span>
+  });
+}</div></div></div>
+  <p style="font-size:15px;color:var(--ink-dim)">The query is parameterized (A05 injection is mitigated). But the error responses are a reconnaissance goldmine (A10 information disclosure). Two categories, one endpoint.</p>
+  <div class="nav"><button class="btn btn-g" onclick="go(1)">← Intro</button><button class="btn btn-p" onclick="go(3)">Make the call →</button></div>
+</div>
+
+<div class="scr" id="s3">
+  <div class="atk-header"><div class="atk-label">// scenario 1</div><div class="atk-step">which fix has higher leverage?</div></div>
+  <div class="choice-grid" id="ch1">
+    <div class="choice-card" onclick="pick(1,0)">
+      <div class="choice-tag">A05 · Injection</div>
+      <div class="choice-title">Add input validation + allowlisting on the search query</div>
+      <div class="choice-desc">Restrict search input to alphanumeric characters. Add query length limits. Defense-in-depth against any future injection if parameterization is bypassed.</div>
+    </div>
+    <div class="choice-card" onclick="pick(1,1)">
+      <div class="choice-tag">A10 · Exceptional Conditions</div>
+      <div class="choice-title">Replace detailed error responses with generic messages</div>
+      <div class="choice-desc">Return "Search failed" to the client. Log the full error internally. Eliminate the reconnaissance path that maps your database schema.</div>
+    </div>
+  </div>
+  <div class="reveal-box" id="rv1"></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(2)">← Scenario</button><button class="btn btn-p" id="nb1" onclick="go(4)" disabled>See Tradeoff →</button></div>
+</div>
+
+<div class="scr" id="s4">
+  <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 1</div></div>
+  <p><strong>Higher leverage: fix the error responses (A10).</strong></p>
+  <p>The parameterized query already blocks SQL injection — the A05 risk is mitigated. But the verbose error messages hand an attacker a map of your database: table names, column types, constraint names, even the query structure. Input validation is good defense-in-depth, but it protects against a theoretical future bypass. The error messages are leaking information <em>right now</em>, on every failed request.</p>
+  <div class="persona-row">
+    <div class="persona"><div class="persona-name">Renata · CISO</div><div class="persona-text">"The parameterized query buys us time. The error messages are active intelligence leakage. Fix the leak, then schedule the input validation for the next sprint."</div></div>
+    <div class="persona"><div class="persona-name">Marcus · Developer</div><div class="persona-text">"Took 20 minutes. Replaced the catch block with a generic message and added structured logging. The input validation is in the backlog — it's not urgent while parameterization holds."</div></div>
+  </div>
+  <div class="nav"><button class="btn btn-g" onclick="go(3)">← Choice</button><button class="btn btn-p" onclick="go(5)">Scenario 2 →</button></div>
+</div>
+
+<!-- ══ SCENARIO 2: A03 + A08 ══ -->
+<div class="scr" id="s5">
+  <div class="atk-header"><div class="atk-label">// scenario 2 of 5</div></div>
+  <h2>The build server that trusts everything</h2>
+  <p>A CI/CD pipeline pulls dependencies from npm without a lockfile pinned to exact hashes. The <code>package-lock.json</code> exists but isn't committed — <code>npm install</code> resolves fresh ranges on every build. Meanwhile, the build server shares a network segment with developer workstations. A compromised dev laptop could reach the build server directly.</p>
+  <p style="font-size:15px;color:var(--ink-dim)">Two supply chain risks: unpinned dependencies that could be swapped for malicious versions (A03), and a build environment that's reachable from compromised endpoints (A08 — integrity of the build pipeline itself).</p>
+  <div class="nav"><button class="btn btn-g" onclick="go(4)">← Previous</button><button class="btn btn-p" onclick="go(6)">Make the call →</button></div>
+</div>
+
+<div class="scr" id="s6">
+  <div class="atk-header"><div class="atk-label">// scenario 2</div><div class="atk-step">which fix has higher leverage?</div></div>
+  <div class="choice-grid" id="ch2">
+    <div class="choice-card" onclick="pick(2,0)">
+      <div class="choice-tag">A03 · Supply Chain</div>
+      <div class="choice-title">Pin the lockfile and verify dependency integrity hashes</div>
+      <div class="choice-desc">Commit package-lock.json with exact versions. Add <code>npm ci</code> to enforce it. Enable npm audit in CI. Stops dependency confusion and typosquatting.</div>
+    </div>
+    <div class="choice-card" onclick="pick(2,1)">
+      <div class="choice-tag">A08 · Integrity Failures</div>
+      <div class="choice-title">Isolate the build server onto its own network segment</div>
+      <div class="choice-desc">Move CI/CD to an isolated VLAN or cloud VPC. No inbound from developer workstations. Build artifacts are the only thing that leaves. Stops lateral movement from a compromised laptop.</div>
+    </div>
+  </div>
+  <div class="reveal-box" id="rv2"></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(5)">← Scenario</button><button class="btn btn-p" id="nb2" onclick="go(7)" disabled>See Tradeoff →</button></div>
+</div>
+
+<div class="scr" id="s7">
+  <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 2</div></div>
+  <p><strong>Higher leverage: isolate the build server (A08).</strong></p>
+  <p>Lockfile pinning stops one attack vector — dependency substitution. But if the build server is reachable from compromised endpoints, an attacker doesn't need to poison a package. They can inject code directly into the build process, modify artifacts, or exfiltrate secrets from CI environment variables. Network isolation is the single point of protection: it removes the build server from the attacker's reachable surface entirely.</p>
+  <div class="persona-row">
+    <div class="persona"><div class="persona-name">Renata · CISO</div><div class="persona-text">"A compromised build server is game over — it touches every artifact we ship. Lockfile pinning matters, but it only covers one supply chain vector. Isolation covers them all."</div></div>
+    <div class="persona"><div class="persona-name">Marcus · Developer</div><div class="persona-text">"We moved CI to an isolated VPC with no inbound SSH. Deployments trigger via webhook, not direct access. Lockfile pinning went in the same week — it was a one-line CI change."</div></div>
+  </div>
+  <div class="nav"><button class="btn btn-g" onclick="go(6)">← Choice</button><button class="btn btn-p" onclick="go(8)">Scenario 3 →</button></div>
+</div>
+
+<!-- ══ SCENARIO 3: A06 + A07 ══ -->
+<div class="scr" id="s8">
+  <div class="atk-header"><div class="atk-label">// scenario 3 of 5</div></div>
+  <h2>The password reset nobody rate-limits</h2>
+  <p>A SaaS application has two authentication paths. The login page uses email + password — no MFA. The password-reset flow sends a 6-digit code by email, valid for 15 minutes. There's no rate limit on reset code attempts. An attacker can try all 1 million combinations of a 6-digit code in under 10 minutes with a basic script.</p>
+  <p style="font-size:15px;color:var(--ink-dim)">The reset flow is a design flaw — a guessable code without rate limiting (A06 insecure design). The login page lacks MFA (A07 authentication failures). Budget for one fix this quarter.</p>
+  <div class="nav"><button class="btn btn-g" onclick="go(7)">← Previous</button><button class="btn btn-p" onclick="go(9)">Make the call →</button></div>
+</div>
+
+<div class="scr" id="s9">
+  <div class="atk-header"><div class="atk-label">// scenario 3</div><div class="atk-step">which fix has higher leverage?</div></div>
+  <div class="choice-grid" id="ch3">
+    <div class="choice-card" onclick="pick(3,0)">
+      <div class="choice-tag">A06 · Insecure Design</div>
+      <div class="choice-title">Rate-limit the password-reset code + increase to 8 digits</div>
+      <div class="choice-desc">Max 5 attempts per code. Lock the code after failures. Increase to 8 digits (100M combinations). Shuts down the brute-force path on the reset flow.</div>
+    </div>
+    <div class="choice-card" onclick="pick(3,1)">
+      <div class="choice-tag">A07 · Authentication</div>
+      <div class="choice-title">Add MFA to the login flow</div>
+      <div class="choice-desc">TOTP or WebAuthn on every login. Even if credentials are stolen via phishing or credential stuffing, the attacker can't complete authentication.</div>
+    </div>
+  </div>
+  <div class="reveal-box" id="rv3"></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(8)">← Scenario</button><button class="btn btn-p" id="nb3" onclick="go(10)" disabled>See Tradeoff →</button></div>
+</div>
+
+<div class="scr" id="s10">
+  <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 3</div></div>
+  <p><strong>Higher leverage: add MFA to login (A07).</strong></p>
+  <p>The login page is the primary authentication path — it's hit by credential stuffing attacks daily. MFA blocks them all, regardless of how the credentials were obtained (phishing, breach reuse, social engineering). The password-reset flow is a secondary path. It's vulnerable, and fixing it matters — but the login page is where the volume is. Protecting the front door beats reinforcing the side entrance.</p>
+  <div class="persona-row">
+    <div class="persona"><div class="persona-name">Renata · CISO</div><div class="persona-text">"MFA on login is the single highest-impact control in our entire auth stack. The reset flow is exploitable, but it's a narrower attack surface. Fix the high-traffic path first."</div></div>
+    <div class="persona"><div class="persona-name">Marcus · Developer</div><div class="persona-text">"We shipped TOTP in two weeks. The reset-flow rate limit was a half-day fix — we did it in the same sprint. But if we'd had to choose, MFA first, every time."</div></div>
+  </div>
+  <div class="nav"><button class="btn btn-g" onclick="go(9)">← Choice</button><button class="btn btn-p" onclick="go(11)">Scenario 4 →</button></div>
+</div>
+
+<!-- ══ SCENARIO 4: A02 + A09 ══ -->
+<div class="scr" id="s11">
+  <div class="atk-header"><div class="atk-label">// scenario 4 of 5</div></div>
+  <h2>The admin panel nobody changed the password for</h2>
+  <p>A monitoring dashboard (Grafana) is exposed on the internal network with default credentials: <code>admin / admin</code>. It has read access to production metrics and database connection health. The organization also has no centralized security logging — application logs exist but aren't aggregated, there's no alerting, and no one reviews them.</p>
+  <p style="font-size:15px;color:var(--ink-dim)">Default credentials on an admin panel (A02 security misconfiguration). No security monitoring or alerting (A09 logging failures). The team can fix one this sprint.</p>
+  <div class="nav"><button class="btn btn-g" onclick="go(10)">← Previous</button><button class="btn btn-p" onclick="go(12)">Make the call →</button></div>
+</div>
+
+<div class="scr" id="s12">
+  <div class="atk-header"><div class="atk-label">// scenario 4</div><div class="atk-step">which fix has higher leverage?</div></div>
+  <div class="choice-grid" id="ch4">
+    <div class="choice-card" onclick="pick(4,0)">
+      <div class="choice-tag">A02 · Misconfiguration</div>
+      <div class="choice-title">Change the default credentials + require SSO for admin panels</div>
+      <div class="choice-desc">Rotate the password immediately. Add SSO/LDAP integration so Grafana uses corporate identity. Disable local admin login. Closes the open door now.</div>
+    </div>
+    <div class="choice-card" onclick="pick(4,1)">
+      <div class="choice-tag">A09 · Logging Failures</div>
+      <div class="choice-title">Deploy centralized logging with security alerting</div>
+      <div class="choice-desc">Ship logs to a SIEM. Create alerts for auth failures, privilege escalation, and data access anomalies. Build the detection capability the team is missing.</div>
+    </div>
+  </div>
+  <div class="reveal-box" id="rv4"></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(11)">← Scenario</button><button class="btn btn-p" id="nb4" onclick="go(13)" disabled>See Tradeoff →</button></div>
+</div>
+
+<div class="scr" id="s13">
+  <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 4</div></div>
+  <p><strong>Higher leverage: change the credentials (A02).</strong></p>
+  <p>Default credentials are exploitable <em>right now</em>, by anyone on the network, with zero skill required. Centralized logging helps you detect attacks — but it doesn't stop one that's already in progress through an open door. The Grafana panel gives an attacker production metrics, database connection strings, and a foothold for lateral movement. Close the door first, then build the alarm system.</p>
+  <div class="persona-row">
+    <div class="persona"><div class="persona-name">Renata · CISO</div><div class="persona-text">"This is a 5-minute fix that removes an active vulnerability. Logging infrastructure takes weeks to deploy well. We need both, but the open admin panel can't wait."</div></div>
+    <div class="persona"><div class="persona-name">Marcus · Developer</div><div class="persona-text">"Changed the password in 2 minutes. Started SSO integration that afternoon. The SIEM project is in the quarterly roadmap — it's important but not the fire we need to put out today."</div></div>
+  </div>
+  <div class="nav"><button class="btn btn-g" onclick="go(12)">← Choice</button><button class="btn btn-p" onclick="go(14)">Scenario 5 →</button></div>
+</div>
+
+<!-- ══ SCENARIO 5: A01 + A02 ══ -->
+<div class="scr" id="s14">
+  <div class="atk-header"><div class="atk-label">// scenario 5 of 5</div></div>
+  <h2>The microservice that trusts everyone</h2>
+  <p>A backend microservice accepts JWTs from the API gateway but doesn't validate the signature — it base64-decodes the payload and trusts the claims. The same service runs as <code>root</code> in its container because the Dockerfile doesn't specify a user.</p>
+  <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">auth-middleware.js</span></div><div class="cbody"><div class="lc"><span class="kw">const</span> payload = <span class="fn">JSON.parse</span>(
+  <span class="fn">atob</span>(token.<span class="fn">split</span>(<span class="st">'.'</span>)[<span class="nm">1</span>])  <span class="cm">// decode payload, skip signature</span>
+);
+req.user = { id: payload.sub, role: payload.role };
+<span class="fn">next</span>();  <span class="cm">// anyone can forge this token</span></div></div></div>
+  <p style="font-size:15px;color:var(--ink-dim)">Missing JWT signature validation (A01 broken access control). Container running as root (A02 security misconfiguration). Both are real problems — but which one creates the vulnerability?</p>
+  <div class="nav"><button class="btn btn-g" onclick="go(13)">← Previous</button><button class="btn btn-p" onclick="go(15)">Make the call →</button></div>
+</div>
+
+<div class="scr" id="s15">
+  <div class="atk-header"><div class="atk-label">// scenario 5</div><div class="atk-step">which fix has higher leverage?</div></div>
+  <div class="choice-grid" id="ch5">
+    <div class="choice-card" onclick="pick(5,0)">
+      <div class="choice-tag">A01 · Broken Access Control</div>
+      <div class="choice-title">Validate the JWT signature before trusting claims</div>
+      <div class="choice-desc">Use the gateway's public key to verify the token signature. Reject unsigned or tampered tokens. Claims become trustworthy only after cryptographic verification.</div>
+    </div>
+    <div class="choice-card" onclick="pick(5,1)">
+      <div class="choice-tag">A02 · Misconfiguration</div>
+      <div class="choice-title">Run the container as a non-root user</div>
+      <div class="choice-desc">Add <code>USER node</code> to the Dockerfile. Drop capabilities. Limit blast radius if the service is compromised — an attacker with root can escape the container.</div>
+    </div>
+  </div>
+  <div class="reveal-box" id="rv5"></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(14)">← Scenario</button><button class="btn btn-p" id="nb5" onclick="go(16)" disabled>See Tradeoff →</button></div>
+</div>
+
+<div class="scr" id="s16">
+  <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 5</div></div>
+  <p><strong>Higher leverage: validate the JWT signature (A01).</strong></p>
+  <p>Without signature validation, <em>anyone</em> can forge a token with any claims — admin, any user, any role. The service has no access control at all. Running as root worsens what happens <em>after</em> a compromise (container escape, lateral movement), but it doesn't create the vulnerability. Fix the access control to close the door; fix the container to limit the blast radius.</p>
+  <div class="persona-row">
+    <div class="persona"><div class="persona-name">Renata · CISO</div><div class="persona-text">"The JWT validation is the vulnerability. Running as root is a severity multiplier. Always fix the vulnerability before reducing the blast radius — you can't contain what you can't prevent."</div></div>
+    <div class="persona"><div class="persona-name">Marcus · Developer</div><div class="persona-text">"Added jsonwebtoken.verify() with the gateway's public key — 4 lines of code. The Dockerfile USER change was a separate PR the same day. Both shipped, but the signature check was the blocker."</div></div>
+  </div>
+  <div class="nav"><button class="btn btn-g" onclick="go(15)">← Choice</button><button class="btn btn-p" onclick="go(17)">The 10 Habits →</button></div>
+</div>
+
+<!-- ══ S17: 10 HABITS REFERENCE CARD ══ -->
+<div class="scr" id="s17">
+  <h3>// the ten habits — one from each module</h3>
+  <div class="habit-grid">
+    <div class="habit-card"><div class="habit-badge" style="background:#1a56a0">A01</div><div class="habit-text"><strong>Check ownership, not just authentication.</strong> Every endpoint that takes a resource ID must verify the requestor owns that resource.</div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#5a7a3a">A02</div><div class="habit-text"><strong>Audit default credentials on every new service.</strong> Before go-live, check admin panels, databases, and monitoring tools.</div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#7a5a8a">A03</div><div class="habit-text"><strong>Pin your dependencies.</strong> Commit lockfiles with exact hashes. Run <code>npm audit</code> / <code>pip audit</code> in CI.</div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#8a6a3a">A04</div><div class="habit-text"><strong>Check the cost parameter.</strong> "We use bcrypt" isn't enough. bcrypt at cost 4 is weaker than PBKDF2 at 100K iterations.</div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#1a56a0">A05</div><div class="habit-text"><strong>Parameterize every query.</strong> No string concatenation of user input into SQL, LDAP, OS commands, or template engines.</div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#6a3a3a">A06</div><div class="habit-text"><strong>Write one abuse case per feature.</strong> Before building, ask: "How would an attacker use this feature against us?"</div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#3a6a5a">A07</div><div class="habit-text"><strong>Require MFA on login.</strong> It's the single highest-impact authentication control. No exceptions for internal tools.</div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#5a3a7a">A08</div><div class="habit-text"><strong>Isolate the build server.</strong> CI/CD should be unreachable from developer workstations. Build artifacts are the only output.</div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#6a6a3a">A09</div><div class="habit-text"><strong>Alert on auth failures.</strong> If 50 failed logins don't trigger a page, your logging is decoration.</div></div>
+    <div class="habit-card"><div class="habit-badge" style="background:#6a3a3a">A10</div><div class="habit-text"><strong>Audit every catch block.</strong> Does it deny or allow? If a catch block on a security path calls <code>next()</code>, it's a fail-open vulnerability.</div></div>
+  </div>
+  <div class="nav"><button class="btn btn-g" onclick="go(16)">← Scenario 5</button><button class="btn btn-p" onclick="go(18)">Finish →</button></div>
+</div>
+
+<!-- ══ S18: CLOSING ══ -->
+<div class="scr" id="s18">
+  <h3>// capstone complete</h3>
+  <div class="score-bar"><div class="score-num" id="finalScore">0/5</div><div class="score-label" id="finalLabel">Loading…</div></div>
+  <p id="finalMsg"></p>
+  <div class="card" style="border-left:3px solid var(--accent)">
+    <p style="font-size:15px;color:var(--ink-mid);margin:0;line-height:1.6"><strong style="color:var(--accent)">The pattern across all five scenarios:</strong> Fix the <em>vulnerability</em> before reducing the <em>blast radius</em>. Close the open door before building the alarm. Stop the active leak before adding defense-in-depth. When two categories intersect, the one that's exploitable <em>right now</em> almost always wins.</p>
+  </div>
+  <div class="nav"><button class="btn btn-g" onclick="go(17)">← The 10 Habits</button><button class="btn btn-fin" onclick="finish()">Complete Course ✓</button></div>
+</div>
+
+</div>
+<script>
+/* ═══ SCENARIO DATA ═══ */
+const SCENARIOS = [null,
+  {correct:1, rightFb:'<strong>✓ Good call.</strong> The parameterized query already handles injection. The verbose error messages are the active risk — they\'re leaking schema information on every failed request.', wrongFb:'<strong>Defensible choice, but not the higher leverage.</strong> Input validation is good defense-in-depth, but the parameterized query already blocks injection. The error messages are actively leaking database structure right now — that\'s the immediate fix.'},
+  {correct:1, rightFb:'<strong>✓ Good call.</strong> Build server isolation removes the entire lateral-movement attack surface. Lockfile pinning addresses one supply chain vector; isolation addresses all of them.', wrongFb:'<strong>Defensible choice, but not the higher leverage.</strong> Lockfile pinning blocks dependency substitution — one attack vector. But if the build server is reachable from compromised endpoints, attackers don\'t need to poison a package. Isolation is the broader fix.'},
+  {correct:1, rightFb:'<strong>✓ Good call.</strong> The login page is the primary attack surface — MFA blocks credential stuffing regardless of how the credentials were obtained. The reset flow is a secondary path.', wrongFb:'<strong>Defensible choice, but not the higher leverage.</strong> The reset flow is exploitable, but the login page is where the volume is. MFA on login blocks the most common authentication attack (credential stuffing) across the entire user base.'},
+  {correct:0, rightFb:'<strong>✓ Good call.</strong> Default credentials are exploitable right now, by anyone on the network, with zero skill required. Close the door first, then build the alarm system.', wrongFb:'<strong>Defensible choice, but not the higher leverage.</strong> Centralized logging helps you detect attacks — but it doesn\'t stop one that\'s already possible through an open admin panel with default credentials. Close the door first.'},
+  {correct:0, rightFb:'<strong>✓ Good call.</strong> Without signature validation, anyone can forge a token. Running as root worsens the blast radius but doesn\'t create the vulnerability. Fix the access control first.', wrongFb:'<strong>Defensible choice, but not the higher leverage.</strong> Running as root is a severity multiplier, not the vulnerability. Without JWT signature validation, there\'s no access control at all — any forged token is accepted. Fix the vulnerability before reducing the blast radius.'}
+];
+
+let score = 0;
+const picked = [null,null,null,null,null,null];
+
+function pick(scenario, choice) {
+  if (picked[scenario] !== null) return;
+  picked[scenario] = choice;
+  const s = SCENARIOS[scenario];
+  const isRight = choice === s.correct;
+  if (isRight) score++;
+  const grid = document.getElementById('ch'+scenario);
+  const cards = grid.querySelectorAll('.choice-card');
+  cards.forEach((c,i) => {
+    if (i === choice) { c.classList.add('picked'); if (!isRight) c.classList.add('wrong'); }
+    else c.classList.add('dimmed');
+  });
+  const rv = document.getElementById('rv'+scenario);
+  rv.className = 'reveal-box on ' + (isRight ? 'fb-right' : 'fb-wrong');
+  rv.innerHTML = isRight ? s.rightFb : s.wrongFb;
+  document.getElementById('nb'+scenario).disabled = false;
+}
+
+/* ═══ NAV ═══ */
+let cur=0;const TOTAL=18;const visited={0:true};
+const SCREEN_LABELS=['Cover','Rules','S1: Scenario','S1: Choice','S1: Tradeoff','S2: Scenario','S2: Choice','S2: Tradeoff','S3: Scenario','S3: Choice','S3: Tradeoff','S4: Scenario','S4: Choice','S4: Tradeoff','S5: Scenario','S5: Choice','S5: Tradeoff','10 Habits','Complete'];
+function buildStrip(){const strip=document.getElementById('navstrip');if(!strip)return;const sections=[{screens:[0],type:'pip-cover'},'sep',{screens:[1],type:''},'sep',{screens:[2,3,4],type:''},{screens:[5,6,7],type:''},{screens:[8,9,10],type:''},{screens:[11,12,13],type:''},{screens:[14,15,16],type:''},'sep',{screens:[17,18],type:'pip-wide'}];strip.innerHTML='';sections.forEach(sec=>{if(sec==='sep'){const s=document.createElement('div');s.className='ns-sep';strip.appendChild(s);return;}sec.screens.forEach(n=>{const pip=document.createElement('button');pip.className='ns-pip '+sec.type;if(n===cur)pip.classList.add('active');else if(visited[n])pip.classList.add('visited');pip.title=SCREEN_LABELS[n]||'';pip.onclick=()=>go(n);strip.appendChild(pip);});});}
+function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');cur=n;visited[n]=true;const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');document.getElementById('wrap').scrollTop=0;document.getElementById('pf').style.width=(n/TOTAL*100)+'%';document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;if(n===18)renderFinal();buildStrip();}
+
+function renderFinal(){
+  document.getElementById('finalScore').textContent=score+' / 5';
+  const msgs=[
+    'Every scenario was a genuine tradeoff. Revisit the ones you missed — the tradeoff explanations are where the real insight lives.',
+    'Strong security judgment. You identified the higher-leverage fix in most scenarios. Review the ones you missed.',
+    'Solid. You got the majority right — you\'re reading risk correctly.',
+    'Excellent. You consistently identified which fix has the highest leverage across intersecting categories.',
+    'Outstanding. Near-perfect prioritization across all five scenarios. You\'re thinking like a security lead.',
+    'Perfect score. You identified the higher-leverage fix in every scenario. The pattern is clear to you: fix the vulnerability before reducing the blast radius.'
+  ];
+  document.getElementById('finalLabel').textContent = score===5?'Perfect':'Score';
+  document.getElementById('finalMsg').innerHTML = msgs[score];
+}
+
+function finish(){window.parent.postMessage({type:'course-next'},'*');}
+
+/* ═══ FULLSCREEN ═══ */
+function toggleFS(){if(!document.fullscreenElement&&!document.webkitFullscreenElement){const el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen).call(el);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}}
+document.addEventListener('fullscreenchange',updateFSIcon);document.addEventListener('webkitfullscreenchange',updateFSIcon);
+function updateFSIcon(){const isFS=!!(document.fullscreenElement||document.webkitFullscreenElement);document.getElementById('fsIco').style.display=isFS?'none':'';document.getElementById('fsIcoExit').style.display=isFS?'':'none';}
+
+buildStrip();
+</script>
+</body>
+</html>

@@ -705,11 +705,25 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
     <div class="atk-label">// knowledge check</div>
     <div class="atk-step">1 / 3</div>
   </div>
-  <p class="tq-prompt">An endpoint returns a user's profile by ID. It requires a valid JWT. What's still missing?</p>
+  <p class="tq-prompt">Two Express.js endpoints return a user's profile. Which one prevents IDOR?</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0">
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">Endpoint A</span></div><div class="cbody" style="padding:8px 12px"><div class="cl" style="cursor:default"><span class="lc" style="font-size:13px;white-space:pre-wrap"><span class="fn">app.get</span>(<span class="st">'/profile/:id'</span>, (req, res) => {
+  <span class="kw">const</span> profile = <span class="kw">await</span> db.<span class="fn">find</span>(
+    <span class="op">req.params.id</span>
+  );
+  res.<span class="fn">json</span>(profile);
+});</span></div></div></div>
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">Endpoint B</span></div><div class="cbody" style="padding:8px 12px"><div class="cl" style="cursor:default"><span class="lc" style="font-size:13px;white-space:pre-wrap"><span class="fn">app.get</span>(<span class="st">'/profile'</span>, (req, res) => {
+  <span class="kw">const</span> profile = <span class="kw">await</span> db.<span class="fn">find</span>(
+    <span class="op">req.user.id</span>
+  );
+  res.<span class="fn">json</span>(profile);
+});</span></div></div></div>
+  </div>
   <div class="tq-options" id="q1opts">
-    <div class="tq-opt" onclick="answer(1,0,false)">A — Input validation on the ID parameter</div>
-    <div class="tq-opt" onclick="answer(1,1,true)">B — A check that the JWT's user_id matches the requested resource's owner</div>
-    <div class="tq-opt" onclick="answer(1,2,false)">C — Rate limiting on the endpoint</div>
+    <div class="tq-opt" onclick="answer(1,0,false)">A — Endpoint A: it uses the URL parameter, which can be validated with a UUID check</div>
+    <div class="tq-opt" onclick="answer(1,1,true)">B — Endpoint B: it derives the user ID from the authenticated session, not the request</div>
+    <div class="tq-opt" onclick="answer(1,2,false)">C — Both are equally secure if the JWT is valid</div>
   </div>
   <div class="tq-fb" id="q1fb"></div>
   <div class="nav"><button class="btn btn-p" id="q1next" onclick="go(6)" disabled>Next Question →</button></div>
@@ -1154,8 +1168,8 @@ function rerun(){
 
 /* ── QUIZ ── */
 const Q_FB=[null,
-  {right:"<strong>✓ Ownership check.</strong> A valid JWT proves identity (authentication), but the endpoint also needs to verify that the JWT's user_id matches the resource's owner (authorization). Without this, any authenticated user can access any resource.",
-   wrong:"The missing piece is an <strong>ownership check</strong> — verifying that the JWT's user_id matches the resource's owner. Input validation and rate limiting are good practices but they don't prevent IDOR. Authentication ≠ authorization."},
+  {right:"<strong>✓ Endpoint B derives the ID from the session.</strong> <code>req.user.id</code> comes from the authenticated JWT — the user can't change it. <code>req.params.id</code> in Endpoint A comes from the URL — the user controls it. A valid JWT proves <em>who you are</em>, but Endpoint A lets you ask for <em>anyone's</em> data. UUID validation doesn't help: a valid UUID for someone else's profile is still IDOR.",
+   wrong:"<strong>Endpoint B is the secure one.</strong> The critical difference: <code>req.params.id</code> is user-controlled input (the URL path), while <code>req.user.id</code> is server-controlled (extracted from the validated JWT). Endpoint A lets any authenticated user fetch any profile by changing the URL. A JWT being valid only proves identity — it doesn't restrict which <em>resources</em> you can access. Endpoint B eliminates IDOR by design: there's no user-controlled resource identifier to tamper with."},
   {right:"<strong>✓ 404 Not Found — the preferred practice.</strong> Returning 404 hides whether the resource exists at all. A 403 tells the attacker 'this resource exists but you can't access it' — which confirms the ID is valid and encourages further enumeration. Note: 403 is acceptable in internal APIs where resource existence isn't sensitive — but 404 is the safer default for external-facing endpoints.",
    wrong:"The preferred response is <strong>404 Not Found</strong>. A 403 confirms the resource exists — it tells the attacker 'keep enumerating, this ID is real.' A 401 is incorrect because the user IS authenticated; the problem is authorization, not identity. Note: in internal APIs, 403 can be acceptable — but 404 is the safer default."},
   {right:"<strong>✓ Server-Side Request Forgery (SSRF).</strong> In 2025, OWASP absorbed SSRF (previously A10:2021) into A01 because SSRF is fundamentally an access control failure — the server makes a request to a resource the user shouldn't be able to reach. A01 now has 40 mapped CWEs, the most of any category.",
