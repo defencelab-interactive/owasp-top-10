@@ -1,0 +1,1959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A05 · Injection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* warm paper base */
+  --bg:#f2f0ec; --surface:#fdfcfa; --surface2:#ece9e2;
+  --border:#dbd6cc; --border2:#bfb8ac;
+  --ink:#181614; --ink-mid:#3d3830; --ink-dim:#7a7268;
+  /* ink blue accent — AAA contrast on warm paper, authoritative */
+  --accent:#1a56a0; --adim:rgba(26,86,160,.09); --aglow:rgba(26,86,160,.3);
+  /* error/success unchanged */
+  --red:#b83232; --rdim:rgba(184,50,50,.1);
+  --green:#1e6e47; --gdim:rgba(30,110,71,.1);
+  /* code editor unchanged */
+  --code-bg:#16181f; --code-surface:#1e2028; --code-border:#2a2d38;
+  --mono:'JetBrains Mono',monospace; --sans:'DM Sans',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+body{display:flex;flex-direction:column;overflow-x:hidden;
+  background-image:repeating-linear-gradient(90deg,transparent,transparent 119px,rgba(0,0,0,.022) 119px,rgba(0,0,0,.022) 120px)}
+
+/* ── CHROME ── */
+.topbar{height:44px;min-height:44px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 28px;gap:12px;flex-shrink:0}
+.badge{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);
+  background:var(--adim);border:1px solid var(--accent);border-radius:2px;padding:3px 10px;letter-spacing:.07em}
+.topbar-title{font-family:var(--mono);font-size:13px;color:var(--ink-dim)}
+.sep{color:var(--border2)}
+.screen-lbl{font-family:var(--mono);font-size:12px;color:var(--ink-dim);margin-left:auto}
+.prog{height:3px;background:var(--border);flex-shrink:0}
+.prog-fill{height:100%;background:var(--accent);transition:width .4s cubic-bezier(.4,0,.2,1)}
+
+/* ── SCROLL ── */
+.wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.wrap::-webkit-scrollbar{display:none}
+
+/* ── SCREENS — fixed-height discipline ──
+   Each screen is a flex column. The scroll-area div inside each
+   screen takes flex:1 and overflows if needed. Nav is always last,
+   always visible. Nothing appends below the nav. ── */
+.scr{display:none;padding:24px 28px 18px;flex-direction:column;gap:14px;width:100%;min-height:100%}
+.scr.on{display:flex;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.scr.on .nav{animation:slideUp .35s cubic-bezier(.4,0,.2,1) .1s both}
+
+/* ── TYPE ── */
+h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}
+h3{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em}
+p{font-size:17px;line-height:1.75;color:var(--ink-mid)}
+code{font-family:var(--mono);font-size:14px;color:var(--accent);background:var(--adim);padding:2px 6px;border-radius:2px}
+strong{color:var(--ink)}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:12px 16px}
+
+
+/* ── S1: SIGNAL INTERACTION ──
+   Key principle: fixed-height container. Paragraph + grid always
+   visible. Feedback REPLACES the paragraph (opacity swap + slide),
+   never adds height below. ── */
+.s1-body{display:flex;flex-direction:column;gap:14px}
+.s1-context{font-size:17px;line-height:1.7;color:var(--ink-mid);
+  transition:opacity .25s ease,max-height .3s ease;max-height:80px;overflow:hidden}
+.s1-context.shrunk{max-height:0;opacity:0;margin:0;padding:0}
+.s1-feedback{font-size:16px;line-height:1.6;border-radius:6px;padding:10px 13px;
+  max-height:0;overflow:hidden;opacity:0;
+  transition:max-height .3s cubic-bezier(.4,0,.2,1),opacity .25s ease,padding .3s ease}
+.s1-feedback.on{max-height:200px;opacity:1}
+.s1-feedback.right{background:var(--gdim);border:1px solid rgba(39,115,74,.25);color:var(--green)}
+.s1-feedback.wrong{background:var(--rdim);border:1px solid rgba(192,57,43,.22);color:var(--red)}
+
+.signal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.signal-card{animation:cardIn .3s cubic-bezier(.4,0,.2,1) both}
+#sc0{animation-delay:.05s}#sc1{animation-delay:.13s}#sc2{animation-delay:.21s}#sc3{animation-delay:.29s}
+.signal-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:16px 18px;cursor:pointer;transition:border-color .15s,background .15s,opacity .3s,transform .2s;
+  display:flex;gap:12px;align-items:flex-start}
+.signal-card:hover{border-color:var(--border2);background:var(--surface2);transform:translateY(-1px)}
+.signal-card.sel-right{border-color:var(--green);background:var(--gdim);cursor:default;transform:none}
+.signal-card.sel-wrong{border-color:var(--red);background:var(--rdim);cursor:default;
+  animation:shake .28s ease;transform:none}
+.signal-card.dimmed{opacity:.22;pointer-events:none;transform:none}
+.sig-ico{font-size:22px;line-height:1;flex-shrink:0;margin-top:1px}
+.sig-title{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px}
+.sig-body{font-size:14.5px;color:var(--ink-mid);line-height:1.55}
+
+/* ── S2: CODE REVIEW ──
+   Feedback docks INSIDE the code block header row (inline tag),
+   never below — so the block height stays constant. ── */
+.code-status{margin-left:auto;font-family:var(--mono);font-size:11.5px;
+  opacity:0;transition:opacity .2s ease}
+.code-status.show{opacity:1}
+.code-status.ok{color:#4ecb71}
+.code-status.err{color:#f07178}
+
+.cbox{background:var(--code-bg);border:1px solid var(--code-border);border-radius:5px;
+  font-family:var(--mono);display:flex;flex-direction:column;overflow:hidden}
+.s2-scr .cbox{max-height:none}
+.s3-scr .exploit-wrap{min-height:340px;max-height:460px}
+.chead{background:var(--code-surface);border-bottom:1px solid var(--code-border);
+  padding:6px 13px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.dots{display:flex;gap:4px}
+.dot{width:8px;height:8px;border-radius:50%}
+.dr{background:#e0585844;border:1px solid #e0585888}
+.dy{background:#f0a50044;border:1px solid #f0a50088}
+.dg{background:#3ecf7244;border:1px solid #3ecf7288}
+.cfn{font-family:var(--mono);font-size:11.5px;color:#555a6a;margin-left:3px}
+.cbody{padding:8px 0;overflow-y:auto;flex:1}
+.cbody::-webkit-scrollbar{width:3px}
+.fix-cbox{flex:none}
+.fix-cbox .cbody{overflow:visible;flex:none}
+@keyframes langFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.fix-cbox .cbody.fading{animation:langFade .18s ease both}
+.cbody::-webkit-scrollbar-track{background:transparent}
+.cbody::-webkit-scrollbar-thumb{background:var(--code-border);border-radius:2px}
+
+.cl{display:flex;align-items:flex-start;padding:1.5px 12px;transition:background .1s;cursor:pointer}
+.cl:hover{background:rgba(26,86,160,.07)}
+.cl:hover .ln{color:var(--accent)}
+.cl.wrong{background:rgba(192,57,43,.14);animation:shake .28s ease}
+.cl.right{background:rgba(26,86,160,.1)}
+.cl.rm{background:rgba(192,57,43,.07);border-left:3px solid var(--red);padding-left:9px;cursor:default}
+.cl.add{background:rgba(39,115,74,.09);border-left:3px solid var(--green);padding-left:9px;cursor:default}
+.cl.rm:hover,.cl.add:hover{background:inherit}.cl.rm:hover .ln,.cl.add:hover .ln{color:inherit}
+@keyframes shake{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}70%{transform:translateX(4px)}}
+@keyframes blink-ln{0%,100%{color:#3a3e4f}50%{color:rgba(26,86,160,.8)}}
+@keyframes ripple-ok{0%{box-shadow:0 0 0 0 rgba(39,115,74,.5)}100%{box-shadow:0 0 0 18px rgba(39,115,74,0)}}
+.cl-target .ln{animation:blink-ln 1.1s ease-in-out infinite}
+.cl.right{animation:ripple-ok .6s ease-out forwards}
+.ln{width:32px;min-width:32px;text-align:right;color:#3a3e4f;font-size:12.5px;
+  user-select:none;padding-right:12px;line-height:1.85}
+.dm{width:14px;min-width:14px;font-weight:700;font-size:11px;color:#3a3e4f}
+.rm .dm{color:var(--red)}.add .dm{color:var(--green)}
+.lc{flex:1;color:#c8ccd8;line-height:1.85;white-space:pre;font-size:14.5px}
+.kw{color:#c792ea}.fn{color:#82aaff}.st{color:#c3e88d}.cm{color:#546e7a;font-style:italic}.nm{color:#f78c6c}.op{color:#f07178}
+
+/* inline feedback strip — slides down inside code block, zero external impact */
+.code-fb-strip{
+  font-family:var(--mono);font-size:13px;line-height:1.5;
+  max-height:0;overflow:hidden;opacity:0;
+  transition:max-height .3s cubic-bezier(.4,0,.2,1),opacity .25s ease,padding .3s ease;
+  padding:0 12px;
+}
+.code-fb-strip.on{max-height:80px;opacity:1;padding:8px 12px;border-top:1px solid var(--code-border)}
+.code-fb-strip.ok{color:#4ecb71;background:rgba(78,203,113,.06)}
+.code-fb-strip.err{color:#f07178;background:rgba(240,113,120,.06)}
+
+/* ── S3: EXPLOIT — one step at a time, replace not append ── */
+.exploit-wrap{display:flex;flex-direction:column;gap:0;position:relative;overflow:hidden}
+.exploit-step{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;gap:8px;
+  opacity:0;transform:translateX(18px);pointer-events:none;
+  transition:opacity .28s ease,transform .28s cubic-bezier(.4,0,.2,1);
+  overflow-y:auto;padding-bottom:4px;
+}
+.exploit-step::-webkit-scrollbar{width:3px}
+.exploit-step::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.exploit-step.active{opacity:1;transform:translateX(0);pointer-events:auto}
+.exploit-step.exit{opacity:0;transform:translateX(-18px)}
+.ex-num{font-family:var(--mono);font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.ex-title{font-size:clamp(24px,3.5vw,32px);font-weight:800;color:var(--ink);margin-bottom:4px;letter-spacing:-.02em;line-height:1.2}
+.ex-body{font-size:17px;line-height:1.75;color:var(--ink-mid)}
+.payload{background:var(--code-bg);border:1px solid var(--code-border);border-radius:5px;
+  padding:12px 16px;font-family:var(--mono);font-size:14px;color:#f07178;
+  margin-top:8px;word-break:break-all;white-space:pre-wrap;min-height:1.6em}
+.resp{background:var(--code-bg);border:1px solid rgba(39,115,74,.3);border-radius:5px;
+  padding:12px 16px;font-family:var(--mono);font-size:14px;color:#c3e88d;
+  margin-top:5px;word-break:break-all;white-space:pre-wrap;min-height:1.6em}
+.tw-cursor{display:inline-block;width:1px;height:1em;background:currentColor;
+  vertical-align:text-bottom;margin-left:1px;animation:blink-cur .7s step-end infinite}
+@keyframes blink-cur{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── S4: FIX ── */
+.lang-tabs{display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;width:fit-content;flex-shrink:0}
+.lang-tab{font-family:var(--mono);font-size:13px;padding:8px 16px;cursor:pointer;
+  color:var(--ink-dim);background:var(--surface);border-right:1px solid var(--border);transition:all .12s}
+.lang-tab:last-child{border-right:none}
+.lang-tab:hover{color:var(--ink)}
+.lang-tab.active{background:var(--accent);color:#fff;font-weight:700}
+.dleg{display:flex;gap:14px;align-items:center}
+.dleg-item{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;color:var(--ink-dim)}
+.dleg-dash{width:14px;height:3px;border-radius:1px}
+
+/* ── WHY DOT + TOOLTIP ── */
+.fix-cbox-wrap{position:relative}
+
+/* pulsing dot — fixed to right margin of code block */
+.why-dot{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:11px;height:11px;
+  border-radius:50%;
+  background:var(--accent);
+  cursor:pointer;
+  opacity:0;
+  transition:opacity .3s ease .15s;
+  z-index:10;
+}
+.why-dot.show{opacity:1}
+/* outer pulse ring */
+.why-dot::before{
+  content:'';
+  position:absolute;inset:-5px;
+  border-radius:50%;
+  border:2px solid var(--accent);
+  opacity:0;
+  animation:dotPulse 2s cubic-bezier(.4,0,.6,1) infinite;
+}
+/* second ring, offset */
+.why-dot::after{
+  content:'';
+  position:absolute;inset:-9px;
+  border-radius:50%;
+  border:1.5px solid var(--accent);
+  opacity:0;
+  animation:dotPulse 2s cubic-bezier(.4,0,.6,1) .5s infinite;
+}
+@keyframes dotPulse{
+  0%{opacity:.6;transform:scale(.7)}
+  70%{opacity:0;transform:scale(1.6)}
+  100%{opacity:0;transform:scale(1.6)}
+}
+
+/* tooltip bubble — appears left of the dot */
+.why-tooltip{
+  position:absolute;
+  right:36px;
+  top:50%;
+  transform:translateY(-50%) scale(.95);
+  width:340px;
+  background:#1a1c24;
+  border:1px solid rgba(26,86,160,.4);
+  border-radius:7px;
+  padding:14px 18px;
+  opacity:0;pointer-events:none;
+  transition:opacity .22s ease,transform .22s cubic-bezier(.34,1.2,.64,1);
+  z-index:20;
+  box-shadow:0 8px 28px rgba(0,0,0,.4);
+}
+/* arrow pointing right toward the dot */
+.why-tooltip::after{
+  content:'';
+  position:absolute;
+  right:-6px;top:50%;transform:translateY(-50%);
+  width:10px;height:10px;
+  background:#1a1c24;
+  border-right:1px solid rgba(26,86,160,.4);
+  border-top:1px solid rgba(26,86,160,.4);
+  transform:translateY(-50%) rotate(45deg);
+}
+.why-tooltip.show{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1)}
+.why-tooltip-label{
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;
+  display:flex;align-items:center;gap:7px;
+}
+.why-tooltip-label::before{content:'';width:16px;height:1px;background:var(--accent);flex-shrink:0}
+.why-tooltip-text{
+  font-size:15px;line-height:1.7;color:#c8ccd8;
+}
+.why-tooltip-text code{
+  color:#f0a500;background:rgba(240,165,0,.12);
+  padding:2px 5px;border-radius:2px;font-size:13.5px;font-family:var(--mono);
+}
+
+/* ── S5: RULE + TRIO with floating tooltips ── */
+.rule-card{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:14px;padding:28px;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;flex-shrink:0;position:relative;overflow:hidden}
+.rule-card::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 70%,rgba(26,86,160,.05) 0%,transparent 65%);pointer-events:none}
+.re{font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.12em}
+@keyframes wordIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.rt .w{display:inline;opacity:0;animation:wordIn .3s ease forwards}
+.rt{font-size:clamp(18px,2.4vw,22px);font-weight:700;color:var(--ink);line-height:1.45;max-width:600px}
+.ra{color:var(--accent)}
+.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:3px;
+  font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.05em;
+  background:var(--adim);color:var(--accent);border:1px solid rgba(26,86,160,.22)}
+
+/* trio — inline expand */
+.trio{display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+.trio-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:16px 20px;cursor:pointer;transition:border-color .15s;
+  display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}
+.trio-item:hover{border-color:var(--border2)}
+.trio-item.open{border-color:var(--accent);background:var(--surface2)}
+.trio-item-main{display:flex;align-items:center;gap:14px}
+.trio-label{font-family:var(--mono);font-size:13px;color:var(--ink-dim);
+  text-transform:uppercase;letter-spacing:.08em;min-width:110px;font-weight:600}
+.trio-val{font-size:17px;color:var(--ink);line-height:1.5}
+.trio-chevron{font-size:14px;color:var(--ink-dim);transition:transform .22s cubic-bezier(.4,0,.2,1);flex-shrink:0}
+.trio-item.open .trio-chevron{transform:rotate(90deg);color:var(--accent)}
+.trio-detail{
+  display:grid;grid-template-rows:0fr;grid-column:1/-1;
+  transition:grid-template-rows .28s cubic-bezier(.4,0,.2,1);
+}
+.trio-item.open .trio-detail{grid-template-rows:1fr}
+.trio-detail-inner{overflow:hidden}
+.trio-detail-text{font-size:16px;line-height:1.7;color:var(--ink-mid);
+  padding-top:12px;border-top:1px solid var(--border);margin-top:12px}
+.trio-detail-text code{color:var(--accent);background:var(--adim);padding:2px 6px;border-radius:2px;font-size:14px}
+
+/* ── NAV ── */
+.nav{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;
+  padding:14px 0 6px;border-top:1px solid var(--border);margin-top:10px}
+.step-ct{font-family:var(--mono);font-size:12.5px;color:var(--ink-dim);margin-right:auto}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:12px 26px;border-radius:5px;
+  font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;border:none;
+  transition:all .14s;letter-spacing:.01em}
+.btn-p{background:var(--accent);color:#fff}
+.btn-p:hover{background:#b84008;transform:translateY(-1px);box-shadow:0 3px 12px var(--aglow)}
+.btn-g{background:transparent;color:var(--ink-mid);border:1px solid var(--border2)}
+.btn-g:hover{border-color:var(--ink-dim);color:var(--ink)}
+.btn-fin{background:var(--accent);color:#fff;padding:12px 28px;font-size:15px;font-weight:700}
+.btn-fin:hover{background:#b84008;transform:translateY(-1px);box-shadow:0 3px 14px var(--aglow)}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+
+/* ── CASE TRIGGER CARD ── */
+.case-trigger{
+  display:flex;align-items:center;gap:14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:16px 20px;cursor:pointer;flex-shrink:0;
+  transition:border-color .15s,background .15s;
+  position:relative;overflow:hidden;
+  border-radius:8px;
+  gap:16px;
+}
+.case-trigger:hover{border-color:var(--border2);background:var(--surface2)}
+.case-trigger::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(192,57,43,.04) 0%,transparent 60%);
+  pointer-events:none;
+}
+
+/* animated signal indicator */
+.case-signal{position:relative;width:32px;height:32px;flex-shrink:0}
+.case-ring{
+  position:absolute;inset:0;
+  border-radius:50%;
+  border:2px dashed rgba(192,57,43,.4);
+  animation:spin-ring 6s linear infinite;
+}
+.case-ring-2{
+  position:absolute;inset:4px;
+  border-radius:50%;
+  border:1px dashed rgba(192,57,43,.2);
+  animation:spin-ring 4s linear infinite reverse;
+}
+.case-dot{
+  position:absolute;inset:50%;transform:translate(-50%,-50%);
+  width:10px;height:10px;border-radius:50%;
+  background:var(--red);
+  animation:pulse-dot 1.8s ease-in-out infinite;
+  box-shadow:0 0 0 0 rgba(192,57,43,.6);
+}
+@keyframes spin-ring{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes pulse-dot{
+  0%,100%{transform:translate(-50%,-50%) scale(1);box-shadow:0 0 0 0 rgba(192,57,43,.5)}
+  50%{transform:translate(-50%,-50%) scale(1.15);box-shadow:0 0 0 6px rgba(192,57,43,0)}
+}
+
+.case-trigger-text{flex:1}
+.case-trigger-label{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px}
+.case-trigger-sub{font-family:var(--mono);font-size:12.5px;color:var(--ink-dim)}
+.case-trigger-arrow{
+  font-size:16px;color:var(--ink-dim);
+  animation:bounce-right .9s ease-in-out infinite;
+  flex-shrink:0;
+}
+@keyframes bounce-right{
+  0%,100%{transform:translateX(0)}
+  50%{transform:translateX(4px)}
+}
+
+/* ── MODAL — in-flow, no fixed positioning ── */
+.wrap{position:relative}
+.modal-overlay{
+  position:absolute;inset:0;
+  background:rgba(28,26,23,.6);
+  opacity:0;pointer-events:none;
+  transition:opacity .22s ease;
+  z-index:40;
+}
+.modal-overlay.on{opacity:1;pointer-events:auto}
+.modal{
+  position:absolute;
+  top:0;left:0;right:0;
+  max-height:92%;
+  background:var(--surface);
+  border-bottom:2px solid var(--red);
+  border-radius:0 0 8px 8px;
+  box-shadow:0 8px 40px rgba(0,0,0,.18);
+  opacity:0;pointer-events:none;z-index:50;
+  transform:translateY(-100%);
+  transition:opacity .28s ease,transform .32s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+}
+.modal.on{opacity:1;pointer-events:auto;transform:translateY(0)}
+.modal-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:14px 18px 11px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.modal-title{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.modal-sub{font-family:var(--mono);font-size:12px;color:var(--red)}
+.modal-close{
+  font-size:18px;color:var(--ink-dim);background:none;border:none;
+  cursor:pointer;padding:2px 8px;border-radius:3px;transition:color .12s;
+  line-height:1;
+}
+.modal-close:hover{color:var(--ink)}
+.modal-body{
+  padding:14px 18px 18px;display:flex;flex-direction:column;gap:12px;
+  overflow-y:auto;flex:1;
+}
+.modal-body::-webkit-scrollbar{width:3px}
+.modal-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.modal-section-label{font-family:var(--mono);font-size:12px;color:var(--accent);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.modal-section p{font-size:15px;line-height:1.7;color:var(--ink-mid);margin:0}
+.modal-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  padding-top:10px;border-top:1px solid var(--border)}
+.modal-stat{text-align:center;background:var(--bg);border:1px solid var(--border);
+  border-radius:5px;padding:10px 8px}
+.modal-stat strong{display:block;font-size:15px;color:var(--ink);margin-bottom:2px}
+.modal-stat span{font-family:var(--mono);font-size:10.5px;color:var(--ink-dim)}
+
+/* ── TEST SCREENS ── */
+.tq-counter{font-family:var(--mono);font-size:13px;color:var(--ink-dim)}
+.tq-prompt{font-size:clamp(22px,3vw,28px);font-weight:800;color:var(--ink);line-height:1.35;flex-shrink:0;letter-spacing:-.01em;margin-top:8px}
+.tq-cbox{cursor:default}
+.tq-cbox .cl{cursor:default!important}
+.tq-cbox .cl:hover{background:none!important}
+.tq-cbox .cl:hover .ln{color:#3a3e4f!important}
+.tq-hl{transition:background .35s ease,border-left .35s ease}
+.tq-hl.hl-wrong{background:rgba(184,50,50,.15)!important;border-left:3px solid var(--red)}
+.tq-hl.hl-right{background:rgba(30,110,71,.13)!important;border-left:3px solid var(--green)}
+/* pair layout */
+.tq-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-shrink:0}
+.tq-pair-box{transition:border-color .3s,box-shadow .3s}
+.tq-pair-box.pair-wrong{border-color:var(--red)!important;box-shadow:0 0 0 3px var(--rdim)}
+.tq-pair-box.pair-right{border-color:var(--green)!important;box-shadow:0 0 0 3px var(--gdim)}
+/* options */
+.tq-options{display:flex;flex-direction:column;gap:12px;flex-shrink:0;margin-top:6px}
+.tq-opt{
+  background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:14px 18px;font-size:16px;color:var(--ink-mid);cursor:pointer;
+  transition:border-color .14s,background .14s,transform .14s;line-height:1.55;
+}
+.tq-opt:hover{border-color:var(--border2);background:var(--surface2);transform:translateX(4px)}
+.tq-opt.opt-right{
+  border-color:var(--green);background:var(--gdim);color:var(--green);
+  cursor:default;transform:none;font-weight:600;
+  animation:optPop .35s cubic-bezier(.4,0,.2,1);
+}
+.tq-opt.opt-wrong{
+  border-color:var(--red);background:var(--rdim);color:var(--red);
+  cursor:default;transform:none;animation:shake .28s ease;
+}
+.tq-opt.opt-dim{opacity:.3;cursor:default;pointer-events:none;transform:none}
+@keyframes optPop{0%{transform:scale(1)}40%{transform:scale(1.012)}100%{transform:scale(1)}}
+/* feedback */
+.tq-fb{
+  font-size:16px;line-height:1.6;border-radius:6px;
+  max-height:0;overflow:hidden;opacity:0;padding:0 16px;
+  transition:max-height .35s cubic-bezier(.4,0,.2,1),opacity .28s ease,padding .32s ease;
+}
+.tq-fb.on{max-height:200px;opacity:1;padding:14px 18px}
+.tq-fb.fb-right{background:var(--gdim);border:1px solid rgba(30,110,71,.25);color:var(--green)}
+.tq-fb.fb-wrong{background:var(--rdim);border:1px solid rgba(184,50,50,.22);color:var(--red)}
+/* score screen */
+.tq-score-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:7px;
+  overflow:hidden;animation:fadeUp .3s ease;
+}
+.tq-score-top{
+  padding:18px 20px 14px;display:flex;align-items:center;
+  justify-content:space-between;border-bottom:1px solid var(--border);
+}
+.tq-score-label{font-family:var(--mono);font-size:10px;color:var(--ink-dim);
+  text-transform:uppercase;letter-spacing:.1em}
+.tq-score-big{font-size:28px;font-weight:800;color:var(--ink)}
+.tq-score-big.s3{color:var(--green)}
+.tq-score-big.s2{color:var(--accent)}
+.tq-score-big.s1{color:var(--red)}
+.tq-score-rows{padding:12px 20px;display:flex;flex-direction:column;gap:7px}
+.tq-score-row{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-mid)}
+.tq-score-icon{font-size:14px;flex-shrink:0}
+.tq-score-msg{font-size:13px;color:var(--ink-mid);line-height:1.6;
+  padding:12px 20px 16px;margin:0;border-top:1px solid var(--border)}
+.tq-missed{display:flex;flex-direction:column;gap:10px;padding:12px 20px 16px;border-top:1px solid var(--border)}
+.tq-missed-item{display:flex;flex-direction:column;gap:5px}
+.tq-missed-q{font-family:var(--mono);font-size:10px;color:var(--red);
+  text-transform:uppercase;letter-spacing:.07em}
+.tq-missed-a{font-size:12.5px;color:var(--ink-mid);line-height:1.55;
+  padding:8px 12px;background:var(--rdim);border-left:3px solid var(--red);border-radius:0 4px 4px 0}
+@media(max-width:540px){.tq-pair{grid-template-columns:1fr}}
+
+
+
+/* ── S8: SUMMARY ── */
+.sum-stage{display:none}
+/* 3/3 — padlock animation */
+.lock-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 0}
+.lock-svg .lock-body{
+  fill:var(--green);
+  animation:lockDrop .4s cubic-bezier(.4,0,.2,1) .2s both;
+  transform-origin:50% 100%;
+}
+.lock-svg .lock-shackle{
+  fill:none;stroke:var(--green);stroke-width:3;stroke-linecap:round;
+  stroke-dasharray:60;stroke-dashoffset:60;
+  animation:shackleClose .5s ease .6s forwards;
+}
+.lock-svg .lock-check{
+  fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:20;stroke-dashoffset:20;
+  animation:checkDraw .35s ease 1s forwards;
+}
+.lock-label{font-family:var(--mono);font-size:14px;color:var(--green);
+  opacity:0;animation:fadeUp .3s ease 1.2s forwards;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+@keyframes lockDrop{from{transform:scale(.6) translateY(-10px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+@keyframes shackleClose{to{stroke-dashoffset:0}}
+@keyframes checkDraw{to{stroke-dashoffset:0}}
+
+/* ── S8: HACKER CODE BLOCK ── */
+.hack-cbox{background:var(--code-bg);border:1px solid var(--code-border);border-radius:6px;overflow:hidden;flex-shrink:0}
+.hack-chead{background:var(--code-surface);border-bottom:1px solid var(--code-border);
+  padding:6px 13px;display:flex;align-items:center;gap:8px}
+.hack-line{display:flex;align-items:center;padding:2px 14px;font-family:var(--mono);font-size:14.5px;position:relative;min-height:30px}
+.hack-ln{width:32px;min-width:32px;text-align:right;color:#3a3e4f;font-size:12.5px;
+  user-select:none;padding-right:12px;line-height:1.85;flex-shrink:0}
+.hack-lc{flex:1;color:#c8ccd8;line-height:1.8;white-space:pre;position:relative}
+/* individual char spans for corruption */
+.hc{display:inline;transition:color .05s}
+.hc.corrupt{color:#f07178;animation:charFlicker .08s ease infinite}
+@keyframes charFlicker{0%,100%{opacity:1}50%{opacity:.4}}
+/* hacker figure running across the line */
+.hacker{
+  position:absolute;
+  font-size:13px;font-family:sans-serif;
+  top:50%;transform:translateY(-50%);
+  pointer-events:none;z-index:10;
+  white-space:nowrap;
+}
+/* comment that appears after pass */
+.hack-comment{
+  display:block;font-family:var(--mono);font-size:12px;
+  color:#f07178;font-style:italic;padding:4px 14px 5px;
+  opacity:0;transition:opacity .4s ease;
+  border-left:2px solid rgba(240,113,120,.3);
+  margin-left:42px;
+}
+.hack-comment.show{opacity:1}
+
+/* message */
+.sum-msg{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:22px 26px;font-size:19px;line-height:1.7;color:var(--ink);
+  flex-shrink:0;animation:fadeUp .3s ease .2s both;
+}
+.sum-msg strong{color:var(--accent)}
+.sum-score{font-size:clamp(36px,5vw,48px);font-weight:800;color:var(--green);letter-spacing:-.02em;margin-bottom:8px;line-height:1}
+.sum-score-miss{color:var(--red)}
+
+/* hint label next to the why-dot */
+.why-dot-hint{
+  position:absolute;
+  right:30px;
+  top:50%;transform:translateY(-50%);
+  font-family:var(--mono);font-size:10px;color:var(--accent);
+  white-space:nowrap;pointer-events:none;
+  opacity:0;transition:opacity .3s ease;
+}
+.why-dot-hint.show{opacity:1}
+/* ── S4 intro block ── */
+.s4-intro{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.s4-intro-text{font-size:17px;line-height:1.75;color:var(--ink-mid);margin:0}
+.s4-dot-hint{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--mono);font-size:12.5px;color:var(--ink-dim);
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:4px;padding:5px 12px;width:fit-content;
+}
+.s4-dot-hint-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);flex-shrink:0;
+  animation:dotPulse 2s cubic-bezier(.4,0,.6,1) infinite;
+  box-shadow:0 0 0 3px var(--adim);
+}
+.s4-dot-hint-text{color:var(--ink-mid)}
+.s4-dot-hint-arrow{
+  color:var(--accent);font-size:12px;
+  animation:bounce-right .9s ease-in-out infinite;
+}
+
+@media(max-width:620px){
+  .signal-grid,.trio{grid-template-columns:1fr 1fr}
+  .scr{padding:12px 14px 10px}
+  .lc{font-size:11px}
+  .trio-tooltip{width:180px}
+}
+
+/* ── NAV STRIP ── */
+.navstrip{display:flex;align-items:center;gap:2px;padding:5px 24px;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.navstrip::-webkit-scrollbar{display:none}
+.ns-pip{height:4px;border-radius:2px;border:none;padding:0;cursor:pointer;flex-shrink:0;
+  background:var(--border);transition:all .18s;appearance:none;width:16px}
+.ns-pip:hover{background:var(--border2);transform:scaleY(1.5)}
+.ns-pip.visited{background:var(--border2)}
+.ns-pip.active{background:var(--red);transform:scaleY(2)}
+.ns-pip.pip-cover{width:8px;height:8px;border-radius:50%}
+.ns-pip.pip-wide{width:22px}
+.ns-sep{width:1px;height:10px;background:var(--border);flex-shrink:0;margin:0 3px}
+
+/* ════════════════════════════════════════════════
+   S0: COVER — injection terminal takeover
+   ════════════════════════════════════════════════ */
+.cover{display:none;flex-direction:column;align-items:center;justify-content:center;
+  position:absolute;inset:0;background:#1a1c22;overflow:hidden;padding:40px 24px;z-index:30}
+.cover.on{display:flex}
+.cover::before{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(255,255,255,.018) 59px,rgba(255,255,255,.018) 60px),
+  repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,255,255,.018) 59px,rgba(255,255,255,.018) 60px);
+  pointer-events:none}
+.cover::after{content:'';position:absolute;width:400px;height:400px;
+  top:40%;left:50%;transform:translate(-50%,-50%);
+  background:radial-gradient(circle,rgba(184,50,50,.08) 0%,transparent 70%);
+  pointer-events:none;animation:cvGlow 3s ease-in-out infinite}
+@keyframes cvGlow{0%,100%{opacity:.4}50%{opacity:1}}
+
+.cv-visual{position:relative;z-index:1;margin-bottom:28px}
+/* terminal in cover */
+.cv-term{width:320px;background:#0d0f14;border:1px solid #2a2d38;border-radius:8px;
+  overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.cv-tbar{background:#181a22;border-bottom:1px solid #2a2d38;padding:7px 12px;
+  display:flex;align-items:center;gap:5px}
+.cv-dot{width:7px;height:7px;border-radius:50%}
+.cv-dr{background:#e0585844;border:1px solid #e0585866}
+.cv-dy{background:#f0a50044;border:1px solid #f0a50066}
+.cv-dg{background:#3ecf7244;border:1px solid #3ecf7266}
+.cv-fn{font-family:var(--mono);font-size:9px;color:#555a6a;margin-left:6px}
+.cv-body{padding:14px 18px;min-height:160px;font-family:var(--mono);font-size:13px;line-height:1.7}
+.cv-line{opacity:0;animation:cvLineIn .2s ease forwards}
+@keyframes cvLineIn{to{opacity:1}}
+.cv-safe{color:#6a7088}
+.cv-prompt{color:#546e7a}
+.cv-inject{color:#f07178;font-weight:700}
+.cv-result{color:#c3e88d}
+.cv-cursor{display:inline-block;width:7px;height:13px;background:#b83232;
+  animation:cvBlink .7s step-end infinite;vertical-align:text-bottom;margin-left:1px}
+@keyframes cvBlink{0%,100%{opacity:1}50%{opacity:0}}
+.cv-flash{position:absolute;inset:0;background:rgba(184,50,50,.08);
+  opacity:0;pointer-events:none;animation:cvFlash .15s ease 2.8s forwards}
+@keyframes cvFlash{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+@keyframes cvFadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.cv-badge{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.1em;
+  padding:5px 14px;border-radius:3px;z-index:2;margin-bottom:8px;
+  color:#fff;background:#b83232;opacity:0;animation:cvFadeUp .4s ease 3.2s forwards}
+.cv-tag{font-family:var(--mono);font-size:13px;letter-spacing:.15em;text-transform:uppercase;
+  z-index:2;margin-bottom:6px;color:#b83232;opacity:0;animation:cvFadeUp .4s ease 3.3s forwards}
+.cv-title{font-size:clamp(30px,5.5vw,46px);font-weight:800;color:#f0ede8;
+  letter-spacing:-.02em;line-height:1.15;text-align:center;z-index:2;margin-bottom:4px;
+  opacity:0;animation:cvFadeUp .4s ease 3.4s forwards}
+.cv-sub{font-size:16px;color:#6a7088;text-align:center;z-index:2;line-height:1.6;max-width:480px;
+  opacity:0;animation:cvFadeUp .4s ease 3.6s forwards}
+.cv-start{z-index:2;margin-top:24px;opacity:0;animation:cvFadeUp .4s ease 3.8s forwards}
+.cv-start .btn{background:#b83232;color:#fff;padding:14px 32px;font-size:16px}
+.cv-start .btn:hover{background:#922828;transform:translateY(-1px);box-shadow:0 3px 12px rgba(184,50,50,.4)}
+
+/* ════════════════════════════════════════════════
+   INTEGRATION 1: Injection echo on correct code line
+   — red cursor sweeps across the found line
+   ════════════════════════════════════════════════ */
+.cl.right .lc{position:relative;overflow:hidden}
+.cl.right .lc::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(184,50,50,.2),transparent);
+  animation:injectSweep .6s ease .1s forwards;pointer-events:none}
+@keyframes injectSweep{to{left:100%}}
+
+/* ════════════════════════════════════════════════
+   INTEGRATION 2: Exploit step escalation glow
+   — background pulse intensifies with each step
+   ════════════════════════════════════════════════ */
+.exploit-wrap::before{content:'';position:absolute;inset:0;border-radius:inherit;
+  background:radial-gradient(ellipse at 50% 50%,var(--exploit-glow,transparent),transparent 70%);
+  pointer-events:none;transition:opacity .5s ease;opacity:var(--exploit-opacity,0)}
+
+/* ════════════════════════════════════════════════
+   INTEGRATION 3: Correct answer — clean terminal flash
+   — brief green-tinted overlay that says "secured"
+   ════════════════════════════════════════════════ */
+.tq-opt.opt-right::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(30,110,71,.12),transparent);
+  animation:secureSweep .5s ease forwards;pointer-events:none;border-radius:inherit}
+@keyframes secureSweep{0%{opacity:0;transform:translateX(-100%)}50%{opacity:1}100%{opacity:0;transform:translateX(100%)}}
+.tq-opt{position:relative;overflow:hidden}
+
+/* ════════════════════════════════════════════════
+   INTEGRATION 4: Rule screen ambient terminal
+   — very dim, slow terminal lines in background
+   ════════════════════════════════════════════════ */
+.rule-card{position:relative;overflow:hidden}
+.rule-ambient{position:absolute;inset:0;pointer-events:none;opacity:.04;
+  font-family:var(--mono);font-size:10px;color:var(--accent);line-height:2;
+  padding:8px 12px;overflow:hidden;white-space:pre;animation:ambientScroll 20s linear infinite}
+@keyframes ambientScroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+
+/* ── ACCENT BANNERS ── */
+.atk-header{display:flex;align-items:center;justify-content:space-between;
+  background:var(--accent);border-radius:6px;padding:18px 24px;flex-shrink:0}
+.atk-label{font-family:var(--mono);font-size:14px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.12em}
+.atk-step{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.7);letter-spacing:.05em}
+
+/* ── FULLSCREEN ── */
+.fs-btn{background:none;border:1px solid var(--border);border-radius:3px;color:var(--ink-dim);
+  cursor:pointer;padding:4px 5px;display:flex;align-items:center;justify-content:center;
+  transition:color .12s,border-color .12s;margin-left:8px;flex-shrink:0}
+.fs-btn:hover{color:var(--ink);border-color:var(--border2)}
+html:fullscreen,html:-webkit-full-screen{background:var(--bg)}
+html:fullscreen body,html:-webkit-full-screen body{height:100vh}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="badge">A05</span>
+  <span class="sep">/</span>
+  <span class="topbar-title">Injection — OWASP Top 10</span>
+  <span class="screen-lbl" id="lbl">00 / 09</span>
+  <button class="fs-btn" id="fsBtn" onclick="toggleFS()" title="Toggle fullscreen" aria-label="Toggle fullscreen">
+    <svg id="fsIco" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="1,5 1,1 5,1"/><polyline points="9,1 13,1 13,5"/><polyline points="13,9 13,13 9,13"/><polyline points="5,13 1,13 1,9"/>
+    </svg>
+    <svg id="fsIcoExit" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+      <polyline points="5,1 5,5 1,5"/><polyline points="9,5 13,5 9,1"/><polyline points="9,13 9,9 13,9"/><polyline points="1,9 5,9 5,13"/>
+    </svg>
+  </button>
+</div>
+<div class="navstrip" id="navstrip"></div>
+<div class="prog"><div class="prog-fill" id="pf" style="width:0%"></div></div>
+
+<div class="wrap" id="wrap">
+
+<!-- ══ S0: COVER ══ -->
+<div class="cover on" id="s0">
+  <div class="cv-visual">
+    <div class="cv-term" id="cvTerm">
+      <div class="cv-tbar">
+        <div class="cv-dot cv-dr"></div><div class="cv-dot cv-dy"></div><div class="cv-dot cv-dg"></div>
+        <span class="cv-fn">query.sql</span>
+      </div>
+      <div class="cv-body" id="cvBody"></div>
+    </div>
+    <div class="cv-flash"></div>
+  </div>
+  <span class="cv-badge">A05</span>
+  <div class="cv-tag">OWASP Top 10 · 2025</div>
+  <div class="cv-title">Injection</div>
+  <div class="cv-sub">When attacker input becomes part of the command your system executes.</div>
+  <div class="cv-start">
+    <button class="btn" onclick="go(1)">Begin Module →</button>
+  </div>
+</div>
+
+<!-- ══ S1 ══ -->
+<div class="scr" id="s1" style="gap:20px">
+  <div class="atk-header">
+    <div class="atk-label">// equifax — 2017 — what triggered detection?</div>
+  </div>
+
+  <div class="case-trigger" onclick="openCase()">
+    <div class="case-signal">
+      <div class="case-ring"></div>
+      <div class="case-ring-2"></div>
+      <div class="case-dot"></div>
+    </div>
+    <div class="case-trigger-text">
+      <div class="case-trigger-label">Equifax 2017 — read the case before you answer</div>
+      <div class="case-trigger-sub">$700M settlement · 147M records · 78 days undetected</div>
+    </div>
+    <span class="case-trigger-arrow">→</span>
+  </div>
+
+  <div class="s1-body">
+    <p class="s1-context" id="s1ctx">Attackers were inside Equifax's network for <strong>78 days</strong>. CVE-2017-5638 had been patched two months prior. Four signals were present during the breach. <strong>Which one finally triggered detection?</strong></p>
+    <div class="s1-feedback" id="s1fb"></div>
+
+    <div class="signal-grid">
+      <div class="signal-card" id="sc0" onclick="pickSignal(0)">
+        <span class="sig-ico">📈</span>
+        <div><div class="sig-title">Unusual data egress</div><div class="sig-body">Traffic spiking on internal DB servers, several GB/day for weeks.</div></div>
+      </div>
+      <div class="signal-card" id="sc1" onclick="pickSignal(1)">
+        <span class="sig-ico">🔐</span>
+        <div><div class="sig-title">Failed auth attempts</div><div class="sig-body">Repeated failures on admin consoles from non-admin internal IPs.</div></div>
+      </div>
+      <div class="signal-card" id="sc2" onclick="pickSignal(2)">
+        <span class="sig-ico">🌐</span>
+        <div><div class="sig-title">Expired SSL certificate</div><div class="sig-body">Inspection cert had expired 19 months prior — egress flowing uninspected.</div></div>
+      </div>
+      <div class="signal-card" id="sc3" onclick="pickSignal(3)">
+        <span class="sig-ico">🚨</span>
+        <div><div class="sig-title">External notification</div><div class="sig-body">Message from outside reporting customer data on criminal forums.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-p" id="s1next" onclick="go(2)" disabled>Start Code Review →</button>
+  </div>
+</div>
+
+
+<!-- ══ S2 ══ -->
+<div class="scr s2-scr" id="s2">
+  <div class="atk-header">
+    <div class="atk-label">// find the vulnerability</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <p style="margin:0;font-size:13px"><strong>Django REST endpoint.</strong> One line lets an attacker read your entire database. <strong>Click it.</strong></p>
+  </div>
+
+  <div class="cbox">
+    <div class="chead">
+      <div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div>
+      <span class="cfn">api/views/users.py</span>
+      <span class="code-status" id="codeStatus"></span>
+    </div>
+    <div class="code-fb-strip" id="codeFb"></div>
+    <div class="cbody" id="code"></div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-p" id="nb2" onclick="go(3)" disabled>See the Exploit →</button>
+  </div>
+</div>
+
+
+<!-- ══ S3 ══ -->
+<div class="scr s3-scr" id="s3">
+  <div class="atk-header">
+    <div class="atk-label">// attack walkthrough</div>
+    <div class="atk-step" id="sct">step 1 of 4</div>
+  </div>
+
+  <div class="exploit-wrap" id="exploitWrap"></div>
+
+  <div class="nav">
+    <button class="btn btn-g" id="pb" onclick="step(-1)" disabled>← Back</button>
+    <button class="btn btn-p" id="nb3" onclick="step(1)">Next →</button>
+  </div>
+</div>
+
+
+<!-- ══ S4 ══ -->
+<div class="scr fix-scr" id="s4">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
+    <h2>Parameterised queries — always.</h2>
+    <div class="dleg">
+      <div class="dleg-item"><div class="dleg-dash" style="background:var(--red)"></div>removed</div>
+      <div class="dleg-item"><div class="dleg-dash" style="background:var(--green)"></div>added</div>
+    </div>
+  </div>
+
+  <p style="font-size:13px;color:var(--ink-mid);margin:0;flex-shrink:0">Structure and data are compiled separately — the attacker's input can never change what the query <em>does</em>.</p>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
+    <div class="lang-tabs">
+    <div class="lang-tab active" onclick="switchLang(0)">Python</div>
+    <div class="lang-tab" onclick="switchLang(1)">Java</div>
+    <div class="lang-tab" onclick="switchLang(2)">Node.js</div>
+    </div>
+  </div>
+
+  <div class="fix-cbox-wrap">
+    <div class="cbox fix-cbox" id="fixCbox">
+      <div class="chead">
+        <div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div>
+        <span class="cfn" id="fixFilename">parameterised.py</span>
+      </div>
+      <div class="cbody" id="fixBody"></div>
+    </div>
+    <div class="why-dot" id="whyDot" onclick="toggleWhyTooltip()"></div>
+    <span class="why-dot-hint" id="whyDotHint">click the dot</span>
+    <div class="why-tooltip" id="whyTooltip">
+      <div class="why-tooltip-label">why this works</div>
+      <div class="why-tooltip-text" id="whyText"></div>
+    </div>
+  </div>
+
+  <div class="nav"><button class="btn btn-p" onclick="go(5)">Knowledge Check →</button></div>
+</div>
+
+
+<!-- ══ S5: Q1 ══ -->
+<div class="scr" id="s5">
+  <div class="atk-header">
+    <div class="atk-label">// knowledge check</div>
+    <div class="atk-step">1 / 3</div>
+  </div>
+  <p class="tq-prompt">Which line introduces the SQL injection vulnerability?</p>
+  <div class="cbox tq-cbox">
+    <div class="chead">
+      <div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div>
+      <span class="cfn">views.py</span>
+    </div>
+    <div class="cbody" id="q1code"></div>
+  </div>
+  <div class="tq-options" id="q1opts">
+    <div class="tq-opt" onclick="answer(1,0,false)">A &nbsp;— Line 1: the function accepts <code>user_id</code> as a parameter</div>
+    <div class="tq-opt" onclick="answer(1,1,true)">B &nbsp;— Line 2: <code>user_id</code> is concatenated directly into the SQL string</div>
+    <div class="tq-opt" onclick="answer(1,2,false)">C &nbsp;— Line 3: <code>cursor.execute()</code> sends the query to the database</div>
+  </div>
+  <div class="tq-fb" id="q1fb"></div>
+  <div class="nav"><button class="btn btn-p" id="q1next" onclick="go(6)" disabled>Next Question →</button></div>
+</div>
+
+
+<!-- ══ S6: Q2 ══ -->
+<div class="scr" id="s6">
+  <div class="atk-header">
+    <div class="atk-label">// knowledge check</div>
+    <div class="atk-step">2 / 3</div>
+  </div>
+  <p class="tq-prompt">Which Node.js version is safe against SQL injection?</p>
+  <div class="tq-pair">
+    <div class="cbox tq-cbox tq-pair-box" id="q2boxa">
+      <div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">option-a.js</span></div>
+      <div class="cbody" id="q2codea"></div>
+    </div>
+    <div class="cbox tq-cbox tq-pair-box" id="q2boxb">
+      <div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">option-b.js</span></div>
+      <div class="cbody" id="q2codeb"></div>
+    </div>
+  </div>
+  <div class="tq-options" id="q2opts">
+    <div class="tq-opt" onclick="answer(2,0,false)">A &nbsp;— Option A is safe: it validates <code>uid</code> before using it</div>
+    <div class="tq-opt" onclick="answer(2,1,true)">B &nbsp;— Option B is safe: <code>$1</code> is a typed placeholder, <code>uid</code> bound after compilation</div>
+  </div>
+  <div class="tq-fb" id="q2fb"></div>
+  <div class="nav"><button class="btn btn-p" id="q2next" onclick="go(7)" disabled>Next Question →</button></div>
+</div>
+
+
+<!-- ══ S7: Q3 ══ -->
+<div class="scr" id="s7">
+  <div class="atk-header">
+    <div class="atk-label">// knowledge check</div>
+    <div class="atk-step">3 / 3</div>
+  </div>
+  <p class="tq-prompt">What does this payload achieve?</p>
+  <div class="cbox tq-cbox">
+    <div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">HTTP request</span></div>
+    <div class="cbody" id="q3code"></div>
+  </div>
+  <div class="tq-options" id="q3opts">
+    <div class="tq-opt" onclick="answer(3,0,false)">A &nbsp;— Extracts all password hashes via UNION SELECT</div>
+    <div class="tq-opt" onclick="answer(3,1,true)">B &nbsp;— Makes the WHERE clause always true, returning all user records</div>
+    <div class="tq-opt" onclick="answer(3,2,false)">C &nbsp;— Infers data one character at a time using boolean responses</div>
+  </div>
+  <div class="tq-fb" id="q3fb"></div>
+  <div class="nav"><button class="btn btn-p" id="q3next" onclick="go(8)" disabled>See Results →</button></div>
+</div>
+
+
+
+
+
+<!-- ══ S8: SUMMARY ══ -->
+<div class="scr" id="s8">
+  <div class="atk-header">
+    <div class="atk-label">// self-check complete</div>
+  </div>
+
+  <!-- hacker code stage — built by JS -->
+  <div id="hackStage"></div>
+
+  <!-- message -->
+  <div class="sum-msg" id="sumMsg"></div>
+
+  <div class="nav">
+    <button class="btn btn-g" id="rerunBtn" onclick="rerunCheck()" style="display:none">↺ Rerun self-check</button>
+    <button class="btn btn-p" id="toRuleBtn" onclick="go(9)" style="display:none">The Rule →</button>
+  </div>
+</div>
+
+
+<div class="scr" id="s9">
+  <h3>// the mental model</h3>
+
+  <div class="rule-card">
+    <div class="rule-ambient" id="ruleAmbient"></div>
+    <span class="re">carry this into your next code review</span>
+    <p class="rt">If a string you didn't write can change what an interpreter <span class="ra">does</span> rather than what it <span class="ra">reads</span>, you have an injection vulnerability.</p>
+    <span class="tag">A05 · Injection</span>
+  </div>
+
+  <div class="trio">
+    <div class="trio-item" id="tr0" onclick="toggleTrio(0)">
+      <div class="trio-item-main">
+        <div class="trio-label">Applies to</div>
+        <div class="trio-val">SQL · NoSQL · LDAP · XPath · OS cmds · <span style="color:var(--accent)">XSS</span></div>
+      </div>
+      <span class="trio-chevron">▶</span>
+      <div class="trio-detail"><div class="trio-detail-inner">
+        <div class="trio-detail-text">All injection variants share one root: user-controlled data reaching an interpreter without structural separation. XSS is injection into an HTML/JS parser. LDAP, XPath, OS commands — same principle, different interpreter.</div>
+      </div></div>
+    </div>
+    <div class="trio-item" id="tr1" onclick="toggleTrio(1)">
+      <div class="trio-item-main">
+        <div class="trio-label">First fix</div>
+        <div class="trio-val">Parameterise every query — <span style="color:var(--ink-dim)">ORM &gt; raw()</span></div>
+      </div>
+      <span class="trio-chevron">▶</span>
+      <div class="trio-detail"><div class="trio-detail-inner">
+        <div class="trio-detail-text">Django ORM <code>.filter()</code> parameterises automatically. Raw SQL only when the ORM can't express the query. Never concatenate or interpolate user input into a query string — no exceptions.</div>
+      </div></div>
+    </div>
+    <div class="trio-item" id="tr2" onclick="toggleTrio(2)">
+      <div class="trio-item-main">
+        <div class="trio-label">Defence in depth</div>
+        <div class="trio-val">Server-side validation · Least privilege DB user</div>
+      </div>
+      <span class="trio-chevron">▶</span>
+      <div class="trio-detail"><div class="trio-detail-inner">
+        <div class="trio-detail-text">Parameterisation prevents entry. Least privilege limits blast radius — the app DB user should only have SELECT on the tables it needs. No DROP, no ALTER, no cross-schema reads. Server-side validation is a second gate; client-side alone is not a control.</div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-g" onclick="rerun()">↺ Run again</button>
+    <button class="btn btn-fin" onclick="finish()">Complete Module ✓</button>
+  </div>
+</div>
+
+</div>
+
+<!-- ══ EQUIFAX CASE MODAL ══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeCase()"></div>
+<div class="modal" id="caseModal">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title">Equifax Data Breach — 2017</div>
+      <div class="modal-sub">$700M settlement · 147M records · CVE-2017-5638</div>
+    </div>
+    <button class="modal-close" onclick="closeCase()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="modal-section">
+      <div class="modal-section-label">Entry point</div>
+      <p>Apache Struts 2 contained a critical remote code execution vulnerability (CVE-2017-5638) in its file upload handling. A patch was released on 7 March 2017. Equifax's security team received the advisory and issued an internal directive to patch within 48 hours. The directive was not followed. Attackers exploited the unpatched system on 13 May 2017 — 66 days after the patch was available.</p>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-label">78 days undetected</div>
+      <p>Attackers moved laterally across 30 servers, querying databases containing names, SSNs, birth dates, addresses, and credit data. An SSL inspection certificate had expired 19 months earlier — encrypted traffic leaving the network was flowing through uninspected. The monitoring gap wasn't discovered until after the breach was reported externally.</p>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-label">Discovery</div>
+      <p>Equifax did not detect the breach internally. On 29 July 2017, their security team renewed the expired certificate and immediately observed suspicious encrypted traffic — but only because they were already investigating after being alerted by an outside party that customer data was circulating on criminal forums.</p>
+    </div>
+    <div class="modal-stat-row">
+      <div class="modal-stat"><strong>147M</strong><span>records exposed</span></div>
+      <div class="modal-stat"><strong>$575M</strong><span>FTC settlement</span></div>
+      <div class="modal-stat"><strong>$700M+</strong><span>total costs</span></div>
+      <div class="modal-stat"><strong>66 days</strong><span>patch available, unpatched</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── SIGNAL DATA ── */
+const SIGNALS=[
+  {right:false,title:"Unusual data egress",
+   msg:"Present but invisible — the expired SSL cert (card 3) meant encrypted egress was flowing uninspected. The spike existed; nobody could see it."},
+  {right:false,title:"Failed auth attempts",
+   msg:"Logs existed. No alert thresholds were set for internal lateral movement. The events were recorded; nobody was watching."},
+  {right:false,title:"Expired SSL certificate",
+   msg:"This caused the blindness — but Equifax only found it after being notified externally. A contributing factor, not the trigger."},
+  {right:true,title:"External notification",
+   msg:"Correct. Equifax was told by an outside party. 78 days of egress spikes, failed auth events, lateral movement — all present, none actioned. This is what A09 looks like in production."}
+];
+
+/* ── CODE DATA ── */
+const CODE=[
+  {n:1, h:'<span class="kw">from</span> django.db <span class="kw">import</span> connection',msg:'Standard import. Not the issue — the vulnerability is introduced at runtime.'},
+  {n:2, h:'<span class="kw">from</span> rest_framework.decorators <span class="kw">import</span> api_view',msg:'DRF import. Not the issue.'},
+  {n:3, h:'<span class="kw">from</span> rest_framework.response <span class="kw">import</span> Response',msg:'Response class. Not the issue.'},
+  {n:4, h:'',msg:'Empty line.'},
+  {n:5, h:'<span class="cm"># GET /api/users/lookup?email=&lt;value&gt;</span>',msg:"Comment. Doesn't execute."},
+  {n:6, h:'<span class="op">@</span><span class="fn">api_view</span>([<span class="st">\'GET\'</span>])',msg:'Limits to GET. Injection does not require POST.'},
+  {n:7, h:'<span class="kw">def</span> <span class="fn">lookup_user</span>(request):',msg:'Function signature. Problem is inside it.'},
+  {n:8, h:'    email = request.GET.<span class="fn">get</span>(<span class="st">\'email\'</span>, <span class="st">\'\'</span>)',msg:'Reads user input. Not unsafe by itself — the vulnerability is in what happens to it next.'},
+  {n:9, h:'    <span class="kw">if</span> <span class="kw">not</span> email:',msg:'Presence check. Not a security control.'},
+  {n:10,h:'        <span class="kw">return</span> <span class="fn">Response</span>({<span class="st">\'error\'</span>: <span class="st">\'email required\'</span>}, status=<span class="nm">400</span>)',msg:'Early return for missing input. Correct.'},
+  {n:11,h:'',msg:'Empty line.'},
+  {n:12,h:'    <span class="cm"># fetch user record for profile display</span>',msg:'Comment. Look closely at the line below.'},
+  {n:13,h:'    query = <span class="st">f&quot;SELECT id, name, role FROM users WHERE email = &apos;</span><span class="op">{email}</span><span class="st">&apos;&quot;</span>',correct:true},
+  {n:14,h:'    <span class="kw">with</span> connection.<span class="fn">cursor</span>() <span class="kw">as</span> cursor:',msg:'Opens a cursor handle. Vulnerability is not in opening it.'},
+  {n:15,h:'        cursor.<span class="fn">execute</span>(query)',msg:'Execution point. But the string was already poisoned on line 13 — that\'s the root cause.'},
+  {n:16,h:'        row = cursor.<span class="fn">fetchone</span>()',msg:'Reads the result. Injection fired two lines earlier.'},
+  {n:17,h:'',msg:'Empty line.'},
+  {n:18,h:'    <span class="kw">if</span> <span class="kw">not</span> row:',msg:'Empty result check. Runs after the query.'},
+  {n:19,h:'        <span class="kw">return</span> <span class="fn">Response</span>({<span class="st">\'error\'</span>: <span class="st">\'not found\'</span>}, status=<span class="nm">404</span>)',msg:'404 handler. Not a vulnerability.'},
+  {n:20,h:'    <span class="kw">return</span> <span class="fn">Response</span>({<span class="st">\'id\'</span>: row[<span class="nm">0</span>], <span class="st">\'name\'</span>: row[<span class="nm">1</span>], <span class="st">\'role\'</span>: row[<span class="nm">2</span>]})',msg:'Serialises the row. Payload executed well before this point.'},
+];
+
+/* ── EXPLOIT DATA ── */
+const EXPLOIT=[
+  {label:'Confirm the injection point',num:'01',
+   body:'The <code>email</code> parameter is interpolated into the f-string before <code>execute()</code> runs. A lone single-quote triggers a 500 leaking the raw query.',
+   payload:"GET /api/users/lookup?email='",
+   resp:"HTTP 500  ProgrammingError: syntax error at or near \"'\"\nLINE 1: SELECT id, name, role FROM users WHERE email = '''"},
+  {label:'UNION-based exfiltration',num:'02',
+   body:'After confirming column count (3) and types, the attacker targets <code>password_hash</code>. The trailing <code>--</code> comments out the closing quote.',
+   payload:"email=' UNION SELECT id,password_hash,role FROM users WHERE role='admin'--",
+   resp:null},
+  {label:'Credentials via the API\'s own response',num:'03',
+   body:'The API hands back admin credentials in its own JSON envelope. The <code>name</code> field carries a bcrypt hash. No separate exfiltration channel needed.',
+   payload:null,
+   resp:'{"id": 1, "name": "$2b$12$V8GkFrqP...Qx9z", "role": "admin"}'},
+  {label:'Boolean-blind when UNION is blocked',num:'04',
+   body:'If a WAF strips UNION, the attacker infers data one character at a time using 200 vs 404 as a binary signal. Entire tables can be extracted automatically.',
+   payload:"email=' OR SUBSTRING(password_hash,1,1)='$'--",
+   resp:"HTTP 200  →  first char is '$'  (repeat for every position)"},
+];
+
+/* ── FIX DATA ── */
+const FIX_LANGS=[
+  {name:"parameterised.py",lines:[
+    {h:"<span class='cm'># Vulnerable \u2014 f-string interpolates input into SQL</span>"},
+    {h:"query = <span class='st'>f&quot;SELECT id, name FROM users WHERE email = &apos;{email}&apos;&quot;</span>"},
+    {h:"cursor.<span class='fn'>execute</span>(query)"},
+    {h:""},
+    {h:"<span class='cm'># Fixed \u2014 ORM (preferred)</span>"},
+    {h:"user = User.objects.<span class='fn'>filter</span>(email=email).<span class='fn'>first</span>()"},
+    {h:""},
+    {h:"<span class='cm'># Fixed \u2014 raw SQL when ORM can't express the query</span>"},
+    {h:"cursor.<span class='fn'>execute</span>("},
+    {h:"    <span class='st'>&quot;SELECT id, name FROM users WHERE email = %s&quot;</span>,"},
+    {h:"    [email]  <span class='cm'># bound after compilation</span>"},
+    {h:")"},
+  ]},
+  {name:"UserRepository.java",lines:[
+    {h:"<span class='cm'>// Vulnerable \u2014 string concatenation</span>"},
+    {h:"String sql = <span class='st'>&quot;SELECT id, name FROM users WHERE email = &apos;&quot;</span>"},
+    {h:"    + email + <span class='st'>&quot;&apos;;&quot;</span>;"},
+    {h:"stmt.<span class='fn'>execute</span>(sql);"},
+    {h:""},
+    {h:"<span class='cm'>// Fixed \u2014 PreparedStatement</span>"},
+    {h:"PreparedStatement ps = conn.<span class='fn'>prepareStatement</span>("},
+    {h:"    <span class='st'>&quot;SELECT id, name FROM users WHERE email = ?&quot;</span>"},
+    {h:");"},
+    {h:"ps.<span class='fn'>setString</span>(<span class='nm'>1</span>, email);"},
+    {h:"ResultSet rs = ps.<span class='fn'>executeQuery</span>();"},
+  ]},
+  {name:"userRepo.js",lines:[
+    {h:"<span class='cm'>// Vulnerable \u2014 concatenation into query</span>"},
+    {h:"const res = await pool.<span class='fn'>query</span>("},
+    {h:"    <span class='st'>&quot;SELECT id, name FROM users WHERE email = &apos;&quot;</span>"},
+    {h:"    + email + <span class='st'>&quot;&apos;&quot;</span>"},
+    {h:");"},
+    {h:""},
+    {h:"<span class='cm'>// Fixed \u2014 pg parameterised ($1 typed slot)</span>"},
+    {h:"const res = await pool.<span class='fn'>query</span>("},
+    {h:"    <span class='st'>&quot;SELECT id, name FROM users WHERE email = $1&quot;</span>,"},
+    {h:"    [email]"},
+    {h:");"},
+  ]},
+];
+
+/* ── STATE ── */
+let cur=0,sigPicked=false,codePicked=false,stepIdx=0;
+const TOTAL=9;
+
+/* ── S1: SIGNAL ── */
+function pickSignal(i){
+  if(sigPicked)return; sigPicked=true;
+  const sig=SIGNALS[i];
+  // shrink context paragraph
+  document.getElementById('s1ctx').classList.add('shrunk');
+  // show feedback in its place
+  const fb=document.getElementById('s1fb');
+  fb.className='s1-feedback on '+(sig.right?'right':'wrong');
+  fb.innerHTML='<strong>'+(sig.right?'✓ ':'✗ ')+sig.title+'</strong> — '+sig.msg;
+  // style cards
+  document.querySelectorAll('.signal-card').forEach((c,j)=>{
+    if(j===i) c.classList.add(sig.right?'sel-right':'sel-wrong');
+    else{ c.classList.add('dimmed'); if(!sig.right&&j===3){c.classList.remove('dimmed');c.classList.add('sel-right');} }
+  });
+  document.getElementById('s1next').disabled=false;
+}
+
+/* ── S2: CODE ── */
+function renderCode(){
+  const c=document.getElementById('code'); c.innerHTML='';
+  CODE.forEach(line=>{
+    const d=document.createElement('div');
+    // mark line 13 for blinking cursor before click
+    d.className = line.correct ? 'cl cl-target' : 'cl';
+    d.innerHTML='<span class="ln">'+line.n+'</span><span class="lc">'+line.h+'</span>';
+    d.onclick=()=>handleClick(d,line);
+    c.appendChild(d);
+  });
+}
+let wrongTimer=null;
+function handleClick(el,line){
+  if(codePicked)return;
+  const fb=document.getElementById('codeFb');
+  const st=document.getElementById('codeStatus');
+  if(line.correct){
+    codePicked=true;
+    el.classList.remove('cl-target'); // stop blinking
+    document.querySelectorAll('#code .cl').forEach(r=>{if(r!==el)r.style.opacity='0.25';});
+    el.classList.add('right');
+    st.textContent='✓ line 13 identified'; st.className='code-status show ok';
+    fb.className='code-fb-strip on ok';
+    fb.innerHTML='Line 13: f-string fuses <code style="color:#f0a500">email</code> into SQL before execute() runs. By execution time the attacker\'s input is already part of the statement structure.';
+    document.getElementById('nb2').disabled=false;
+  } else {
+    if(wrongTimer)clearTimeout(wrongTimer);
+    el.classList.add('wrong');
+    st.textContent='✗ not the root cause'; st.className='code-status show err';
+    fb.className='code-fb-strip on err';
+    fb.innerHTML=line.msg||'Not the root cause.';
+    wrongTimer=setTimeout(()=>{
+      el.classList.remove('wrong');
+      fb.className='code-fb-strip';
+      st.className='code-status';
+    },2200);
+  }
+}
+
+/* ── S3: EXPLOIT (replace, not append) ── */
+function typewrite(el, text, speed, onDone){
+  el.textContent='';
+  const cur=document.createElement('span'); cur.className='tw-cursor'; el.appendChild(cur);
+  let i=0;
+  const t=setInterval(()=>{
+    if(i<text.length){ cur.insertAdjacentText('beforebegin',text[i]); i++; }
+    else{ clearInterval(t); cur.remove(); if(onDone)onDone(); }
+  }, speed);
+}
+
+function renderExploit(){
+  const w=document.getElementById('exploitWrap'); w.innerHTML='';
+  EXPLOIT.forEach((s,i)=>{
+    const d=document.createElement('div'); d.className='exploit-step'; d.id='ex'+i;
+    const payloadHtml = s.payload
+      ? '<div class="payload" id="ep'+i+'"></div>' : '';
+    const respHtml = s.resp
+      ? '<div class="resp" id="er'+i+'"></div>' : '';
+    d.innerHTML=
+      '<div><span class="ex-num">step '+s.num+' / 04</span></div>'+
+      '<div class="ex-title">'+s.label+'</div>'+
+      '<div class="ex-body">'+s.body+'</div>'+
+      payloadHtml + respHtml;
+    w.appendChild(d);
+  });
+  setStep(0);
+}
+function setStep(i){
+  const prev=stepIdx;
+  stepIdx=i;
+  const prevEl=document.getElementById('ex'+prev);
+  const nextEl=document.getElementById('ex'+i);
+  if(prev!==i){
+    prevEl.classList.add('exit');
+    setTimeout(()=>prevEl.classList.remove('active','exit'),280);
+  }
+  nextEl.classList.add('active');
+  const sctEl=document.getElementById('sct');
+  if(sctEl) sctEl.textContent='step '+(i+1)+' of '+EXPLOIT.length;
+  document.getElementById('pb').disabled=i===0;
+  const nb=document.getElementById('nb3');
+  if(i>=EXPLOIT.length-1){nb.textContent='See the Fix →';nb.onclick=()=>go(4);}
+  else{nb.textContent='Next →';nb.onclick=()=>step(1);}
+
+  // INTEGRATION 2: escalation glow — intensity increases with each step
+  const wrap=document.getElementById('exploitWrap');
+  const intensity = (i + 1) / EXPLOIT.length;
+  wrap.style.setProperty('--exploit-glow', 'rgba(184,50,50,' + (0.04 + intensity * 0.08) + ')');
+  wrap.style.setProperty('--exploit-opacity', intensity);
+  // typewriter on payload, then delayed resp
+  const s=EXPLOIT[i];
+  const delay=prev===i?0:300; // wait for slide-in
+  if(s.payload){
+    const pel=document.getElementById('ep'+i);
+    if(pel){ pel.textContent='';
+      setTimeout(()=>typewrite(pel,'→ '+s.payload,18,()=>{
+        if(s.resp){
+          const rel=document.getElementById('er'+i);
+          if(rel) setTimeout(()=>typewrite(rel,'← '+s.resp,14),400);
+        }
+      }),delay);
+    }
+  } else if(s.resp){
+    const rel=document.getElementById('er'+i);
+    if(rel) setTimeout(()=>typewrite(rel,'← '+s.resp,14),delay);
+  }
+}
+function step(d){const n=stepIdx+d;if(n>=0&&n<EXPLOIT.length)setStep(n);}
+
+/* ── S4: FIX ── */
+const WHY_TEXT = [
+  "The ORM's <code>.filter(email=email)</code> parameterises automatically — use it. For raw SQL, <code>cursor.execute(sql, [params])</code> sends the SQL template to Postgres first; the engine compiles it into an execution plan before any value is transmitted. <code>%s</code> is a typed slot in the wire protocol — the driver never interpolates it into a string.",
+  "Java's <code>PreparedStatement</code> uses the database's Extended Query protocol: the SQL is parsed server-side into an execution plan on the first call, then <code>setString(1, email)</code> binds the value over a separate protocol message. The SQL structure and the data never share a wire frame.",
+  "Node's <code>pg</code> driver sends the query template and <code>[email]</code> as two separate protocol messages. <code>$1</code> is a server-side placeholder — Postgres has already compiled the plan before it ever sees the value. No string interpolation occurs at any layer."
+];
+
+function switchLang(i){
+  document.querySelectorAll('.lang-tab').forEach((t,j)=>t.classList.toggle('active',j===i));
+  const lang=FIX_LANGS[i];
+  document.getElementById('fixFilename').textContent=lang.name;
+  const cb=document.getElementById('fixBody');
+  cb.classList.remove('fading');
+  void cb.offsetWidth; // force reflow
+  cb.classList.add('fading');
+  cb.innerHTML='';
+  lang.lines.forEach((line,n)=>{
+    const d=document.createElement('div'); d.className='cl'; d.style.cursor='default';
+    d.innerHTML='<span class="ln">'+(n+1)+'</span><span class="lc">'+line.h+'</span>';
+    cb.appendChild(d);
+  });
+  // update why text
+  document.getElementById('whyText').innerHTML=WHY_TEXT[i];
+  // hide tooltip when switching lang, show dot after render settles
+  document.getElementById('whyTooltip').classList.remove('show');
+  const dot=document.getElementById('whyDot');
+  dot.classList.remove('show');
+  setTimeout(()=>{
+    dot.classList.add('show');
+    const hint=document.getElementById('whyDotHint');
+    if(hint)hint.classList.add('show');
+  },200);
+}
+
+function toggleWhyTooltip(){
+  document.getElementById('whyTooltip').classList.toggle('show');
+  const hint=document.getElementById('whyDotHint');
+  if(hint)hint.classList.remove('show');
+}
+
+/* ── S5: TRIO TOOLTIPS ── */
+let openTrio=-1;
+function toggleTrio(i){
+  if(openTrio===i){
+    document.getElementById('tr'+i).classList.remove('open');
+    openTrio=-1; return;
+  }
+  if(openTrio>=0) document.getElementById('tr'+openTrio).classList.remove('open');
+  document.getElementById('tr'+i).classList.add('open');
+  openTrio=i;
+}
+// close tooltips on outside click
+document.addEventListener('click',e=>{
+  if(openTrio>=0&&!e.target.closest('.trio-item')){
+    document.getElementById('tr'+openTrio).classList.remove('open');
+    openTrio=-1;
+  }
+});
+
+/* ── NAV ── */
+const visited={0:true};
+const SCREEN_LABELS=['Cover','Case Study','Code Review','Exploit','Fix','Q1','Q2','Q3','Results','Rule'];
+
+function buildStrip(){
+  const strip=document.getElementById('navstrip');
+  if(!strip)return;
+  // Layout: [cover] sep [case·code·exploit·fix] sep [q1·q2·q3·results] sep [rule]
+  const sections=[
+    {screens:[0],type:'pip-cover'},
+    'sep',
+    {screens:[1,2,3,4],type:''},
+    'sep',
+    {screens:[5,6,7,8],type:''},
+    'sep',
+    {screens:[9],type:'pip-wide'}
+  ];
+  strip.innerHTML='';
+  sections.forEach(sec=>{
+    if(sec==='sep'){const s=document.createElement('div');s.className='ns-sep';strip.appendChild(s);return;}
+    sec.screens.forEach(n=>{
+      const pip=document.createElement('button');
+      pip.className='ns-pip '+sec.type;
+      if(n===cur) pip.classList.add('active');
+      else if(visited[n]) pip.classList.add('visited');
+      pip.title=SCREEN_LABELS[n]||'Screen '+n;
+      pip.onclick=()=>go(n);
+      strip.appendChild(pip);
+    });
+  });
+  const active=strip.querySelector('.active');
+  if(active) active.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+}
+
+function go(n){
+  if(n<0||n>TOTAL)return;
+  const oldEl=document.getElementById('s'+cur);
+  if(oldEl) oldEl.classList.remove('on');
+  cur=n;
+  visited[n]=true;
+  const newEl=document.getElementById('s'+n);
+  if(newEl) newEl.classList.add('on');
+  document.getElementById('wrap').scrollTop=0;
+  document.getElementById('pf').style.width=(n/TOTAL*100)+'%';
+  document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+(TOTAL<10?'0':'')+TOTAL;
+  if(n===3) renderExploit();
+  if(cur!==8) document.querySelectorAll('.bug').forEach(el=>el.remove());
+  if(n===8) renderSummary();
+  if(n===5) renderQCode('q1code',  Q_CODES.q1,  60);
+  if(n===6){ renderQCode('q2codea', Q_CODES.q2a, 60); renderQCode('q2codeb', Q_CODES.q2b, 200); }
+  if(n===7) renderQCode('q3code',  Q_CODES.q3,  60);
+  if(n===9){ revealRule(); buildRuleAmbient(); }
+  buildStrip();
+}
+
+function revealRule(){
+  const rt=document.querySelector('.rt');
+  if(!rt||rt.dataset.revealed) return;
+  rt.dataset.revealed='1';
+  const text=rt.textContent;
+  // preserve the <span class="ra"> elements
+  const html=rt.innerHTML;
+  // split by spaces but keep spans intact — work on childNodes
+  rt.innerHTML='';
+  // re-parse: split the original HTML into word tokens
+  const tmp=document.createElement('div'); tmp.innerHTML=html;
+  let delay=0;
+  tmp.childNodes.forEach(node=>{
+    if(node.nodeType===3){ // text node
+      node.textContent.split(/(\s+)/).forEach(tok=>{
+        if(!tok) return;
+        if(/^\s+$/.test(tok)){ rt.appendChild(document.createTextNode(tok)); return; }
+        const sp=document.createElement('span'); sp.className='w';
+        sp.style.animationDelay=delay+'ms'; sp.textContent=tok;
+        rt.appendChild(sp); delay+=42;
+      });
+    } else { // element node (span.ra)
+      const words=node.textContent.split(/(\s+)/);
+      words.forEach(tok=>{
+        if(!tok) return;
+        if(/^\s+$/.test(tok)){ rt.appendChild(document.createTextNode(tok)); return; }
+        const sp=document.createElement('span'); sp.className='w ra';
+        sp.style.animationDelay=delay+'ms'; sp.textContent=tok;
+        rt.appendChild(sp); delay+=42;
+      });
+    }
+  });
+}
+function finish(){window.parent.postMessage({type:'course-next'},'*');}
+
+/* ── MODAL ── */
+function openCase(){
+  document.getElementById('modalOverlay').classList.add('on');
+  document.getElementById('caseModal').classList.add('on');
+}
+function closeCase(){
+  document.getElementById('modalOverlay').classList.remove('on');
+  document.getElementById('caseModal').classList.remove('on');
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeCase(); });
+
+/* ── RERUN ── */
+function rerun(){
+  // reset all state
+  sigPicked=false; codePicked=false; stepIdx=0; openTrio=-1;
+  // reset S1
+  document.getElementById('s1ctx').classList.remove('shrunk');
+  document.getElementById('s1fb').className='s1-feedback';
+  document.getElementById('s1fb').innerHTML='';
+  document.querySelectorAll('.signal-card').forEach(c=>{
+    c.className='signal-card';
+    c.style.opacity='';
+  });
+  document.getElementById('s1next').disabled=true;
+  // reset S2
+  codePicked=false;
+  document.querySelectorAll('#code .cl').forEach(r=>{r.style.opacity='';r.className='cl';});
+  document.getElementById('codeFb').className='code-fb-strip';
+  document.getElementById('codeFb').innerHTML='';
+  document.getElementById('codeStatus').className='code-status';
+  document.getElementById('codeStatus').textContent='';
+  document.getElementById('nb2').disabled=true;
+  // reset S3 exploit
+  document.getElementById('exploitWrap').innerHTML='';
+  // reset S4 why float
+  const wf=document.getElementById('whyFloat');
+  if(wf)wf.classList.remove('show','expanded');
+  // reset S5 test + S8 summary
+  resetTest();
+  clearHackerTimers();
+  document.getElementById('hackStage').innerHTML='';
+  document.getElementById('sumMsg').innerHTML='';
+  document.getElementById('rerunBtn').style.display='none';
+  document.getElementById('toRuleBtn').style.display='none';
+  // reset S6 trio
+  document.querySelectorAll('.trio-item').forEach(t=>t.classList.remove('open'));
+  // reset rule reveal + ambient
+  const rt=document.querySelector('.rt');
+  if(rt) delete rt.dataset.revealed;
+  const ra=document.getElementById('ruleAmbient');
+  if(ra){delete ra.dataset.built; ra.textContent='';}
+  // reset visited
+  Object.keys(visited).forEach(k=>{if(k!=='0')delete visited[k];});
+  // navigate to screen 1
+  go(1);
+}
+
+/* ── COVER TERMINAL ── */
+function buildCoverTerminal(){
+  const body=document.getElementById('cvBody');
+  if(!body)return;
+  body.innerHTML='';
+  const lines=[
+    {text:'<span class="cv-prompt">$</span> <span class="cv-safe">SELECT * FROM users</span>',delay:400},
+    {text:'<span class="cv-safe">  WHERE email = \'</span><span class="cv-inject">\' OR 1=1 --</span>',delay:1200},
+    {text:'',delay:1800},
+    {text:'<span class="cv-result">→ 147,324 rows returned</span>',delay:2200},
+    {text:'<span class="cv-result">→ admin:$2b$12$V8Gk...</span>',delay:2600},
+    {text:'<span class="cv-inject">→ access: GRANTED</span><span class="cv-cursor"></span>',delay:3000},
+  ];
+  lines.forEach(l=>{
+    const div=document.createElement('div');
+    div.className='cv-line';
+    div.innerHTML=l.text;
+    div.style.animationDelay=l.delay+'ms';
+    body.appendChild(div);
+  });
+}
+
+/* ── RULE AMBIENT TERMINAL ── */
+function buildRuleAmbient(){
+  const el=document.getElementById('ruleAmbient');
+  if(!el||el.dataset.built)return;
+  el.dataset.built='1';
+  // repeating pattern of safe parameterised queries — the "fixed" world
+  const lines=[
+    'cursor.execute("SELECT id FROM users WHERE email = %s", [email])',
+    'ps.setString(1, email); rs = ps.executeQuery();',
+    'pool.query("SELECT * FROM orders WHERE uid = $1", [uid]);',
+    'User.objects.filter(email=email).first()',
+    'cursor.execute("SELECT id FROM users WHERE email = %s", [email])',
+    'ps.setString(1, email); rs = ps.executeQuery();',
+    'pool.query("SELECT * FROM orders WHERE uid = $1", [uid]);',
+    'User.objects.filter(email=email).first()',
+  ];
+  el.textContent=lines.join('\n').repeat(4);
+}
+
+/* ── TEST SCREENS ── */
+const Q_CODES = {
+  q1: [
+    {n:1, h:'<span class="kw">def</span> <span class="fn">get_user</span>(request, user_id):'},
+    {n:2, h:'    sql = <span class="st">"SELECT * FROM users WHERE id = "</span> + user_id', hl:true},
+    {n:3, h:'    cursor.<span class="fn">execute</span>(sql)', hl:true},
+    {n:4, h:'    <span class="kw">return</span> cursor.<span class="fn">fetchone</span>()'},
+  ],
+  q2a: [
+    {n:1, h:'<span class="kw">const</span> res = <span class="kw">await</span> pool.<span class="fn">query</span>('},
+    {n:2, h:'  <span class="st">"SELECT * FROM orders WHERE uid = "</span>'},
+    {n:3, h:'  + req.params.uid'},
+    {n:4, h:');'},
+  ],
+  q2b: [
+    {n:1, h:'<span class="kw">const</span> res = <span class="kw">await</span> pool.<span class="fn">query</span>('},
+    {n:2, h:'  <span class="st">"SELECT * FROM orders WHERE uid = $1"</span>,'},
+    {n:3, h:'  [req.params.uid]'},
+    {n:4, h:');'},
+  ],
+  q3: [
+    {n:1, h:'<span class="cm"># GET /api/users/lookup?email=</span>'},
+    {n:2, h:"<span class='op'>' OR '1'='1' --</span>"},
+  ]
+};
+
+const Q_FB = [
+  null, // placeholder so index matches question number
+  {
+    right: "<strong>✓ Line 2</strong> — <code>user_id</code> is concatenated directly into the SQL string. By the time <code>execute()</code> runs on line 3, the attacker's input is already fused into the statement. Line 1 (accepting a parameter) is not the vulnerability — the danger is in what you do with it next.",
+    wrong: "The vulnerability is on <strong>line 2</strong> where <code>user_id</code> is concatenated into the query string. Accepting a parameter (line 1) or executing a query (line 3) aren't the problem — what you write into that string is."
+  },
+  {
+    right: "<strong>✓ Option B</strong> — <code>$1</code> is a server-side typed placeholder. The <code>pg</code> driver sends the SQL template and <code>[uid]</code> as two separate protocol messages. Postgres compiles the plan before it ever sees the value. Option A concatenates directly — identical to the Python f-string vulnerability.",
+    wrong: "Option A is vulnerable — it concatenates <code>req.params.uid</code> directly into the query string. <strong>Option B</strong> is safe: <code>$1</code> keeps structure and data separate at the wire-protocol level."
+  },
+  {
+    right: "<strong>✓ Tautology injection</strong> — <code>'1'='1'</code> is a constant truth, making the WHERE clause always evaluate to true. Every row is returned. The <code>--</code> comments out any trailing SQL. This is authentication bypass — blunter than UNION exfil but immediately effective.",
+    wrong: "This is a <strong>tautology attack</strong> — <code>'1'='1'</code> is always true, so the WHERE clause never filters. All records are returned. UNION SELECT (A) requires column-count probing first. Boolean-blind (C) infers data bit by bit from 200/404 responses. This payload is simpler and broader."
+  }
+];
+
+let tqScore = 0;
+let tqAnswers = [null, null, null]; // q1, q2, q3
+
+function renderQCode(containerId, lines, animDelay) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  c.innerHTML = '';
+  lines.forEach((line, i) => {
+    const d = document.createElement('div');
+    d.className = 'cl' + (line.hl ? ' tq-hl' : '');
+    if (line.hl) d.id = containerId + 'l' + i;
+    d.style.opacity = '0';
+    d.style.transform = 'translateX(-6px)';
+    d.innerHTML = '<span class="ln">' + line.n + '</span><span class="lc">' + line.h + '</span>';
+    c.appendChild(d);
+    // staggered slide-in
+    setTimeout(() => {
+      d.style.transition = 'opacity .22s ease, transform .22s ease';
+      d.style.opacity = '1';
+      d.style.transform = 'translateX(0)';
+    }, animDelay + i * 55);
+  });
+}
+
+function answer(qIdx, optIdx, isRight) {
+  const answers = {1: tqAnswers[0], 2: tqAnswers[1], 3: tqAnswers[2]};
+  if (answers[qIdx] !== null) return;
+
+  // store answer
+  tqAnswers[qIdx - 1] = isRight;
+  if (isRight) tqScore++;
+
+  // dim all options, style chosen
+  const opts = document.querySelectorAll('#q' + qIdx + 'opts .tq-opt');
+  opts.forEach((o, i) => {
+    if (i === optIdx) o.classList.add(isRight ? 'opt-right' : 'opt-wrong');
+    else o.classList.add('opt-dim');
+  });
+
+  // highlight code for Q1
+  if (qIdx === 1) {
+    const lineIds = ['q1codel0','q1codel1','q1codel2'];
+    // optIdx 0 = line 1, 1 = line 2, 2 = line 3
+    const el = document.getElementById(lineIds[optIdx]);
+    if (el) el.classList.add(isRight ? 'hl-right' : 'hl-wrong');
+    if (!isRight) {
+      const correct = document.getElementById('q1codel1');
+      if (correct) setTimeout(() => correct.classList.add('hl-right'), 300);
+    }
+  }
+
+  // highlight code boxes for Q2
+  if (qIdx === 2) {
+    document.getElementById('q2boxa').classList.add(optIdx === 0 ? 'pair-wrong' : 'pair-wrong');
+    document.getElementById('q2boxb').classList.add('pair-right');
+    if (optIdx === 0) document.getElementById('q2boxa').classList.add('pair-wrong');
+  }
+
+  // show feedback
+  const fb = document.getElementById('q' + qIdx + 'fb');
+  fb.className = 'tq-fb on ' + (isRight ? 'fb-right' : 'fb-wrong');
+  fb.innerHTML = isRight ? Q_FB[qIdx].right : Q_FB[qIdx].wrong;
+
+  // unlock next button
+  const nextBtn = document.getElementById('q' + qIdx + 'next');
+  if (nextBtn) setTimeout(() => { nextBtn.disabled = false; }, 500);
+}
+
+
+function resetTest() {
+  tqScore = 0;
+  tqAnswers = [null, null, null];
+  [1,2,3].forEach(i => {
+    const opts = document.querySelectorAll('#q' + i + 'opts .tq-opt');
+    opts.forEach(o => o.className = 'tq-opt');
+    const fb = document.getElementById('q' + i + 'fb');
+    if (fb) { fb.className = 'tq-fb'; fb.innerHTML = ''; }
+    const nb = document.getElementById('q' + i + 'next');
+    if (nb) nb.disabled = true;
+  });
+  // reset Q2 boxes
+  ['q2boxa','q2boxb'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = 'cbox tq-cbox tq-pair-box';
+  });
+}
+
+/* ── S8: SUMMARY ── */
+function renderSummary() {
+  const list = document.getElementById('sumList');
+  if (!list) return;
+  list.innerHTML = '';
+
+  const questions = [
+    { label: 'Which line introduces the vulnerability?',      idx: 1 },
+    { label: 'Which Node.js version is safe?',                idx: 2 },
+    { label: 'What does the tautology payload achieve?',      idx: 3 },
+  ];
+
+  // Short correct answer — one line, no preamble
+  const correct = [
+    'Line 2 — string concatenation fuses user input into the SQL structure before execute() runs.',
+    'Option B — <code>$1</code> is a typed server-side placeholder. Structure and data sent as separate protocol messages.',
+    'Tautology: WHERE clause always true — every row returned. Authentication bypassed.'
+  ];
+
+  questions.forEach((q, i) => {
+    const answered = tqAnswers[i];
+    const row = document.createElement('div');
+    row.className = 'sum-row';
+
+    let html = '<div class="sum-header">' +
+      '<div class="sum-icon ' + (answered ? 'ok' : 'no') + '">' + (answered ? '✓' : '✗') + '</div>' +
+      '<span class="sum-q">' + q.label + '</span>' +
+      '</div>';
+
+    // Only show the correct answer row if they got it wrong
+    if (!answered) {
+      html += '<div class="sum-detail">' + correct[i] + '</div>';
+    }
+
+    row.innerHTML = html;
+    list.appendChild(row);
+  });
+}
+
+/* ── S8: SUMMARY ── */
+
+// Lines a hacker can run across — one per potential missed question
+const HACK_LINES = [
+  {
+    code: '    query = f"SELECT * FROM users WHERE id = \'" + user_id + "\'"',
+    comment: '# a hacker just did this to your query \u2014 your WHERE clause now returns everything \ud83d\ude08',
+    speed: 38
+  },
+  {
+    code: '    const res = await pool.query("SELECT * FROM orders WHERE uid = " + uid);',
+    comment: '# a hacker just ran through here \u2014 your entire orders table is now their spreadsheet \ud83d\udcca',
+    speed: 28
+  },
+  {
+    code: '    stmt.execute("SELECT * FROM users WHERE email = \'" + email + "\'");',
+    comment: '# a hacker just walked right in \u2014 your auth check is now meaningless \ud83d\udd13',
+    speed: 32
+  }
+];
+
+const GLITCH_CHARS = ["'","--","1=1","OR","/*","*/","#","@","$","!","%","^","&","*"];
+
+let hackerTimers = [];
+
+function clearHackerTimers() {
+  hackerTimers.forEach(t => clearTimeout(t));
+  hackerTimers = [];
+}
+
+function buildHackStage(missedCount) {
+  const stage = document.getElementById('hackStage');
+  stage.innerHTML = '';
+
+  const box = document.createElement('div');
+  box.className = 'hack-cbox';
+  box.innerHTML = `
+    <div class="hack-chead">
+      <div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div>
+      <span class="cfn">your_code.py</span>
+    </div>`;
+
+  const linesWrap = document.createElement('div');
+  linesWrap.style.padding = '8px 0';
+
+  // Show only as many lines as missed questions
+  for (let i = 0; i < missedCount; i++) {
+    const hl = HACK_LINES[i];
+
+    // line row
+    const row = document.createElement('div');
+    row.className = 'hack-line';
+    row.id = 'hackrow' + i;
+    row.style.position = 'relative';
+
+    const ln = document.createElement('span');
+    ln.className = 'hack-ln';
+    ln.textContent = i + 1;
+
+    // build char spans for corruption
+    const lc = document.createElement('span');
+    lc.className = 'hack-lc';
+    lc.id = 'hacklc' + i;
+    hl.code.split('').forEach((ch, ci) => {
+      const sp = document.createElement('span');
+      sp.className = 'hc';
+      sp.id = 'hc' + i + '_' + ci;
+      sp.textContent = ch;
+      lc.appendChild(sp);
+    });
+
+    // hacker figure
+    const hacker = document.createElement('span');
+    hacker.className = 'hacker';
+    hacker.id = 'hacker' + i;
+    hacker.textContent = 'ᕕ( ᐛ )ᕗ';
+    hacker.style.left = '-60px';
+
+    row.appendChild(ln);
+    row.appendChild(lc);
+    row.appendChild(hacker);
+    linesWrap.appendChild(row);
+
+    // comment line (hidden until hacker passes)
+    const cmtRow = document.createElement('div');
+    cmtRow.className = 'hack-comment';
+    cmtRow.id = 'hackcmt' + i;
+    cmtRow.textContent = hl.comment;
+    linesWrap.appendChild(cmtRow);
+  }
+
+  box.appendChild(linesWrap);
+  stage.appendChild(box);
+
+  // start animations with staggered delays
+  for (let i = 0; i < missedCount; i++) {
+    const delay = i * 1800; // each hacker starts 1.8s after previous
+    hackerTimers.push(setTimeout(() => runHacker(i), delay));
+  }
+}
+
+function runHacker(lineIdx) {
+  const hl = HACK_LINES[lineIdx];
+  const hackerEl = document.getElementById('hacker' + lineIdx);
+  const lcEl = document.getElementById('hacklc' + lineIdx);
+  const cmtEl = document.getElementById('hackcmt' + lineIdx);
+  if (!hackerEl || !lcEl) return;
+
+  const chars = hl.code.split('');
+  const totalChars = chars.length;
+  const speed = hl.speed;
+  // hacker figure width approx 48px, char approx 7.2px wide
+  const charWidth = 7.2;
+  const hackerWidth = 48;
+
+  let pos = -hackerWidth; // start off left edge
+  const endPos = totalChars * charWidth + hackerWidth;
+
+  function tick() {
+    pos += charWidth;
+    if (!hackerEl) return;
+    hackerEl.style.left = (42 + pos) + 'px'; // 42 = ln width offset
+
+    // corrupt chars under the hacker footprint (±2 chars)
+    const currentChar = Math.floor(pos / charWidth);
+    for (let ci = 0; ci < totalChars; ci++) {
+      const span = document.getElementById('hc' + lineIdx + '_' + ci);
+      if (!span) continue;
+      const dist = Math.abs(ci - currentChar);
+      if (dist <= 1) {
+        // corrupt
+        span.classList.add('corrupt');
+        const glitch = GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)];
+        span.textContent = glitch;
+        // restore after hacker passes
+        hackerTimers.push(setTimeout(() => {
+          if (span) {
+            span.textContent = chars[ci];
+            span.classList.remove('corrupt');
+          }
+        }, speed * 4));
+      }
+    }
+
+    if (pos < endPos) {
+      hackerTimers.push(setTimeout(tick, speed));
+    } else {
+      // hacker exits — show comment
+      hackerEl.style.left = (endPos + 42) + 'px';
+      hackerTimers.push(setTimeout(() => {
+        // restore all chars cleanly
+        chars.forEach((ch, ci) => {
+          const span = document.getElementById('hc' + lineIdx + '_' + ci);
+          if (span) { span.textContent = ch; span.classList.remove('corrupt'); }
+        });
+        if (cmtEl) cmtEl.classList.add('show');
+      }, 200));
+    }
+  }
+
+  tick();
+}
+
+function renderSummary() {
+  clearHackerTimers();
+  const hackStage = document.getElementById('hackStage');
+  const msg       = document.getElementById('sumMsg');
+  const rerunBtn  = document.getElementById('rerunBtn');
+  const toRuleBtn = document.getElementById('toRuleBtn');
+
+  hackStage.innerHTML = '';
+  msg.innerHTML = '';
+
+  if (tqScore === 3) {
+    hackStage.innerHTML = `
+      <div class="lock-wrap">
+        <svg class="lock-svg" width="72" height="80" viewBox="0 0 72 80">
+          <path class="lock-shackle" d="M20,36 L20,22 A16,16 0 0,1 52,22 L52,36"/>
+          <rect class="lock-body" x="8" y="34" width="56" height="38" rx="6"/>
+          <polyline class="lock-check" points="24,52 32,61 48,46"/>
+        </svg>
+        <span class="lock-label">all clear</span>
+      </div>`;
+    msg.innerHTML = '<div class="sum-score">3 / 3</div><strong>Well done.</strong> You identified the injection point, the safe parameterisation pattern, and the tautology technique. Click The Rule to finish the module.';
+    rerunBtn.style.display  = 'none';
+    toRuleBtn.style.display = '';
+  } else {
+    const missed = 3 - tqScore;
+    buildHackStage(missed);
+    msg.innerHTML = `<div class="sum-score sum-score-miss">${tqScore} / 3</div><strong>${missed === 1 ? 'One question' : missed + ' questions'} missed.</strong> Run through the self-check again — the feedback on each one explains exactly where the vulnerability sits.`;
+    rerunBtn.style.display  = '';
+    toRuleBtn.style.display = 'none';
+  }
+}
+
+function rerunCheck() {
+  clearHackerTimers();
+  document.getElementById('hackStage').innerHTML = '';
+  resetTest();
+  go(5);
+}
+/* ── FULLSCREEN ── */
+function toggleFS(){
+  if(!document.fullscreenElement&&!document.webkitFullscreenElement){
+    const el=document.documentElement;
+    (el.requestFullscreen||el.webkitRequestFullscreen).call(el);
+  }else{
+    (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+  }
+}
+document.addEventListener('fullscreenchange',updateFSIcon);
+document.addEventListener('webkitfullscreenchange',updateFSIcon);
+function updateFSIcon(){
+  const isFS=!!(document.fullscreenElement||document.webkitFullscreenElement);
+  document.getElementById('fsIco').style.display=isFS?'none':'';
+  document.getElementById('fsIcoExit').style.display=isFS?'':'none';
+}
+
+/* ── BOOT ── */
+renderCode();
+switchLang(0);
+buildCoverTerminal();
+buildStrip();
+</script>
+</body>
+</html>

@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A02 · Security Misconfiguration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2f0ec;--surface:#fdfcfa;--surface2:#ece9e2;
+  --border:#dbd6cc;--border2:#bfb8ac;
+  --ink:#181614;--ink-mid:#3d3830;--ink-dim:#7a7268;
+  --accent:#5a7a3a;--adim:rgba(90,122,58,.09);--aglow:rgba(90,122,58,.3);
+  --red:#b83232;--rdim:rgba(184,50,50,.1);
+  --green:#1e6e47;--gdim:rgba(30,110,71,.1);
+  --yellow:#b89820;--ydim:rgba(184,152,32,.1);
+  --code-bg:#16181f;--code-surface:#1e2028;--code-border:#2a2d38;
+  --dark:#1a1c22;--dark2:#22252e;--dark-border:#2e3240;--dark-text:#c8ccd8;--dark-dim:#6a7088;
+  --mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+body{display:flex;flex-direction:column;overflow-x:hidden;
+  background-image:repeating-linear-gradient(90deg,transparent,transparent 119px,rgba(0,0,0,.022) 119px,rgba(0,0,0,.022) 120px)}
+
+/* ── CHROME ── */
+.topbar{height:44px;min-height:44px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 28px;gap:12px;flex-shrink:0}
+.badge{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);
+  background:var(--adim);border:1px solid var(--accent);border-radius:2px;padding:3px 10px;letter-spacing:.07em}
+.topbar-title{font-family:var(--mono);font-size:13px;color:var(--ink-dim)}
+.sep{color:var(--border2)}
+.screen-lbl{font-family:var(--mono);font-size:12px;color:var(--ink-dim);margin-left:auto}
+.prog{height:3px;background:var(--border);flex-shrink:0}
+.prog-fill{height:100%;background:var(--accent);transition:width .4s cubic-bezier(.4,0,.2,1)}
+.navstrip{display:flex;align-items:center;gap:2px;padding:5px 24px;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.navstrip::-webkit-scrollbar{display:none}
+.ns-pip{height:4px;border-radius:2px;border:none;padding:0;cursor:pointer;flex-shrink:0;
+  background:var(--border);transition:all .18s;appearance:none;width:16px}
+.ns-pip:hover{background:var(--border2);transform:scaleY(1.5)}
+.ns-pip.visited{background:var(--border2)}
+.ns-pip.active{background:var(--accent);transform:scaleY(2)}
+.ns-pip.pip-cover{width:8px;height:8px;border-radius:50%}
+.ns-pip.pip-wide{width:22px}
+.ns-sep{width:1px;height:10px;background:var(--border);flex-shrink:0;margin:0 3px}
+.wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;position:relative}
+.wrap::-webkit-scrollbar{display:none}
+
+/* ── SCREENS ── */
+.scr{display:none;padding:24px 28px 18px;flex-direction:column;gap:14px;width:100%;min-height:100%}
+.scr.on{display:flex;animation:fadeUp .2s ease}
+.scr.fix-scr{gap:18px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.scr.on .nav{animation:slideUp .35s cubic-bezier(.4,0,.2,1) .1s both}
+
+/* ── TYPE ── */
+h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}
+h3{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em}
+p{font-size:17px;line-height:1.75;color:var(--ink-mid)}
+code{font-family:var(--mono);font-size:14px;color:var(--accent);background:var(--adim);padding:2px 6px;border-radius:2px}
+strong{color:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:12px 16px}
+
+/* ── NAV ── */
+.nav{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;
+  padding:14px 0 6px;border-top:1px solid var(--border);margin-top:10px}
+.step-ct{font-family:var(--mono);font-size:12.5px;color:var(--ink-dim);margin-right:auto}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:12px 26px;border-radius:5px;
+  font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;border:none;transition:all .14s;letter-spacing:.01em}
+.btn-p{background:var(--accent);color:#fff}
+.btn-p:hover{background:#486230;transform:translateY(-1px);box-shadow:0 3px 12px var(--aglow)}
+.btn-g{background:transparent;color:var(--ink-mid);border:1px solid var(--border2)}
+.btn-g:hover{border-color:var(--ink-dim);color:var(--ink)}
+.btn-fin{background:var(--accent);color:#fff;padding:12px 28px;font-size:15px;font-weight:700}
+.btn-fin:hover{background:#486230;transform:translateY(-1px);box-shadow:0 3px 14px var(--aglow)}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+
+/* ── GLOSSARY TOOLTIP ── */
+.gloss{border-bottom:1px dotted var(--accent);cursor:help;font-weight:600;color:inherit}
+#gloss-tip{position:fixed;background:#1a1620;color:#F5F2ED;font-size:14px;font-weight:400;line-height:1.55;
+  padding:12px 16px;border-radius:6px;border:1px solid rgba(90,122,58,.4);box-shadow:0 8px 28px rgba(0,0,0,.55);
+  max-width:340px;width:max-content;opacity:0;visibility:hidden;transform:translateY(4px);
+  transition:opacity .18s,transform .18s,visibility .18s;pointer-events:none;z-index:9999;text-align:left;font-family:inherit}
+#gloss-tip.on{opacity:1;visibility:visible;transform:translateY(0)}
+
+/* ── INCIDENT TIMELINE ── */
+.timeline{position:relative;padding:10px 0 0}
+.tl-track{position:relative;display:flex;align-items:flex-start;gap:0;padding-bottom:16px}
+.tl-track::before{content:'';position:absolute;top:18px;left:24px;right:24px;height:2px;background:rgba(255,255,255,.08);z-index:0}
+.tl-event{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;cursor:pointer;padding:0 4px;min-width:0}
+.tl-dot{width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);transition:all .25s;flex-shrink:0}
+.tl-event:hover .tl-dot,.tl-event.active .tl-dot{background:var(--accent);border-color:var(--accent);box-shadow:0 0 12px rgba(90,122,58,.4)}
+.tl-event.breach .tl-dot{border-color:rgba(184,50,50,.4)}
+.tl-event.breach.active .tl-dot{background:var(--red);border-color:var(--red);box-shadow:0 0 12px rgba(184,50,50,.4)}
+.tl-time{font-size:12px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.5px;font-family:var(--mono)}
+.tl-name{font-size:13px;color:rgba(255,255,255,.5);text-align:center;line-height:1.3;font-weight:500;transition:color .2s}
+.tl-event.active .tl-name{color:#fff}
+.tl-detail{margin-top:8px;padding:14px 18px;background:linear-gradient(170deg,#1c1820,#181820);border:1px solid rgba(90,122,58,.3);
+  border-radius:10px;font-size:15px;color:rgba(245,242,237,.8);line-height:1.7;display:none}
+.tl-detail.on{display:block;animation:tl-slide .25s ease}
+.tl-detail strong{color:#fff;font-weight:600}
+.tl-detail-tag{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:4px}
+.tl-detail-tag.tag-breach{color:var(--red)}
+.tl-detail-tag.tag-warn{color:var(--yellow)}
+.tl-detail-tag.tag-ok{color:var(--green)}
+@keyframes tl-slide{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── TERMINAL CONSOLE ── */
+.term{background:#0a0c10;border:1px solid rgba(255,255,255,.08);border-radius:10px;overflow:hidden;font-family:var(--mono)}
+.term-bar{display:flex;align-items:center;gap:6px;padding:10px 14px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06)}
+.term-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.12)}
+.term-dot:nth-child(1){background:#ff5f57}.term-dot:nth-child(2){background:#febc2e}.term-dot:nth-child(3){background:#28c840}
+.term-title{font-size:12px;color:rgba(255,255,255,.3);letter-spacing:1px;margin-left:8px;font-weight:600;text-transform:uppercase}
+.term-body{padding:18px 22px;min-height:140px;max-height:280px;overflow-y:auto;scrollbar-width:thin}
+.term-line{font-size:14.5px;line-height:1.7;color:rgba(255,255,255,.55);white-space:pre-wrap;word-break:break-all;
+  opacity:0;transform:translateY(3px);animation:term-appear .2s ease forwards}
+.term-line.cmd{color:rgba(255,255,255,.85)}.term-line.cmd::before{content:'$ ';color:var(--green)}
+.term-line.atk{color:var(--red)}.term-line.atk::before{content:'⚠ ';color:var(--red)}
+.term-line.ok{color:var(--green)}.term-line.ok::before{content:'✓ ';color:var(--green)}
+.term-line.info{color:var(--yellow)}.term-line.info::before{content:'→ ';color:var(--yellow)}
+.term-line.blank{height:10px}
+@keyframes term-appear{to{opacity:1;transform:translateY(0)}}
+.term-btn{display:flex;gap:8px;margin-top:10px}
+.term-play{background:var(--accent);border:none;color:#fff;padding:8px 18px;border-radius:6px;font-size:14px;
+  font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.term-play:hover{background:#486230}.term-play:disabled{opacity:.4;cursor:default}
+.term-reset{background:none;border:1px solid var(--border);color:var(--ink-dim);padding:7px 14px;border-radius:6px;
+  font-size:13px;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.term-reset:hover{border-color:var(--accent);color:var(--ink)}
+
+/* ── CODE BLOCKS ── */
+.cbox{background:var(--code-bg);border:1px solid var(--code-border);border-radius:5px;font-family:var(--mono);display:flex;flex-direction:column;overflow:hidden}
+.chead{background:var(--code-surface);border-bottom:1px solid var(--code-border);padding:6px 13px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.dots{display:flex;gap:4px}.dot{width:8px;height:8px;border-radius:50%}
+.dr{background:#e0585844;border:1px solid #e0585888}.dy{background:#f0a50044;border:1px solid #f0a50088}.dg{background:#3ecf7244;border:1px solid #3ecf7288}
+.cfn{font-family:var(--mono);font-size:11.5px;color:#555a6a;margin-left:3px}
+.code-status{margin-left:auto;font-family:var(--mono);font-size:11.5px;opacity:0;transition:opacity .2s ease}
+.code-status.show{opacity:1}.code-status.ok{color:#4ecb71}.code-status.err{color:#f07178}
+.cbody{padding:8px 0;overflow-y:auto;flex:1}
+.cl{display:flex;align-items:flex-start;padding:1.5px 12px;transition:background .1s;cursor:pointer}
+.cl:hover{background:rgba(90,122,58,.07)}.cl:hover .ln{color:var(--accent)}
+.cl.wrong{background:rgba(192,57,43,.14);animation:shake .28s ease}
+.cl.right{background:rgba(90,122,58,.1)}
+@keyframes shake{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}70%{transform:translateX(4px)}}
+@keyframes blink-ln{0%,100%{color:#3a3e4f}50%{color:rgba(90,122,58,.8)}}
+@keyframes ripple-ok{0%{box-shadow:0 0 0 0 rgba(90,122,58,.5)}100%{box-shadow:0 0 0 18px rgba(90,122,58,0)}}
+.cl-target .ln{animation:blink-ln 1.1s ease-in-out infinite}
+.cl.right{animation:ripple-ok .6s ease-out forwards}
+.ln{width:32px;min-width:32px;text-align:right;color:#3a3e4f;font-size:12.5px;user-select:none;padding-right:12px;line-height:1.85}
+.lc{flex:1;color:#c8ccd8;line-height:1.85;white-space:pre;font-size:14.5px}
+.kw{color:#c792ea}.fn{color:#82aaff}.st{color:#c3e88d}.cm{color:#546e7a;font-style:italic}.nm{color:#f78c6c}.op{color:#f07178}
+.code-fb-strip{font-family:var(--mono);font-size:13px;line-height:1.5;
+  max-height:0;overflow:hidden;opacity:0;
+  transition:max-height .3s cubic-bezier(.4,0,.2,1),opacity .25s ease,padding .3s ease;padding:0 12px}
+.code-fb-strip.on{max-height:80px;opacity:1;padding:8px 12px;border-top:1px solid var(--code-border)}
+.code-fb-strip.ok{color:#4ecb71;background:rgba(78,203,113,.06)}
+.code-fb-strip.err{color:#f07178;background:rgba(240,113,120,.06)}
+
+/* fix code diffs */
+.cl.rm{background:rgba(192,57,43,.07);border-left:3px solid var(--red);padding-left:9px;cursor:default}
+.cl.add{background:rgba(90,122,58,.09);border-left:3px solid var(--green);padding-left:9px;cursor:default}
+.cl.rm:hover,.cl.add:hover{background:inherit}.cl.rm:hover .ln,.cl.add:hover .ln{color:inherit}
+.dm{width:12px;min-width:12px;font-weight:700;font-size:11px;color:#3a3e4f}
+.rm .dm{color:var(--red)}.add .dm{color:var(--green)}
+.lang-tabs{display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;width:fit-content;flex-shrink:0}
+.lang-tab{font-family:var(--mono);font-size:13px;padding:8px 16px;cursor:pointer;color:var(--ink-dim);background:var(--surface);border-right:1px solid var(--border);transition:all .12s}
+.lang-tab:last-child{border-right:none}
+.lang-tab:hover{color:var(--ink)}.lang-tab.active{background:var(--accent);color:#fff;font-weight:700}
+@keyframes langFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.fix-cbox .cbody.fading{animation:langFade .18s ease both}
+.dleg{display:flex;gap:14px;align-items:center}
+.dleg-item{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;color:var(--ink-dim)}
+.dleg-dash{width:14px;height:3px;border-radius:1px}
+
+/* why dot */
+.fix-cbox-wrap{position:relative}
+.why-dot{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:11px;height:11px;border-radius:50%;background:var(--accent);cursor:pointer;opacity:0;transition:opacity .3s ease .15s;z-index:10}
+.why-dot.show{opacity:1}
+.why-dot::before{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:dotPulse 2s cubic-bezier(.4,0,.6,1) infinite}
+@keyframes dotPulse{0%{opacity:.6;transform:scale(.7)}70%{opacity:0;transform:scale(1.6)}100%{opacity:0}}
+.why-dot-hint{position:absolute;right:30px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10px;color:var(--accent);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .3s ease}
+.why-dot-hint.show{opacity:1}
+.why-tooltip{position:absolute;right:36px;top:50%;transform:translateY(-50%) scale(.95);width:340px;background:#1a1c24;border:1px solid rgba(90,122,58,.4);border-radius:7px;padding:14px 18px;opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s cubic-bezier(.34,1.2,.64,1);z-index:20;box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.why-tooltip::after{content:'';position:absolute;right:-6px;top:50%;width:10px;height:10px;background:#1a1c24;border-right:1px solid rgba(90,122,58,.4);border-top:1px solid rgba(90,122,58,.4);transform:translateY(-50%) rotate(45deg)}
+.why-tooltip.show{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1)}
+.why-tooltip-label{font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.why-tooltip-label::before{content:'';width:16px;height:1px;background:var(--accent);flex-shrink:0}
+.why-tooltip-text{font-size:15px;line-height:1.7;color:#c8ccd8}
+.why-tooltip-text code{color:#f0a500;background:rgba(240,165,0,.12);padding:2px 5px;border-radius:2px;font-size:13.5px;font-family:var(--mono)}
+
+/* ── QUIZ ── */
+.tq-counter{font-family:var(--mono);font-size:13px;color:var(--ink-dim)}
+.tq-prompt{font-size:clamp(22px,3vw,28px);font-weight:800;color:var(--ink);line-height:1.35;flex-shrink:0;letter-spacing:-.01em;margin-top:8px}
+.tq-options{display:flex;flex-direction:column;gap:12px;flex-shrink:0;margin-top:6px}
+.tq-opt{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:14px 18px;font-size:16px;color:var(--ink-mid);cursor:pointer;
+  transition:border-color .14s,background .14s,transform .14s;line-height:1.55;position:relative;overflow:hidden}
+.tq-opt:hover{border-color:var(--border2);background:var(--surface2);transform:translateX(4px)}
+.tq-opt.opt-right{border-color:var(--green);background:var(--gdim);color:var(--green);cursor:default;transform:none;font-weight:600;animation:optPop .35s cubic-bezier(.4,0,.2,1)}
+.tq-opt.opt-wrong{border-color:var(--red);background:var(--rdim);color:var(--red);cursor:default;transform:none;animation:shake .28s ease}
+.tq-opt.opt-dim{opacity:.3;cursor:default;pointer-events:none;transform:none}
+@keyframes optPop{0%{transform:scale(1)}40%{transform:scale(1.012)}100%{transform:scale(1)}}
+.tq-fb{font-size:16px;line-height:1.6;border-radius:6px;max-height:0;overflow:hidden;opacity:0;padding:0 16px;
+  transition:max-height .35s cubic-bezier(.4,0,.2,1),opacity .28s ease,padding .32s ease}
+.tq-fb.on{max-height:200px;opacity:1;padding:14px 18px}
+.tq-fb.fb-right{background:var(--gdim);border:1px solid rgba(30,110,71,.25);color:var(--green)}
+.tq-fb.fb-wrong{background:var(--rdim);border:1px solid rgba(184,50,50,.22);color:var(--red)}
+
+/* ── INTEGRATION: correct-answer green sweep ── */
+.tq-opt.opt-right::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(30,110,71,.12),transparent);animation:secureSweep .5s ease forwards;pointer-events:none;border-radius:inherit}
+@keyframes secureSweep{0%{opacity:0;transform:translateX(-100%)}50%{opacity:1}100%{opacity:0;transform:translateX(100%)}}
+
+/* ── SCORE ── */
+.sum-msg{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px 26px;font-size:19px;line-height:1.7;color:var(--ink);flex-shrink:0;animation:fadeUp .3s ease .2s both}
+.sum-msg strong{color:var(--accent)}
+.sum-score{font-size:clamp(36px,5vw,48px);font-weight:800;color:var(--green);letter-spacing:-.02em;margin-bottom:8px;line-height:1}
+.sum-score-miss{color:var(--red)}
+/* gear animation for 3/3 */
+.gear-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 0}
+.gear-svg .g1{fill:var(--green);animation:spinCW 4s linear infinite;transform-origin:36px 40px}
+.gear-svg .g2{fill:var(--green);opacity:.6;animation:spinCCW 3s linear infinite;transform-origin:64px 40px}
+@keyframes spinCW{to{transform:rotate(360deg)}}@keyframes spinCCW{to{transform:rotate(-360deg)}}
+.gear-label{font-family:var(--mono);font-size:14px;color:var(--green);opacity:0;animation:fadeUp .3s ease 1.2s forwards;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+
+/* misconfig fail stage — open doors with visitors */
+.misconfig-stage{background:var(--code-bg);border:1px solid var(--code-border);border-radius:8px;padding:16px;
+  font-family:var(--mono);font-size:13.5px;line-height:2;color:var(--dark-text);overflow:hidden;position:relative}
+.misconfig-line{opacity:0;animation:fadeUp .3s ease forwards}
+.misconfig-line .mc-file{color:#82aaff}
+.misconfig-line .mc-val{color:#f07178}
+.misconfig-line .mc-comment{color:#546e7a;font-style:italic}
+.misconfig-line .mc-visitor{display:inline;animation:walkIn .6s ease forwards}
+@keyframes walkIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── RULE CARD ── */
+.rule-card{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:28px;background:var(--surface);border:1px solid var(--border);border-radius:8px;flex-shrink:0;position:relative;overflow:hidden}
+.rule-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 70%,rgba(90,122,58,.05) 0%,transparent 65%);pointer-events:none}
+.re{font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.12em}
+@keyframes wordIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.rt .w{display:inline;opacity:0;animation:wordIn .3s ease forwards}
+.rt{font-size:clamp(18px,2.4vw,22px);font-weight:700;color:var(--ink);line-height:1.45;max-width:600px}
+.ra{color:var(--accent)}
+.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:3px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.05em;background:var(--adim);color:var(--accent);border:1px solid rgba(90,122,58,.22)}
+.rule-ambient{position:absolute;inset:0;pointer-events:none;opacity:.04;font-family:var(--mono);font-size:10px;color:var(--accent);line-height:2;padding:8px 12px;overflow:hidden;white-space:pre;animation:ambientScroll 20s linear infinite}
+@keyframes ambientScroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+
+/* ── TRIO ── */
+.trio{display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+.trio-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px 20px;cursor:pointer;transition:border-color .15s;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}
+.trio-item:hover{border-color:var(--border2)}.trio-item.open{border-color:var(--accent);background:var(--surface2)}
+.trio-item-main{display:flex;align-items:center;gap:14px}
+.trio-label{font-family:var(--mono);font-size:13px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.08em;min-width:110px;font-weight:600}
+.trio-val{font-size:17px;color:var(--ink);line-height:1.5}
+.trio-chevron{font-size:14px;color:var(--ink-dim);transition:transform .22s;flex-shrink:0}
+.trio-item.open .trio-chevron{transform:rotate(90deg);color:var(--accent)}
+.trio-detail{display:grid;grid-template-rows:0fr;grid-column:1/-1;transition:grid-template-rows .28s cubic-bezier(.4,0,.2,1)}
+.trio-item.open .trio-detail{grid-template-rows:1fr}
+.trio-detail-inner{overflow:hidden}
+.trio-detail-text{font-size:16px;line-height:1.7;color:var(--ink-mid);padding-top:12px;border-top:1px solid var(--border);margin-top:12px}
+.trio-detail-text code{color:var(--accent);background:var(--adim);padding:2px 6px;border-radius:2px;font-size:14px}
+
+/* ── CHECKLIST TRACKER ── */
+.checklist{margin:0}
+.cl-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;-webkit-user-select:none;user-select:none}
+.cl-item:last-child{border-bottom:none}
+.cl-item:hover{background:rgba(90,122,58,.03)}
+.cl-check{width:26px;height:26px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;margin-top:1px}
+.cl-item.checked .cl-check{background:var(--green);border-color:var(--green)}
+.cl-item.checked .cl-check::after{content:'✓';color:#fff;font-size:14px;font-weight:800}
+.cl-body{flex:1}
+.cl-title{font-size:16px;font-weight:600;color:var(--ink);line-height:1.35;transition:all .2s}
+.cl-item.checked .cl-title{color:var(--ink-dim);text-decoration:line-through;text-decoration-color:var(--border)}
+.cl-hint{font-size:14px;color:var(--ink-dim);line-height:1.4;margin-top:2px}
+.cl-progress{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.cl-progress-bar{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.cl-progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width .3s}
+.cl-progress-text{font-size:13px;font-weight:700;color:var(--ink-dim);font-family:var(--mono);min-width:44px;text-align:right}
+
+/* ═══ S0: COVER — gear misalignment ═══ */
+.cover{display:none;flex-direction:column;align-items:center;justify-content:center;position:absolute;inset:0;background:var(--dark);overflow:hidden;padding:24px 24px 40px;z-index:30}
+.cover.on{display:flex}
+.cover::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(255,255,255,.018) 59px,rgba(255,255,255,.018) 60px),repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,255,255,.018) 59px,rgba(255,255,255,.018) 60px);pointer-events:none}
+.cover::after{content:'';position:absolute;width:400px;height:400px;top:40%;left:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(90,122,58,.1) 0%,transparent 70%);pointer-events:none;animation:cvGlow 4s ease-in-out infinite}
+@keyframes cvGlow{0%,100%{opacity:.4}50%{opacity:.9}}
+@keyframes cvFadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.cv-visual{position:relative;z-index:1;margin-bottom:20px;width:280px;height:200px;display:flex;align-items:center;justify-content:center}
+.cv-gears{width:240px;height:200px;z-index:2}
+.cv-g1{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:400;stroke-dashoffset:400;animation:cvDraw 1.4s ease .3s forwards}
+.cv-g2{fill:none;stroke:rgba(90,122,58,.5);stroke-width:2;stroke-dasharray:400;stroke-dashoffset:400;animation:cvDraw 1.2s ease .6s forwards}
+.cv-g1-spin{animation:spinCW 8s linear 1.8s infinite;transform-origin:70px 90px}
+.cv-g2-spin{animation:spinCCW 6s linear 1.8s infinite;transform-origin:128px 90px}
+.cv-mis{fill:var(--red);opacity:0;animation:cvSfill .3s ease 1.6s forwards}
+@keyframes cvDraw{to{stroke-dashoffset:0}}
+@keyframes cvSfill{to{opacity:1}}
+
+.cv-warn{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:5px;opacity:0;animation:cvFadeUp .4s ease 2s forwards;z-index:3;white-space:nowrap}
+.cv-warn::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--red);animation:dpulse 1.2s ease-in-out infinite}
+@keyframes dpulse{0%,100%{box-shadow:0 0 0 0 rgba(184,50,50,.6)}50%{box-shadow:0 0 0 4px rgba(184,50,50,0)}}
+
+.cv-badge{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.1em;padding:5px 14px;border-radius:3px;z-index:2;margin-bottom:8px;color:#fff;background:var(--accent);opacity:0;animation:cvFadeUp .4s ease 2.2s forwards}
+.cv-tag{font-family:var(--mono);font-size:13px;letter-spacing:.15em;text-transform:uppercase;z-index:2;margin-bottom:6px;color:var(--accent);opacity:0;animation:cvFadeUp .4s ease 2.3s forwards}
+.cv-title{font-size:clamp(28px,5vw,42px);font-weight:800;color:#f0ede8;letter-spacing:-.02em;line-height:1.15;text-align:center;z-index:2;margin-bottom:6px;opacity:0;animation:cvFadeUp .4s ease 2.4s forwards}
+.cv-sub{font-size:16px;color:var(--dark-dim);text-align:center;z-index:2;line-height:1.6;max-width:480px;opacity:0;animation:cvFadeUp .4s ease 2.6s forwards}
+.cv-start{z-index:2;margin-top:24px;opacity:0;animation:cvFadeUp .4s ease 2.8s forwards}
+.cv-start .btn{background:var(--accent);color:#fff;padding:14px 32px;font-size:16px}
+.cv-start .btn:hover{background:#486230;transform:translateY(-1px);box-shadow:0 3px 12px var(--aglow)}
+
+/* ── INTEGRATION 1: gear sweep on correct code line ── */
+.cl.right .lc{position:relative;overflow:hidden}
+.cl.right .lc::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(90,122,58,.2),transparent);animation:gearSweep .6s ease .1s forwards;pointer-events:none}
+@keyframes gearSweep{to{left:100%}}
+
+/* ── INTEGRATION 2: exploit escalation glow ── */
+.exploit-wrap{display:flex;flex-direction:column;gap:0;position:relative;overflow:hidden}
+.exploit-wrap::before{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 50% 50%,var(--exploit-glow,transparent),transparent 70%);pointer-events:none;transition:opacity .5s ease;opacity:var(--exploit-opacity,0)}
+.exploit-step{display:none;flex-direction:column;gap:16px;opacity:0;transition:opacity .28s ease}
+.exploit-step.active{display:flex;opacity:1;animation:fadeUp .25s ease}
+.ex-num{font-family:var(--mono);font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.ex-title{font-size:clamp(24px,3.5vw,32px);font-weight:800;color:var(--ink);margin-bottom:4px;letter-spacing:-.02em;line-height:1.2}
+.ex-body{font-size:17px;line-height:1.75;color:var(--ink-mid)}
+
+@media(max-width:620px){.scr{padding:12px 14px 10px}.lc{font-size:11px}}
+
+/* ── ACCENT BANNERS ── */
+.atk-header{display:flex;align-items:center;justify-content:space-between;
+  background:var(--accent);border-radius:6px;padding:18px 24px;flex-shrink:0}
+.atk-label{font-family:var(--mono);font-size:14px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.12em}
+.atk-step{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.7);letter-spacing:.05em}
+
+/* ── MISS ANIMATION ── */
+.miss-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 0}
+.miss-svg{width:80px;height:90px}
+.miss-svg .shield{fill:none;stroke:var(--red);stroke-width:3;stroke-dasharray:200;stroke-dashoffset:200;animation:cvDraw 1s ease .2s forwards}
+.miss-svg .shield-fill{fill:rgba(184,50,50,.08);opacity:0;animation:cvSfill .4s ease 1s forwards}
+.miss-svg .miss-x1,.miss-svg .miss-x2{fill:none;stroke:var(--red);stroke-width:3;stroke-linecap:round;
+  stroke-dasharray:30;stroke-dashoffset:30;animation:checkDraw .3s ease 1.2s forwards}
+@keyframes checkDraw{to{stroke-dashoffset:0}}
+.miss-label{font-family:var(--mono);font-size:14px;color:var(--red);
+  opacity:0;animation:fadeUp .3s ease 1.4s forwards;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+
+/* ── FULLSCREEN ── */
+.fs-btn{background:none;border:1px solid var(--border);border-radius:3px;color:var(--ink-dim);
+  cursor:pointer;padding:4px 5px;display:flex;align-items:center;justify-content:center;
+  transition:color .12s,border-color .12s;margin-left:8px;flex-shrink:0}
+.fs-btn:hover{color:var(--ink);border-color:var(--border2)}
+html:fullscreen,html:-webkit-full-screen{background:var(--bg)}
+html:fullscreen body,html:-webkit-full-screen body{height:100vh}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="badge">A02</span>
+  <span class="sep">/</span>
+  <span class="topbar-title">Security Misconfiguration — OWASP Top 10</span>
+  <span class="screen-lbl" id="lbl">00 / 11</span>
+  <button class="fs-btn" id="fsBtn" onclick="toggleFS()" title="Toggle fullscreen" aria-label="Toggle fullscreen">
+    <svg id="fsIco" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="1,5 1,1 5,1"/><polyline points="9,1 13,1 13,5"/><polyline points="13,9 13,13 9,13"/><polyline points="5,13 1,13 1,9"/>
+    </svg>
+    <svg id="fsIcoExit" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+      <polyline points="5,1 5,5 1,5"/><polyline points="9,5 13,5 9,1"/><polyline points="9,13 9,9 13,9"/><polyline points="1,9 5,9 5,13"/>
+    </svg>
+  </button>
+</div>
+<div class="navstrip" id="navstrip"></div>
+<div class="prog"><div class="prog-fill" id="pf" style="width:0%"></div></div>
+
+<div class="wrap" id="wrap">
+
+<!-- ══ S0: COVER ══ -->
+<div class="cover on" id="s0">
+  <div class="cv-visual">
+    <svg class="cv-gears" viewBox="0 0 180 180">
+      <g class="cv-g1-spin"><path class="cv-g1" d="M70,50 L76,42 L82,50 L90,48 L88,56 L96,60 L90,66 L92,74 L84,74 L80,82 L74,76 L66,80 L64,72 L56,70 L60,62 L54,58 L60,52 L56,46 L64,46 Z"/><circle cx="70" cy="64" r="10" fill="none" stroke="rgba(90,122,58,.2)" stroke-width="1"/></g>
+      <g class="cv-g2-spin"><path class="cv-g2" d="M128,55 L133,48 L138,55 L144,53 L143,60 L150,63 L145,68 L146,75 L140,75 L137,81 L132,76 L126,79 L124,73 L118,71 L121,65 L116,61 L121,57 L118,52 L124,52 Z"/><circle cx="128" cy="66" r="8" fill="none" stroke="rgba(90,122,58,.15)" stroke-width="1"/></g>
+      <circle class="cv-mis" cx="92" cy="60" r="4"/>
+    </svg>
+    <div class="cv-warn">config mismatch detected</div>
+  </div>
+  <span class="cv-badge">A02</span>
+  <div class="cv-tag">OWASP Top 10 · 2025</div>
+  <div class="cv-title">Security<br>Misconfiguration</div>
+  <div class="cv-sub">Everything looks fine — until one default, one copied config, one unchecked setting opens the door.</div>
+  <div class="cv-start"><button class="btn" onclick="go(1)">Begin Module →</button></div>
+</div>
+
+<!-- ══ S1: CASE — POWER APPS 2021 ══ -->
+<div class="scr" id="s1" style="gap:20px">
+  <div class="atk-header">
+    <div class="atk-label">// microsoft power apps — 2021</div>
+  </div>
+
+  <p style="font-size:19px;line-height:1.8">In May 2021, a security researcher at UpGuard found that <span class="gloss" data-def="OData — Open Data Protocol. A REST-based standard for querying and updating data. Power Apps portals use OData feeds to expose list data to external users.">OData</span> feeds on Microsoft Power Apps portals were returning sensitive data — including <span class="gloss" data-def="PII — Personally Identifiable Information. Data that can identify a specific individual: name, SSN, address, phone number, email, passport number.">PII</span> — to anyone who queried them. No authentication required. 38 million records across 47 organisations, including American Airlines, Ford, J.B. Hunt, state COVID-19 vaccination databases, and Microsoft's own payroll system. The data included Social Security numbers, vaccination appointments, employee IDs, and millions of email addresses. Nobody had attacked anything — the data was simply public by default.</p>
+
+  <div class="card" style="background:var(--dark);border-color:var(--dark-border);border-radius:8px;padding:16px 16px 12px">
+    <div class="timeline" id="tl1">
+      <div class="tl-track">
+        <div class="tl-event" onclick="tlClick(0)"><div class="tl-dot"></div><div class="tl-time">May '21</div><div class="tl-name">Researcher finds open feeds</div></div>
+        <div class="tl-event" onclick="tlClick(1)"><div class="tl-dot"></div><div class="tl-time">Jun '21</div><div class="tl-name">Reported to Microsoft</div></div>
+        <div class="tl-event breach" onclick="tlClick(2)"><div class="tl-dot"></div><div class="tl-time">Jun '21</div><div class="tl-name">Microsoft: "by design"</div></div>
+        <div class="tl-event" onclick="tlClick(3)"><div class="tl-dot"></div><div class="tl-time">Jul '21</div><div class="tl-name">Abuse report filed</div></div>
+        <div class="tl-event" onclick="tlClick(4)"><div class="tl-dot"></div><div class="tl-time">Aug '21</div><div class="tl-name">Public disclosure</div></div>
+        <div class="tl-event" onclick="tlClick(5)"><div class="tl-dot"></div><div class="tl-time">Aug '21</div><div class="tl-name">Defaults changed</div></div>
+      </div>
+      <div class="tl-detail" id="tl-detail"></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--dark-dim);text-align:center;margin-top:8px;letter-spacing:.06em">↑ click any event to see what happened ↑</div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-g" onclick="go(0)">← Cover</button>
+    <button class="btn btn-p" onclick="go(2)">What went wrong? →</button>
+  </div>
+</div>
+
+<!-- ══ S2: QUESTION ══ -->
+<div class="scr" id="s2">
+  <div class="atk-header">
+    <div class="atk-label">// classify the failure</div>
+  </div>
+  <p><strong>The question:</strong> Microsoft said this was "by design." The documentation warned about it. Forty-seven organisations still got it wrong. What kind of security failure is this?</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="sigGrid">
+    <div class="card" style="cursor:pointer;transition:all .15s" onclick="pickSig(0)"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">🐛 A software vulnerability</div><div style="font-size:14.5px;color:var(--ink-mid);line-height:1.5">A bug in Microsoft's code that should have been patched.</div></div>
+    <div class="card" style="cursor:pointer;transition:all .15s" onclick="pickSig(1)"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">⚙️ An insecure default</div><div style="font-size:14.5px;color:var(--ink-mid);line-height:1.5">The platform defaulted to public access. Nobody changed it.</div></div>
+    <div class="card" style="cursor:pointer;transition:all .15s" onclick="pickSig(2)"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">🔑 Missing authentication</div><div style="font-size:14.5px;color:var(--ink-mid);line-height:1.5">The API endpoints had no login requirement.</div></div>
+    <div class="card" style="cursor:pointer;transition:all .15s" onclick="pickSig(3)"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">📚 Poor documentation</div><div style="font-size:14.5px;color:var(--ink-mid);line-height:1.5">Microsoft didn't warn users clearly enough.</div></div>
+  </div>
+
+  <div style="font-size:13px;line-height:1.55;border-radius:4px;max-height:0;overflow:hidden;opacity:0;transition:max-height .3s,opacity .25s,padding .3s" id="s1fb"></div>
+
+  <div class="nav">
+    <button class="btn btn-g" onclick="go(1)">← Case Study</button>
+    <button class="btn btn-p" id="s1next" onclick="go(3)" disabled>Start Code Review →</button>
+  </div>
+</div>
+
+<!-- ══ S3: CODE REVIEW ══ -->
+<div class="scr" id="s3">
+  <div class="atk-header">
+    <div class="atk-label">// find the misconfiguration</div>
+  </div>
+  <p><strong>Power Apps portal <span class="gloss" data-def="YAML — YAML Ain't Markup Language. A human-readable data format used for configuration files. Common in cloud deployments, CI/CD pipelines, and Kubernetes.">YAML</span> configuration.</strong> One setting controls whether anonymous users can access table data. <strong>Click the line that opens the door.</strong></p>
+
+  <div class="cbox">
+    <div class="chead">
+      <div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div>
+      <span class="cfn">portal-config.yaml</span>
+      <span class="code-status" id="codeStatus"></span>
+    </div>
+    <div class="code-fb-strip" id="codeFb"></div>
+    <div class="cbody" id="code"></div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-g" onclick="go(2)">← Question</button>
+    <button class="btn btn-p" id="nb2" onclick="go(4)" disabled>See the Exploit →</button>
+  </div>
+</div>
+
+<!-- ══ S4: EXPLOIT — TERMINAL ══ -->
+<div class="scr" id="s4">
+  <div class="atk-header">
+    <div class="atk-label">// attack walkthrough</div>
+    <div class="atk-step" id="sct">step 1 of 4</div>
+  </div>
+
+  <div class="exploit-wrap" id="exploitWrap"></div>
+
+  <div class="nav">
+    <button class="btn btn-g" id="pb" onclick="step(-1)" disabled>← Back</button>
+    <button class="btn btn-p" id="nb3" onclick="step(1)">Next →</button>
+  </div>
+</div>
+
+<!-- ══ S5: FIX ══ -->
+<div class="scr fix-scr" id="s5">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
+    <h2>Secure defaults. Then verify.</h2>
+    <div class="dleg">
+      <div class="dleg-item"><div class="dleg-dash" style="background:var(--red)"></div>removed</div>
+      <div class="dleg-item"><div class="dleg-dash" style="background:var(--green)"></div>added</div>
+    </div>
+  </div>
+  <p style="font-size:17px;color:var(--ink-mid);margin:0;line-height:1.65">The fix isn't complex code. It's a configuration change — and an automated check to make sure it stays changed. <span class="gloss" data-def="IaC — Infrastructure as Code. Managing infrastructure (servers, databases, cloud services) through machine-readable config files rather than manual setup. Terraform, CloudFormation, Pulumi are common tools.">IaC</span> should be treated like application code: linted, scanned, reviewed.</p>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
+    <div class="lang-tabs">
+      <div class="lang-tab active" onclick="switchLang(0)">Power Apps</div>
+      <div class="lang-tab" onclick="switchLang(1)">Terraform (S3)</div>
+      <div class="lang-tab" onclick="switchLang(2)">Kubernetes</div>
+    </div>
+  </div>
+
+  <div class="fix-cbox-wrap">
+    <div class="cbox fix-cbox" id="fixCbox">
+      <div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" id="fixFilename">portal-config.yaml</span></div>
+      <div class="cbody" id="fixBody"></div>
+    </div>
+    <div class="why-dot" id="whyDot" onclick="toggleWhyTooltip()"></div>
+    <span class="why-dot-hint" id="whyDotHint">click the dot</span>
+    <div class="why-tooltip" id="whyTooltip">
+      <div class="why-tooltip-label">why this works</div>
+      <div class="why-tooltip-text" id="whyText"></div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-g" onclick="go(4)">← Exploit</button>
+    <button class="btn btn-p" onclick="go(6)">Knowledge Check →</button>
+  </div>
+</div>
+
+<!-- ══ S6: Q1 ══ -->
+<div class="scr" id="s6">
+  <div class="atk-header"><div class="atk-label">// knowledge check</div><div class="atk-step">1 / 3</div></div>
+  <p class="tq-prompt">A cloud storage bucket is created by a Terraform pipeline copied from staging. The <span class="gloss" data-def="ACL — Access Control List. A set of rules defining which users or system processes are granted access to objects and what operations are allowed.">ACL</span> defaults to public-read. What's the first line of defence?</p>
+  <div class="tq-options" id="q1opts">
+    <div class="tq-opt" onclick="answer(1,0,false)">A — Train developers to always check ACLs manually before deployment</div>
+    <div class="tq-opt" onclick="answer(1,1,true)">B — Run an IaC security scanner (tfsec, Checkov) in CI that fails the build on public ACLs</div>
+    <div class="tq-opt" onclick="answer(1,2,false)">C — Use a WAF in front of the bucket to filter unauthorised requests</div>
+  </div>
+  <div class="tq-fb" id="q1fb"></div>
+  <div class="nav"><button class="btn btn-p" id="q1next" onclick="go(7)" disabled>Next Question →</button></div>
+</div>
+
+<!-- ══ S7: Q2 ══ -->
+<div class="scr" id="s7">
+  <div class="atk-header"><div class="atk-label">// knowledge check</div><div class="atk-step">2 / 3</div></div>
+  <p class="tq-prompt">An application returns a full stack trace with internal file paths and database connection strings when an unhandled exception occurs. What A02 sub-category is this?</p>
+  <div class="tq-options" id="q2opts">
+    <div class="tq-opt" onclick="answer(2,0,false)">A — Missing encryption at rest</div>
+    <div class="tq-opt" onclick="answer(2,1,false)">B — Default credentials left unchanged</div>
+    <div class="tq-opt" onclick="answer(2,2,true)">C — Verbose error handling revealing sensitive system information</div>
+  </div>
+  <div class="tq-fb" id="q2fb"></div>
+  <div class="nav"><button class="btn btn-p" id="q2next" onclick="go(8)" disabled>Next Question →</button></div>
+</div>
+
+<!-- ══ S8: Q3 ══ -->
+<div class="scr" id="s8">
+  <div class="atk-header"><div class="atk-label">// knowledge check</div><div class="atk-step">3 / 3</div></div>
+  <p class="tq-prompt">In the 2025 OWASP Top 10, Security Misconfiguration moved from #5 to #2. What does OWASP cite as the primary driver?</p>
+  <div class="tq-options" id="q3opts">
+    <div class="tq-opt" onclick="answer(3,0,true)">A — The shift to highly configurable cloud-native software increases the surface area for misconfig</div>
+    <div class="tq-opt" onclick="answer(3,1,false)">B — New XXE vulnerabilities were discovered in 2024</div>
+    <div class="tq-opt" onclick="answer(3,2,false)">C — Misconfiguration was previously undercounted in OWASP's data methodology</div>
+  </div>
+  <div class="tq-fb" id="q3fb"></div>
+  <div class="nav"><button class="btn btn-p" id="q3next" onclick="go(9)" disabled>See Results →</button></div>
+</div>
+
+<!-- ══ S9: SUMMARY ══ -->
+<div class="scr" id="s9">
+  <div class="atk-header">
+    <div class="atk-label">// self-check complete</div>
+  </div>
+  <div id="hackStage"></div>
+  <div class="sum-msg" id="sumMsg"></div>
+  <div class="nav">
+    <button class="btn btn-g" id="rerunBtn" onclick="rerunCheck()" style="display:none">↺ Rerun self-check</button>
+    <button class="btn btn-p" id="toRuleBtn" onclick="go(10)" style="display:none">The Rule →</button>
+  </div>
+</div>
+
+<!-- ══ S10: RULE ══ -->
+<div class="scr" id="s10">
+  <h3>// the mental model</h3>
+
+  <div class="rule-card">
+    <div class="rule-ambient" id="ruleAmbient"></div>
+    <span class="re">carry this into your next deploy</span>
+    <p class="rt">Security is not a feature you <span class="ra">add</span>. It's a default you <span class="ra">start with</span> and verify continuously. If the safe state requires someone to remember to change a setting — that setting will be wrong in production.</p>
+    <span class="tag">A02 · Security Misconfiguration</span>
+  </div>
+
+  <div class="trio">
+    <div class="trio-item" id="tr0" onclick="toggleTrio(0)">
+      <div class="trio-item-main"><div class="trio-label">Scope in 2025</div><div class="trio-val">Cloud misconfig · default creds · verbose errors · <span style="color:var(--accent)">XXE</span> · missing headers</div></div>
+      <span class="trio-chevron">▶</span>
+      <div class="trio-detail"><div class="trio-detail-inner">
+        <div class="trio-detail-text">A02 rose from #5 to #2 in 2025. 16 mapped CWEs, 719K occurrences. The shift to cloud-native and IaC means more of an application's behaviour lives in configuration files, not code. XXE (CWE-611) is now included in this category. 100% of applications tested had some form of misconfiguration.</div>
+      </div></div>
+    </div>
+    <div class="trio-item" id="tr1" onclick="toggleTrio(1)">
+      <div class="trio-item-main"><div class="trio-label">First fix</div><div class="trio-val">Automate config scanning in CI — <code>tfsec</code>, <code>Checkov</code>, <code>cfn-lint</code></div></div>
+      <span class="trio-chevron">▶</span>
+      <div class="trio-detail"><div class="trio-detail-inner">
+        <div class="trio-detail-text">Treat IaC like application code: lint it, scan it, review it. Run <code>tfsec</code> or <code>Checkov</code> in CI and fail the build on high-severity findings. This catches public buckets, default credentials, debug mode, and missing encryption before deployment — not after a breach.</div>
+      </div></div>
+    </div>
+    <div class="trio-item" id="tr2" onclick="toggleTrio(2)">
+      <div class="trio-item-main"><div class="trio-label">Defence in depth</div><div class="trio-val">Identical environments · minimal platform · security headers · automated hardening</div></div>
+      <span class="trio-chevron">▶</span>
+      <div class="trio-detail"><div class="trio-detail-inner">
+        <div class="trio-detail-text">Dev, staging, and production must be configured identically (different credentials, same security posture). Remove unused features, ports, accounts, and sample apps. Send security headers (HSTS, CSP, X-Content-Type-Options). Automate hardening so a new environment starts secure by default.</div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-g" onclick="rerun()">↺ Run again</button>
+    <button class="btn btn-p" onclick="go(11)">One more thing →</button>
+  </div>
+</div>
+
+<!-- ══ S11: CHECKLIST ══ -->
+<div class="scr" id="s11">
+  <h3>// check your infrastructure today</h3>
+  <p>Five things you can verify right now. None take more than ten minutes.</p>
+
+  <div class="card" style="padding:0">
+    <div class="checklist" id="cl1">
+      <div class="cl-item" onclick="clToggle(0)"><div class="cl-check"></div><div class="cl-body"><div class="cl-title">Cloud storage permissions</div><div class="cl-hint">Are any buckets/blobs publicly accessible? Run: aws s3api get-bucket-acl</div></div></div>
+      <div class="cl-item" onclick="clToggle(1)"><div class="cl-check"></div><div class="cl-body"><div class="cl-title">Default credentials</div><div class="cl-hint">Admin panels, databases, message queues — any still using factory defaults?</div></div></div>
+      <div class="cl-item" onclick="clToggle(2)"><div class="cl-check"></div><div class="cl-body"><div class="cl-title">Error handling in production</div><div class="cl-hint">Does a 500 error reveal stack traces, file paths, or connection strings?</div></div></div>
+      <div class="cl-item" onclick="clToggle(3)"><div class="cl-check"></div><div class="cl-body"><div class="cl-title">IaC security scanning</div><div class="cl-hint">Is tfsec/Checkov running in CI? Does it fail the build on high severity?</div></div></div>
+      <div class="cl-item" onclick="clToggle(4)"><div class="cl-check"></div><div class="cl-body"><div class="cl-title">Security headers</div><div class="cl-hint">HSTS, CSP, X-Frame-Options, X-Content-Type-Options — all set?</div></div></div>
+    </div>
+    <div class="cl-progress"><div class="cl-progress-bar"><div class="cl-progress-fill" id="cl1-fill" style="width:0%"></div></div><div class="cl-progress-text" id="cl1-text">0 / 5</div></div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-g" onclick="go(10)">← The Rule</button>
+    <button class="btn btn-fin" onclick="finish()">Complete Module ✓</button>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ═══ TIMELINE DATA ═══ */
+const TL_DATA=[
+  {tag:'',tagText:'DISCOVERY',text:'UpGuard researcher found that OData API feeds on Power Apps portals were returning list data to anonymous requests. The data included names, emails, SSNs, and COVID-19 vaccination records. The setting <strong>"Enable Table Permissions"</strong> was off by default.'},
+  {tag:'tag-warn',tagText:'REPORTED',text:'UpGuard filed a vulnerability report with Microsoft Security Resource Center. Included evidence of 38 million records across 47 organisations — government agencies (Indiana, Maryland, NYC), airlines (American Airlines), logistics (J.B. Hunt), and <strong>Microsoft\'s own payroll data</strong>.'},
+  {tag:'tag-breach',tagText:'REJECTED',text:'Microsoft closed the report, stating the behaviour was <strong>"by design."</strong> The documentation did warn that OData feeds would be public without table permissions enabled. Microsoft\'s position: this is a user configuration issue, not a vulnerability.'},
+  {tag:'tag-warn',tagText:'ESCALATED',text:'UpGuard filed a formal abuse report. Separately, they began notifying the 47 most severely affected organisations directly. American Airlines secured their data within 4 days. Indiana took longer and initially accused UpGuard of profiteering.'},
+  {tag:'tag-warn',tagText:'PUBLIC',text:'UpGuard published the full research. Public pressure mounted. The key insight: <strong>"It is a better resolution to change the product than to label systemic data loss an end-user misconfiguration."</strong>'},
+  {tag:'tag-ok',tagText:'FIXED',text:'Microsoft enabled Table Permissions <strong>by default</strong> for all newly created portals. Released a Portal Checker diagnostic tool. The fix was a default change — the exact same fix OWASP recommends for all A02 vulnerabilities: <strong>secure by default, not secure by configuration.</strong>'}
+];
+function tlClick(i){
+  document.querySelectorAll('.tl-event').forEach((e,j)=>e.classList.toggle('active',j===i));
+  const d=TL_DATA[i];if(!d)return;
+  const det=document.getElementById('tl-detail');
+  det.innerHTML='<div class="tl-detail-tag '+d.tag+'">'+d.tagText+'</div>'+d.text;
+  det.classList.add('on');
+}
+
+/* ═══ SIGNAL ═══ */
+let sigPicked=false;
+function pickSig(i){
+  if(sigPicked)return;sigPicked=true;
+  const cards=document.querySelectorAll('#sigGrid .card');
+  const isRight=i===1;
+  const fb=document.getElementById('s1fb');
+  cards.forEach((c,j)=>{
+    if(j===i){c.style.borderColor=isRight?'var(--green)':'var(--red)';c.style.background=isRight?'var(--gdim)':'var(--rdim)';}
+    else{c.style.opacity='.22';c.style.pointerEvents='none';if(!isRight&&j===1){c.style.opacity='1';c.style.borderColor='var(--green)';c.style.background='var(--gdim)';}}
+  });
+  fb.style.maxHeight='120px';fb.style.opacity='1';fb.style.padding='10px 13px';
+  fb.style.background=isRight?'var(--gdim)':'var(--rdim)';fb.style.border='1px solid '+(isRight?'rgba(39,115,74,.25)':'rgba(192,57,43,.22)');fb.style.color=isRight?'var(--green)':'var(--red)';
+  fb.innerHTML=isRight
+    ?'<strong>✓ Insecure default.</strong> The documentation warned about it. Microsoft called it "by design." But when 47 organisations all make the same mistake, the default is the problem — not the users. This is the essence of A02: the system works as configured, but the configuration was never safe to begin with.'
+    :'<strong>✗ Close, but not precise enough.</strong> The root cause is an <strong>insecure default</strong> — the platform shipped with public access enabled. Microsoft\'s documentation warned about it, but warnings in docs don\'t prevent misconfigurations at scale. The fix was changing the default.';
+  document.getElementById('s1next').disabled=false;
+}
+
+/* ═══ CODE REVIEW ═══ */
+const CODE=[
+  {n:1,h:'<span class="cm"># Power Apps portal configuration</span>'},
+  {n:2,h:'<span class="kw">portal</span>:'},
+  {n:3,h:'  <span class="kw">name</span>: <span class="st">"COVID Vaccination Portal"</span>'},
+  {n:4,h:'  <span class="kw">authentication</span>: <span class="st">"Azure AD B2C"</span>'},
+  {n:5,h:''},
+  {n:6,h:'<span class="kw">lists</span>:'},
+  {n:7,h:'  - <span class="kw">entity</span>: <span class="st">"contact"</span>'},
+  {n:8,h:'    <span class="kw">odata_feed</span>: <span class="nm">true</span>'},
+  {n:9,h:'    <span class="kw">enable_table_permissions</span>: <span class="op">false</span>',correct:true},
+  {n:10,h:'    <span class="kw">page_size</span>: <span class="nm">50</span>'},
+  {n:11,h:''},
+  {n:12,h:'  - <span class="kw">entity</span>: <span class="st">"vaccination_appointment"</span>'},
+  {n:13,h:'    <span class="kw">odata_feed</span>: <span class="nm">true</span>'},
+  {n:14,h:'    <span class="kw">enable_table_permissions</span>: <span class="op">false</span>',correct:true},
+  {n:15,h:'    <span class="kw">page_size</span>: <span class="nm">100</span>'},
+];
+let codePicked=false;
+function renderCode(){
+  const c=document.getElementById('code');c.innerHTML='';
+  CODE.forEach(line=>{
+    const d=document.createElement('div');d.className=line.correct?'cl cl-target':'cl';
+    d.innerHTML='<span class="ln">'+line.n+'</span><span class="lc">'+line.h+'</span>';
+    d.onclick=()=>handleClick(d,line);c.appendChild(d);
+  });
+}
+let wrongTimer=null;
+function handleClick(el,line){
+  if(codePicked)return;
+  const fb=document.getElementById('codeFb'),st=document.getElementById('codeStatus');
+  if(line.correct){
+    codePicked=true;el.classList.remove('cl-target');
+    document.querySelectorAll('#code .cl').forEach(r=>{if(r!==el)r.style.opacity='0.25';});
+    el.classList.add('right');
+    st.textContent='✓ line '+line.n+' identified';st.className='code-status show ok';
+    fb.className='code-fb-strip on ok';
+    fb.innerHTML='<code style="color:#f0a500">enable_table_permissions: false</code> — this is the default that exposed 38 million records. With this off, the OData feed returns all list data to anonymous requests. The fix is exactly one word: <code style="color:#4ecb71">true</code>.';
+    document.getElementById('nb2').disabled=false;
+  } else {
+    if(wrongTimer)clearTimeout(wrongTimer);
+    el.classList.add('wrong');st.textContent='✗ not the misconfig';st.className='code-status show err';
+    fb.className='code-fb-strip on err';
+    const msgs={1:'Comment.',2:'Portal section header.',3:'Portal name — not a security setting.',4:'Authentication provider — this is actually correctly configured.',5:'Empty line.',
+      6:'Lists section header.',7:'Entity definition — the data table being exposed.',8:'OData feed enabled — necessary for the portal to work, but not the vulnerability by itself.',
+      10:'Page size — pagination setting, not security-relevant.',11:'Empty line.',12:'Another entity definition.',13:'OData feed for vaccination data.',15:'Page size.'};
+    fb.innerHTML=msgs[line.n]||'Not the misconfiguration. Look for the access control setting.';
+    wrongTimer=setTimeout(()=>{el.classList.remove('wrong');fb.className='code-fb-strip';st.className='code-status';},2200);
+  }
+}
+
+/* ═══ EXPLOIT ═══ */
+const EXPLOIT=[
+  {num:'01',label:'Discover the OData endpoint',
+   body:'The attacker finds the portal URL and appends <code>/_odata/contacts</code>. No authentication. The API returns a JSON feed of the contacts table — names, emails, phone numbers.',
+   term:[{type:'cmd',text:"curl 'https://portal.contoso.com/_odata/contacts'"},{type:'',text:'{"value":[{"fullname":"Alice Chen","emailaddress1":"alice@corp.com","telephone1":"555-0142"},...]}'},
+     {type:'blank'},{type:'info',text:'No auth required. 747,980 records in this table.'}]},
+  {num:'02',label:'Enumerate all exposed tables',
+   body:'The OData protocol has a metadata endpoint that lists every entity available. The attacker discovers vaccination appointments, employee records, and job applications — all with <code>enable_table_permissions: false</code>.',
+   term:[{type:'cmd',text:"curl 'https://portal.contoso.com/_odata/$metadata'"},{type:'info',text:'Entities found: contact, vaccination_appointment, job_application'},
+     {type:'blank'},{type:'cmd',text:"curl 'https://portal.contoso.com/_odata/job_applications?$select=ssn,fullname'"},{type:'atk',text:'SSN and full name returned for every applicant.'}]},
+  {num:'03',label:'Scale across organisations',
+   body:'Power Apps portals follow a predictable URL pattern. The researcher scanned for portals and found over 1,000 with public OData feeds. Forty-seven had sensitive PII — state governments, Fortune 500 companies, and Microsoft itself.',
+   term:[{type:'cmd',text:"# Scan for portals with open OData feeds"},{type:'cmd',text:"for domain in $(cat portals.txt); do"},{type:'',text:"  curl -sf \"https://$domain/_odata\" | jq '.value | length'"},{type:'cmd',text:'done'},
+     {type:'blank'},{type:'atk',text:'1,000+ portals found with public feeds.'},{type:'atk',text:'47 exposing PII including SSNs and vaccination records.'}]},
+  {num:'04',label:'Microsoft\'s initial response',
+   body:'When reported, Microsoft closed the case as "by design" — the documentation did warn that OData feeds would be public without table permissions. The researcher\'s counter-argument became the lesson: <em>"It is a better resolution to change the product than to label systemic data loss an end-user misconfiguration."</em>',
+   term:[{type:'info',text:'Microsoft response: "This behavior is by design."'},{type:'info',text:'Documentation: "Warning: OData feeds are public if table permissions are not enabled."'},
+     {type:'blank'},{type:'ok',text:'August 2021: Microsoft changes default to enabled.'},{type:'ok',text:'New portals now enforce table permissions by default.'}]}
+];
+let stepIdx=0;
+function renderExploit(){
+  const w=document.getElementById('exploitWrap');w.innerHTML='';
+  EXPLOIT.forEach((s,i)=>{
+    const d=document.createElement('div');d.className='exploit-step';d.id='ex'+i;
+    d.innerHTML='<div><span class="ex-num">step '+s.num+' / 04</span></div><div class="ex-title">'+s.label+'</div><div class="ex-body">'+s.body+'</div>'
+      +'<div class="term" style="margin-top:8px"><div class="term-bar"><div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div><span class="term-title">terminal</span></div><div class="term-body" id="et'+i+'"></div></div>';
+    w.appendChild(d);
+  });
+  setStep(0);
+}
+function setStep(i){
+  const prev=stepIdx;stepIdx=i;
+  // hide previous
+  if(prev!==i){const pe=document.getElementById('ex'+prev);if(pe)pe.classList.remove('active');}
+  // show current
+  const cur=document.getElementById('ex'+i);if(cur)cur.classList.add('active');
+  document.getElementById('sct').textContent='step '+(i+1)+' of '+EXPLOIT.length;
+  document.getElementById('pb').disabled=i===0;
+  const nb=document.getElementById('nb3');
+  if(i>=EXPLOIT.length-1){nb.textContent='See the Fix →';nb.onclick=()=>go(5);}
+  else{nb.textContent='Next →';nb.onclick=()=>step(1);}
+  // escalation glow
+  const wrap=document.getElementById('exploitWrap');
+  const intensity=(i+1)/EXPLOIT.length;
+  wrap.style.setProperty('--exploit-glow','rgba(90,122,58,'+(0.04+intensity*0.08)+')');
+  wrap.style.setProperty('--exploit-opacity',intensity);
+  // terminal lines
+  const tb=document.getElementById('et'+i);if(!tb)return;tb.innerHTML='';
+  const lines=EXPLOIT[i].term;
+  lines.forEach((l,j)=>{
+    const div=document.createElement('div');
+    div.className='term-line'+(l.type?' '+l.type:'');
+    div.style.animationDelay=(prev===i?0:300)+j*200+'ms';
+    if(l.type==='blank')div.innerHTML='&nbsp;';else div.textContent=l.text;
+    tb.appendChild(div);
+  });
+}
+function step(d){const n=stepIdx+d;if(n>=0&&n<EXPLOIT.length)setStep(n);}
+
+/* ═══ FIX ═══ */
+const FIX_LANGS=[
+  {name:'portal-config.yaml',lines:[
+    {h:'<span class="cm"># Vulnerable — table permissions disabled (default)</span>'},
+    {h:'<span class="kw">enable_table_permissions</span>: <span class="op">false</span>'},
+    {h:''},
+    {h:'<span class="cm"># Fixed — enforce permissions on every list</span>'},
+    {h:'<span class="kw">enable_table_permissions</span>: <span class="st">true</span>'},
+    {h:'<span class="cm"># Only authenticated users with correct roles see data</span>'},
+  ]},
+  {name:'main.tf',lines:[
+    {h:'<span class="cm"># Vulnerable — public ACL, no encryption</span>'},
+    {h:'<span class="kw">acl</span> = <span class="st">"public-read"</span>'},
+    {h:''},
+    {h:'<span class="cm"># Fixed — block all public access</span>'},
+    {h:'<span class="kw">block_public_acls</span>       = <span class="st">true</span>'},
+    {h:'<span class="kw">block_public_policy</span>     = <span class="st">true</span>'},
+    {h:'<span class="kw">ignore_public_acls</span>      = <span class="st">true</span>'},
+    {h:'<span class="kw">restrict_public_buckets</span> = <span class="st">true</span>'},
+    {h:''},
+    {h:'<span class="cm"># Enforce encryption at rest</span>'},
+    {h:'<span class="kw">sse_algorithm</span> = <span class="st">"AES256"</span>'},
+  ]},
+  {name:'deployment.yaml',lines:[
+    {h:'<span class="cm"># Vulnerable — runs as root, no resource limits</span>'},
+    {h:'<span class="kw">runAsRoot</span>: <span class="op">true</span>'},
+    {h:'<span class="kw">allowPrivilegeEscalation</span>: <span class="op">true</span>'},
+    {h:''},
+    {h:'<span class="cm"># Fixed — restricted security context</span>'},
+    {h:'<span class="kw">runAsNonRoot</span>: <span class="st">true</span>'},
+    {h:'<span class="kw">allowPrivilegeEscalation</span>: <span class="st">false</span>'},
+    {h:'<span class="kw">readOnlyRootFilesystem</span>: <span class="st">true</span>'},
+    {h:'<span class="kw">capabilities</span>:'},
+    {h:'  <span class="kw">drop</span>: [<span class="st">"ALL"</span>]'},
+  ]},
+];
+const WHY_TEXT=[
+  "Setting <code>enable_table_permissions: true</code> means the OData feed only returns records that the authenticated user has explicit permission to see. Anonymous users get nothing. This is the exact change Microsoft made as a default after the disclosure — one boolean that would have prevented 38 million records from being exposed.",
+  "The <code>block_public_*</code> settings form a four-layer defence: they block public ACLs from being set, block public bucket policies, ignore any existing public ACLs, and restrict public access at the bucket level. Since April 2023, AWS enables these by default on new buckets — but existing buckets and IaC templates may still have the old permissive defaults.",
+  "Running as non-root with a read-only filesystem and dropped capabilities follows the principle of least privilege. Even if the container is compromised, the attacker can't write to the filesystem, escalate privileges, or use dangerous kernel capabilities. <code>drop: [\"ALL\"]</code> removes all Linux capabilities — add back only what the application actually needs."
+];
+function switchLang(i){
+  document.querySelectorAll('.lang-tab').forEach((t,j)=>t.classList.toggle('active',j===i));
+  const lang=FIX_LANGS[i];document.getElementById('fixFilename').textContent=lang.name;
+  const cb=document.getElementById('fixBody');cb.classList.remove('fading');void cb.offsetWidth;cb.classList.add('fading');cb.innerHTML='';
+  lang.lines.forEach((line,n)=>{const d=document.createElement('div');d.className='cl';d.style.cursor='default';d.innerHTML='<span class="ln">'+(n+1)+'</span><span class="lc">'+line.h+'</span>';cb.appendChild(d);});
+  document.getElementById('whyText').innerHTML=WHY_TEXT[i];
+  document.getElementById('whyTooltip').classList.remove('show');
+  const dot=document.getElementById('whyDot');dot.classList.remove('show');
+  setTimeout(()=>{dot.classList.add('show');const hint=document.getElementById('whyDotHint');if(hint)hint.classList.add('show');},200);
+}
+function toggleWhyTooltip(){document.getElementById('whyTooltip').classList.toggle('show');const hint=document.getElementById('whyDotHint');if(hint)hint.classList.remove('show');}
+
+/* ═══ QUIZ ═══ */
+const Q_FB=[null,
+  {right:"<strong>✓ Automated IaC scanning in CI.</strong> Training helps, but humans forget. A WAF doesn't fix the root cause. An automated scanner catches public ACLs, missing encryption, and debug flags <em>before</em> code reaches production. Fail the build — don't rely on vigilance.",
+   wrong:"The most effective first line: <strong>automated IaC scanning in CI</strong> (tfsec, Checkov). Training relies on memory. A WAF treats the symptom, not the cause. Automation catches misconfiguration at PR time, before it ever reaches production."},
+  {right:"<strong>✓ Verbose error handling.</strong> Stack traces in production reveal internal file paths, framework versions, database connection strings, and sometimes credentials. This is CWE-209 (Generation of Error Message Containing Sensitive Information) — one of the most common A02 sub-patterns. The fix: a central error handler that returns generic messages to users and logs details internally.",
+   wrong:"This is <strong>verbose error handling</strong> — CWE-209. A full stack trace in production reveals internal paths, framework versions, and sometimes credentials. It's not about encryption or credentials directly — it's about the error handler being misconfigured to show system internals to external users."},
+  {right:"<strong>✓ Highly configurable software.</strong> OWASP's 2025 rationale: \"With more shifts into highly configurable software, it's not surprising to see this category moving up.\" Cloud-native architecture means more behaviour lives in configuration (YAML, Terraform, IAM policies) rather than in code — expanding the attack surface for misconfiguration.",
+   wrong:"The primary driver is the <strong>shift to highly configurable cloud-native software</strong>. More behaviour lives in config files, not code. OWASP's own rationale: \"With more shifts into highly configurable software, it's not surprising to see this category moving up.\""}
+];
+let tqScore=0,tqAnswers=[null,null,null];
+function answer(qIdx,optIdx,isRight){
+  if(tqAnswers[qIdx-1]!==null)return;tqAnswers[qIdx-1]=isRight;if(isRight)tqScore++;
+  document.querySelectorAll('#q'+qIdx+'opts .tq-opt').forEach((o,i)=>{if(i===optIdx)o.classList.add(isRight?'opt-right':'opt-wrong');else o.classList.add('opt-dim');});
+  const fb=document.getElementById('q'+qIdx+'fb');fb.className='tq-fb on '+(isRight?'fb-right':'fb-wrong');
+  fb.innerHTML=isRight?Q_FB[qIdx].right:Q_FB[qIdx].wrong;
+  setTimeout(()=>{document.getElementById('q'+qIdx+'next').disabled=false;},500);
+}
+function resetTest(){tqScore=0;tqAnswers=[null,null,null];
+  [1,2,3].forEach(i=>{document.querySelectorAll('#q'+i+'opts .tq-opt').forEach(o=>o.className='tq-opt');
+    const fb=document.getElementById('q'+i+'fb');if(fb){fb.className='tq-fb';fb.innerHTML='';}
+    const nb=document.getElementById('q'+i+'next');if(nb)nb.disabled=true;});
+}
+
+/* ═══ SUMMARY ═══ */
+const MISCONFIG_LINES = [
+  { file:'s3-bucket.tf', val:'acl = "public-read"', visitor:'🦝', comment:'a raccoon just made your S3 bucket its personal file server' },
+  { file:'portal-config.yaml', val:'enable_table_permissions: false', visitor:'🐿️', comment:'a squirrel just downloaded 38 million records through your OData feed' },
+  { file:'deployment.yaml', val:'runAsRoot: true', visitor:'🦊', comment:'a fox just got root in your container — nice of you to leave the door open' },
+  { file:'application.yml', val:'debug: true', visitor:'🐸', comment:'a frog is reading your stack traces in production — very informative, thank you' },
+  { file:'.env.production', val:'ADMIN_PASS=admin123', visitor:'🦆', comment:'a duck just logged into your admin panel with the default password' },
+];
+
+function buildMisconfigStage(missed) {
+  const hs = document.getElementById('hackStage');
+  const lines = MISCONFIG_LINES.slice(0, Math.min(missed, 3));
+  hs.innerHTML = '<div class="misconfig-stage">' +
+    lines.map((l, i) =>
+      '<div class="misconfig-line" style="animation-delay:' + (i * 0.4) + 's">' +
+        '<span class="mc-file">' + l.file + '</span> → <span class="mc-val">' + l.val + '</span>' +
+        '<span class="mc-visitor" style="animation-delay:' + (i * 0.4 + 0.3) + 's">' + l.visitor + '</span>\n' +
+        '<span class="mc-comment"># ' + l.comment + '</span>' +
+      '</div>'
+    ).join('') +
+  '</div>';
+}
+
+function renderSummary(){
+  const msg=document.getElementById('sumMsg'),hs=document.getElementById('hackStage');
+  const rerunBtn=document.getElementById('rerunBtn'),toRuleBtn=document.getElementById('toRuleBtn');
+  if(tqScore===3){
+    hs.innerHTML='<div class="gear-wrap"><svg class="gear-svg" width="80" height="80" viewBox="0 0 80 80"><path class="g1" d="M36,18 L40,12 L44,18 L50,17 L49,23 L55,25 L51,30 L52,36 L46,36 L44,42 L39,38 L34,40 L33,34 L27,33 L30,28 L26,24 L31,21 L28,16 L34,16 Z"/><path class="g2" d="M54,28 L57,23 L60,28 L64,27 L63,32 L68,33 L65,37 L66,42 L61,42 L59,46 L55,43 L51,45 L50,40 L46,39 L48,35 L44,32 L48,30 L46,26 L51,26 Z"/></svg><span class="gear-label">properly configured</span></div>';
+    msg.innerHTML='<div class="sum-score">3 / 3</div><strong>Well done.</strong> You identified the IaC scanning defence, the verbose error pattern, and the 2025 rationale for the #5→#2 move. Click The Rule to finish.';
+    rerunBtn.style.display='none';toRuleBtn.style.display='';
+  } else {
+    const missed=3-tqScore;
+    buildMisconfigStage(missed);
+    msg.innerHTML='<div class="sum-score sum-score-miss">'+tqScore+' / 3</div><strong>'+(missed===1?'One question':'Two questions')+' missed.</strong> The configs above are still open — the critters are already inside. Run through the check again to close the doors.';
+    rerunBtn.style.display='';toRuleBtn.style.display='none';
+  }
+}
+function rerunCheck(){document.getElementById('hackStage').innerHTML='';resetTest();go(6);}
+
+/* ═══ CHECKLIST ═══ */
+function clToggle(i){
+  const items=document.querySelectorAll('#cl1 .cl-item');items[i].classList.toggle('checked');
+  const total=items.length,checked=document.querySelectorAll('#cl1 .cl-item.checked').length;
+  document.getElementById('cl1-fill').style.width=(checked/total*100)+'%';
+  document.getElementById('cl1-text').textContent=checked+' / '+total;
+}
+
+/* ═══ NAV ═══ */
+let cur=0;const TOTAL=11;const visited={0:true};
+const SCREEN_LABELS=['Cover','Case Study','Question','Code Review','Exploit','Fix','Q1','Q2','Q3','Results','Rule','Checklist'];
+function buildStrip(){
+  const strip=document.getElementById('navstrip');if(!strip)return;
+  const sections=[{screens:[0],type:'pip-cover'},'sep',{screens:[1,2,3,4,5],type:''},'sep',{screens:[6,7,8,9],type:''},'sep',{screens:[10,11],type:'pip-wide'}];
+  strip.innerHTML='';
+  sections.forEach(sec=>{
+    if(sec==='sep'){const s=document.createElement('div');s.className='ns-sep';strip.appendChild(s);return;}
+    sec.screens.forEach(n=>{const pip=document.createElement('button');pip.className='ns-pip '+sec.type;
+      if(n===cur)pip.classList.add('active');else if(visited[n])pip.classList.add('visited');
+      pip.title=SCREEN_LABELS[n]||'';pip.onclick=()=>go(n);strip.appendChild(pip);});
+  });
+}
+
+function go(n){
+  if(n<0||n>TOTAL)return;
+  const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');
+  cur=n;visited[n]=true;
+  const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');
+  document.getElementById('wrap').scrollTop=0;
+  document.getElementById('pf').style.width=(n/TOTAL*100)+'%';
+  document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;
+  if(n===4)renderExploit();
+  if(n===9)renderSummary();
+  if(n===10){revealRule();buildRuleAmbient();}
+  buildStrip();
+}
+function revealRule(){
+  const rt=document.querySelector('.rt');if(!rt||rt.dataset.revealed)return;rt.dataset.revealed='1';
+  const html=rt.innerHTML;rt.innerHTML='';const tmp=document.createElement('div');tmp.innerHTML=html;let delay=0;
+  tmp.childNodes.forEach(node=>{
+    if(node.nodeType===3){node.textContent.split(/(\s+)/).forEach(tok=>{if(!tok)return;if(/^\s+$/.test(tok)){rt.appendChild(document.createTextNode(tok));return;}const sp=document.createElement('span');sp.className='w';sp.style.animationDelay=delay+'ms';sp.textContent=tok;rt.appendChild(sp);delay+=42;});}
+    else{node.textContent.split(/(\s+)/).forEach(tok=>{if(!tok)return;if(/^\s+$/.test(tok)){rt.appendChild(document.createTextNode(tok));return;}const sp=document.createElement('span');sp.className='w ra';sp.style.animationDelay=delay+'ms';sp.textContent=tok;rt.appendChild(sp);delay+=42;});}
+  });
+}
+function buildRuleAmbient(){
+  const el=document.getElementById('ruleAmbient');if(!el||el.dataset.built)return;el.dataset.built='1';
+  el.textContent=['block_public_acls       = true','enable_table_permissions: true','runAsNonRoot: true','restrict_public_buckets = true',
+    'allowPrivilegeEscalation: false','sse_algorithm = "AES256"','readOnlyRootFilesystem: true','capabilities: drop: ["ALL"]'].join('\n').repeat(4);
+}
+function finish(){window.parent.postMessage({type:'course-next'},'*');}
+function rerun(){
+  sigPicked=false;codePicked=false;stepIdx=0;
+  document.querySelectorAll('#sigGrid .card').forEach(c=>{c.style='cursor:pointer;transition:all .15s';});
+  document.getElementById('s1fb').style.cssText='max-height:0;opacity:0;padding:0';
+  document.getElementById('s1next').disabled=true;
+  document.querySelectorAll('#code .cl').forEach(r=>{r.style.opacity='';r.className='cl';});
+  document.getElementById('codeFb').className='code-fb-strip';document.getElementById('codeFb').innerHTML='';
+  document.getElementById('codeStatus').className='code-status';
+  document.getElementById('nb2').disabled=true;
+  document.getElementById('exploitWrap').innerHTML='';
+  resetTest();
+  document.getElementById('hackStage').innerHTML='';document.getElementById('sumMsg').innerHTML='';
+  document.getElementById('rerunBtn').style.display='none';document.getElementById('toRuleBtn').style.display='none';
+  document.querySelectorAll('.trio-item').forEach(t=>t.classList.remove('open'));
+  const rt=document.querySelector('.rt');if(rt)delete rt.dataset.revealed;
+  const ra=document.getElementById('ruleAmbient');if(ra){delete ra.dataset.built;ra.textContent='';}
+  document.querySelectorAll('#cl1 .cl-item').forEach(c=>c.classList.remove('checked'));
+  document.getElementById('cl1-fill').style.width='0%';document.getElementById('cl1-text').textContent='0 / 5';
+  Object.keys(visited).forEach(k=>{if(k!=='0')delete visited[k];});
+  go(1);
+}
+
+/* ═══ TRIO ═══ */
+let openTrio=-1;
+function toggleTrio(i){if(openTrio===i){document.getElementById('tr'+i).classList.remove('open');openTrio=-1;return;}
+  if(openTrio>=0)document.getElementById('tr'+openTrio).classList.remove('open');
+  document.getElementById('tr'+i).classList.add('open');openTrio=i;}
+document.addEventListener('click',e=>{if(openTrio>=0&&!e.target.closest('.trio-item')){document.getElementById('tr'+openTrio).classList.remove('open');openTrio=-1;}});
+
+/* ═══ GLOSSARY TOOLTIP ═══ */
+(function(){
+  const tip=document.createElement('div');tip.id='gloss-tip';document.body.appendChild(tip);let cur=null;
+  function place(el){const def=el.getAttribute('data-def')||'';tip.textContent=def;const r=el.getBoundingClientRect();tip.style.left='0px';tip.style.top='0px';
+    const tw=tip.offsetWidth,th=tip.offsetHeight;let left=r.left;if(left+tw>window.innerWidth-8)left=window.innerWidth-tw-8;if(left<8)left=8;
+    let top=r.top-th-10;if(top<8)top=r.bottom+10;tip.style.left=left+'px';tip.style.top=top+'px';tip.classList.add('on');cur=el;}
+  function hide(){tip.classList.remove('on');cur=null}
+  document.addEventListener('mouseover',e=>{const g=e.target.closest('.gloss');if(g&&g!==cur)place(g)});
+  document.addEventListener('mouseout',e=>{if(e.target.closest('.gloss'))hide()});
+  document.addEventListener('click',e=>{const g=e.target.closest('.gloss');if(g&&window.matchMedia('(hover:none)').matches){if(cur===g)hide();else place(g);e.preventDefault();return}if(!g)hide()});
+  document.addEventListener('scroll',hide,true);
+})();
+
+/* ═══ FULLSCREEN ═══ */
+function toggleFS(){
+  if(!document.fullscreenElement&&!document.webkitFullscreenElement){
+    const el=document.documentElement;
+    (el.requestFullscreen||el.webkitRequestFullscreen).call(el);
+  }else{
+    (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+  }
+}
+document.addEventListener('fullscreenchange',updateFSIcon);
+document.addEventListener('webkitfullscreenchange',updateFSIcon);
+function updateFSIcon(){
+  const isFS=!!(document.fullscreenElement||document.webkitFullscreenElement);
+  document.getElementById('fsIco').style.display=isFS?'none':'';
+  document.getElementById('fsIcoExit').style.display=isFS?'':'none';
+}
+
+/* ═══ BOOT ═══ */
+renderCode();switchLang(0);buildStrip();
+</script>
+</body>
+</html>

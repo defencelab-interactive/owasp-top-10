@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A07 · Authentication Failures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2f0ec;--surface:#fdfcfa;--surface2:#ece9e2;--border:#dbd6cc;--border2:#bfb8ac;
+  --ink:#181614;--ink-mid:#3d3830;--ink-dim:#7a7268;
+  --accent:#3a6a5a;--adim:rgba(58,106,90,.09);--aglow:rgba(58,106,90,.3);
+  --red:#b83232;--rdim:rgba(184,50,50,.1);--green:#1e6e47;--gdim:rgba(30,110,71,.1);--yellow:#b89820;
+  --code-bg:#16181f;--code-surface:#1e2028;--code-border:#2a2d38;
+  --dark:#1a1c22;--dark2:#22252e;--dark-border:#2e3240;--dark-text:#c8ccd8;--dark-dim:#6a7088;
+  --mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+body{display:flex;flex-direction:column;overflow-x:hidden;background-image:repeating-linear-gradient(90deg,transparent,transparent 119px,rgba(0,0,0,.022) 119px,rgba(0,0,0,.022) 120px)}
+.topbar{height:44px;min-height:44px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;flex-shrink:0}
+.badge{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);background:var(--adim);border:1px solid var(--accent);border-radius:2px;padding:3px 10px;letter-spacing:.07em}
+.topbar-title{font-family:var(--mono);font-size:13px;color:var(--ink-dim)}.sep{color:var(--border2)}
+.screen-lbl{font-family:var(--mono);font-size:12px;color:var(--ink-dim);margin-left:auto}
+.prog{height:3px;background:var(--border);flex-shrink:0}.prog-fill{height:100%;background:var(--accent);transition:width .4s cubic-bezier(.4,0,.2,1)}
+.navstrip{display:flex;align-items:center;gap:2px;padding:5px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}.navstrip::-webkit-scrollbar{display:none}
+.ns-pip{height:4px;border-radius:2px;border:none;padding:0;cursor:pointer;flex-shrink:0;background:var(--border);transition:all .18s;appearance:none;width:16px}.ns-pip:hover{background:var(--border2);transform:scaleY(1.5)}.ns-pip.visited{background:var(--border2)}.ns-pip.active{background:var(--accent);transform:scaleY(2)}.ns-pip.pip-cover{width:8px;height:8px;border-radius:50%}.ns-pip.pip-wide{width:22px}.ns-sep{width:1px;height:10px;background:var(--border);flex-shrink:0;margin:0 3px}
+.wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;position:relative}.wrap::-webkit-scrollbar{display:none}
+.scr{display:none;padding:24px 28px 18px;flex-direction:column;gap:14px;width:100%;min-height:100%}.scr.on{display:flex;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.scr.on .nav{animation:slideUp .35s cubic-bezier(.4,0,.2,1) .1s both}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em}p{font-size:17px;line-height:1.75;color:var(--ink-mid)}code{font-family:var(--mono);font-size:14px;color:var(--accent);background:var(--adim);padding:2px 6px;border-radius:2px}strong{color:var(--ink)}.card{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:12px 16px}
+.nav{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;padding:14px 0 6px;border-top:1px solid var(--border);margin-top:10px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:12px 26px;border-radius:5px;font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;border:none;transition:all .14s;letter-spacing:.01em}.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:#2d5446;transform:translateY(-1px);box-shadow:0 3px 12px var(--aglow)}.btn-g{background:transparent;color:var(--ink-mid);border:1px solid var(--border2)}.btn-g:hover{border-color:var(--ink-dim);color:var(--ink)}.btn-fin{background:var(--accent);color:#fff;padding:12px 28px;font-size:15px;font-weight:700}.btn-fin:hover{background:#2d5446}.btn:disabled{opacity:.3;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.gloss{border-bottom:1px dotted var(--accent);cursor:help;font-weight:600;color:inherit}#gloss-tip{position:fixed;background:#1a1620;color:#F5F2ED;font-size:14px;font-weight:400;line-height:1.55;padding:12px 16px;border-radius:6px;border:1px solid rgba(58,106,90,.4);box-shadow:0 8px 28px rgba(0,0,0,.55);max-width:340px;width:max-content;opacity:0;visibility:hidden;transform:translateY(4px);transition:opacity .18s,transform .18s,visibility .18s;pointer-events:none;z-index:9999;text-align:left;font-family:inherit}#gloss-tip.on{opacity:1;visibility:visible;transform:translateY(0)}
+/* timeline */.timeline{position:relative;padding:10px 0 0}.tl-track{position:relative;display:flex;align-items:flex-start;gap:0;padding-bottom:16px}.tl-track::before{content:'';position:absolute;top:18px;left:24px;right:24px;height:2px;background:rgba(255,255,255,.08);z-index:0}.tl-event{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;cursor:pointer;padding:0 4px;min-width:0}.tl-dot{width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);transition:all .25s;flex-shrink:0}.tl-event:hover .tl-dot,.tl-event.active .tl-dot{background:var(--accent);border-color:var(--accent);box-shadow:0 0 12px rgba(58,106,90,.4)}.tl-event.breach .tl-dot{border-color:rgba(184,50,50,.4)}.tl-event.breach.active .tl-dot{background:var(--red);border-color:var(--red);box-shadow:0 0 12px rgba(184,50,50,.4)}.tl-event.good .tl-dot{border-color:rgba(30,110,71,.4)}.tl-event.good.active .tl-dot{background:var(--green);border-color:var(--green)}.tl-time{font-size:12px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.5px;font-family:var(--mono)}.tl-name{font-size:13px;color:rgba(255,255,255,.5);text-align:center;line-height:1.3;font-weight:500;transition:color .2s}.tl-event.active .tl-name{color:#fff}.tl-detail{margin-top:8px;padding:14px 18px;background:linear-gradient(170deg,#1c1820,#181820);border:1px solid rgba(58,106,90,.3);border-radius:10px;font-size:15px;color:rgba(245,242,237,.8);line-height:1.7;display:none}.tl-detail.on{display:block;animation:tl-slide .25s ease}.tl-detail strong{color:#fff;font-weight:600}.tl-detail-tag{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}.tl-detail-tag.tag-breach{color:var(--red)}.tl-detail-tag.tag-warn{color:var(--yellow)}.tl-detail-tag.tag-ok{color:var(--green)}@keyframes tl-slide{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+/* code */.cbox{background:var(--code-bg);border:1px solid var(--code-border);border-radius:5px;font-family:var(--mono);display:flex;flex-direction:column;overflow:hidden}.chead{background:var(--code-surface);border-bottom:1px solid var(--code-border);padding:6px 13px;display:flex;align-items:center;gap:8px;flex-shrink:0}.dots{display:flex;gap:4px}.dot{width:8px;height:8px;border-radius:50%}.dr{background:#e0585844;border:1px solid #e0585888}.dy{background:#f0a50044;border:1px solid #f0a50088}.dg{background:#3ecf7244;border:1px solid #3ecf7288}.cfn{font-family:var(--mono);font-size:11.5px;color:#555a6a;margin-left:3px}.code-status{margin-left:auto;font-family:var(--mono);font-size:11.5px;opacity:0;transition:opacity .2s ease}.code-status.show{opacity:1}.code-status.ok{color:#4ecb71}.code-status.err{color:#f07178}.cbody{padding:8px 0;overflow-y:auto;flex:1}.cl{display:flex;align-items:flex-start;padding:1.5px 12px;transition:background .1s;cursor:pointer}.cl:hover{background:rgba(58,106,90,.07)}.cl:hover .ln{color:var(--accent)}.cl.wrong{background:rgba(192,57,43,.14);animation:shake .28s ease}.cl.right{background:rgba(58,106,90,.1)}@keyframes shake{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}70%{transform:translateX(4px)}}@keyframes blink-ln{0%,100%{color:#3a3e4f}50%{color:rgba(58,106,90,.8)}}.cl-target .ln{animation:blink-ln 1.1s ease-in-out infinite}.cl.right{animation:ripple-ok .6s ease-out forwards}@keyframes ripple-ok{0%{box-shadow:0 0 0 0 rgba(58,106,90,.5)}100%{box-shadow:0 0 0 18px rgba(58,106,90,0)}}.ln{width:32px;min-width:32px;text-align:right;color:#3a3e4f;font-size:12.5px;user-select:none;padding-right:12px;line-height:1.85}.lc{flex:1;color:#c8ccd8;line-height:1.85;white-space:pre;font-size:14.5px}.kw{color:#c792ea}.fn{color:#82aaff}.st{color:#c3e88d}.cm{color:#546e7a;font-style:italic}.nm{color:#f78c6c}.op{color:#f07178}.code-fb-strip{font-family:var(--mono);font-size:13px;line-height:1.5;max-height:0;overflow:hidden;opacity:0;transition:max-height .3s cubic-bezier(.4,0,.2,1),opacity .25s ease,padding .3s ease;padding:0 12px}.code-fb-strip.on{max-height:80px;opacity:1;padding:8px 12px;border-top:1px solid var(--code-border)}.code-fb-strip.ok{color:#4ecb71;background:rgba(78,203,113,.06)}.code-fb-strip.err{color:#f07178;background:rgba(240,113,120,.06)}.cl.right .lc{position:relative;overflow:hidden}.cl.right .lc::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(58,106,90,.2),transparent);animation:sweep .6s ease .1s forwards;pointer-events:none}@keyframes sweep{to{left:100%}}
+/* fix */.lang-tabs{display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;width:fit-content;flex-shrink:0}.lang-tab{font-family:var(--mono);font-size:13px;padding:8px 16px;cursor:pointer;color:var(--ink-dim);background:var(--surface);border-right:1px solid var(--border);transition:all .12s}.lang-tab:last-child{border-right:none}.lang-tab:hover{color:var(--ink)}.lang-tab.active{background:var(--accent);color:#fff;font-weight:700}@keyframes langFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}.fix-cbox .cbody.fading{animation:langFade .18s ease both}.dleg{display:flex;gap:14px;align-items:center}.dleg-item{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:12px;color:var(--ink-dim)}.dleg-dash{width:14px;height:3px;border-radius:1px}.fix-cbox-wrap{position:relative}.why-dot{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:11px;height:11px;border-radius:50%;background:var(--accent);cursor:pointer;opacity:0;transition:opacity .3s ease .15s;z-index:10}.why-dot.show{opacity:1}.why-dot::before{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:dotPulse 2s cubic-bezier(.4,0,.6,1) infinite}@keyframes dotPulse{0%{opacity:.6;transform:scale(.7)}70%{opacity:0;transform:scale(1.6)}100%{opacity:0}}.why-dot-hint{position:absolute;right:30px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10px;color:var(--accent);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .3s ease}.why-dot-hint.show{opacity:1}.why-tooltip{position:absolute;right:36px;top:50%;transform:translateY(-50%) scale(.95);width:340px;background:#1a1c24;border:1px solid rgba(58,106,90,.4);border-radius:7px;padding:14px 18px;opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s cubic-bezier(.34,1.2,.64,1);z-index:20;box-shadow:0 8px 28px rgba(0,0,0,.4)}.why-tooltip::after{content:'';position:absolute;right:-6px;top:50%;width:10px;height:10px;background:#1a1c24;border-right:1px solid rgba(58,106,90,.4);border-top:1px solid rgba(58,106,90,.4);transform:translateY(-50%) rotate(45deg)}.why-tooltip.show{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1)}.why-tooltip-label{font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:7px}.why-tooltip-label::before{content:'';width:16px;height:1px;background:var(--accent);flex-shrink:0}.why-tooltip-text{font-size:15px;line-height:1.7;color:#c8ccd8}.why-tooltip-text code{color:#f0a500;background:rgba(240,165,0,.12);padding:2px 5px;border-radius:2px;font-size:13.5px;font-family:var(--mono)}
+/* quiz */.tq-counter{font-family:var(--mono);font-size:13px;color:var(--ink-dim)}.tq-prompt{font-size:clamp(22px,3vw,28px);font-weight:800;color:var(--ink);line-height:1.35;letter-spacing:-.01em;margin-top:8px;flex-shrink:0}.tq-options{display:flex;flex-direction:column;gap:12px;margin-top:6px;flex-shrink:0}.tq-opt{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 18px;font-size:16px;color:var(--ink-mid);cursor:pointer;transition:border-color .14s,background .14s,transform .14s;line-height:1.5;position:relative;overflow:hidden}.tq-opt:hover{border-color:var(--border2);background:var(--surface2);transform:translateX(4px)}.tq-opt.opt-right{border-color:var(--green);background:var(--gdim);color:var(--green);cursor:default;transform:none;font-weight:600}.tq-opt.opt-wrong{border-color:var(--red);background:var(--rdim);color:var(--red);cursor:default;transform:none;animation:shake .28s ease}.tq-opt.opt-dim{opacity:.3;cursor:default;pointer-events:none;transform:none}.tq-opt.opt-right::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(30,110,71,.12),transparent);animation:secureSweep .5s ease forwards;pointer-events:none;border-radius:inherit}@keyframes secureSweep{0%{opacity:0;transform:translateX(-100%)}50%{opacity:1}100%{opacity:0;transform:translateX(100%)}}.tq-fb{font-size:16px;line-height:1.6;border-radius:6px;max-height:0;overflow:hidden;opacity:0;padding:0 16px;transition:max-height .35s cubic-bezier(.4,0,.2,1),opacity .28s ease,padding .32s ease}.tq-fb.on{max-height:200px;opacity:1;padding:14px 18px}.tq-fb.fb-right{background:var(--gdim);border:1px solid rgba(30,110,71,.25);color:var(--green)}.tq-fb.fb-wrong{background:var(--rdim);border:1px solid rgba(184,50,50,.22);color:var(--red)}
+/* exploit */.exploit-wrap{display:flex;flex-direction:column;gap:0;position:relative;overflow:hidden}.exploit-step{display:none;flex-direction:column;gap:8px;opacity:0;transition:opacity .28s ease}.exploit-step.active{display:flex;opacity:1;animation:fadeUp .25s ease}.ex-num{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}.ex-title{font-size:clamp(24px,3.5vw,32px);font-weight:800;letter-spacing:-.02em;line-height:1.2;color:var(--ink);margin-bottom:3px}.ex-body{font-size:17px;line-height:1.75;color:var(--ink-mid)}
+.math-box{background:var(--code-bg);border:1px solid var(--code-border);border-radius:6px;padding:18px 20px;font-family:var(--mono);margin-top:6px}.math-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:14.5px}.math-label{color:var(--dark-dim)}.math-val{color:var(--dark-text);font-weight:700}.math-val.danger{color:var(--red)}.math-val.safe{color:var(--green)}.math-divider{height:1px;background:var(--code-border);margin:6px 0}
+/* score */.sum-msg{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px 26px;font-size:19px;line-height:1.7;color:var(--ink);flex-shrink:0;animation:fadeUp .3s ease .2s both}.sum-msg strong{color:var(--accent)}.auth-stage{background:var(--code-bg);border:1px solid var(--code-border);border-radius:8px;padding:20px;font-family:var(--mono);font-size:13.5px;line-height:2;color:var(--dark-text);overflow:hidden}.auth-line{opacity:0;animation:fadeUp .3s ease forwards}
+/* rule */.rule-card{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:28px;background:var(--surface);border:1px solid var(--border);border-radius:8px;flex-shrink:0;position:relative;overflow:hidden}.rule-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 70%,rgba(58,106,90,.05) 0%,transparent 65%);pointer-events:none}.re{font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.12em}@keyframes wordIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}.rt .w{display:inline;opacity:0;animation:wordIn .3s ease forwards}.rt{font-size:clamp(18px,2.4vw,22px);font-weight:700;color:var(--ink);line-height:1.45;max-width:600px}.ra{color:var(--accent)}.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:3px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.05em;background:var(--adim);color:var(--accent);border:1px solid rgba(58,106,90,.22)}.rule-ambient{position:absolute;inset:0;pointer-events:none;opacity:.04;font-family:var(--mono);font-size:10px;color:var(--accent);line-height:2;padding:8px 12px;overflow:hidden;white-space:pre;animation:ambientScroll 20s linear infinite}@keyframes ambientScroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}@keyframes shClose{to{stroke-dashoffset:0}}@keyframes chDraw{to{stroke-dashoffset:0}}
+/* trio */.trio{display:flex;flex-direction:column;gap:10px;flex-shrink:0}.trio-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px 20px;cursor:pointer;transition:border-color .15s;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}.trio-item:hover{border-color:var(--border2)}.trio-item.open{border-color:var(--accent);background:var(--surface2)}.trio-item-main{display:flex;align-items:center;gap:14px}.trio-label{font-family:var(--mono);font-size:13px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.08em;min-width:110px;font-weight:600}.trio-val{font-size:17px;color:var(--ink);line-height:1.5}.trio-chevron{font-size:14px;color:var(--ink-dim);transition:transform .22s;flex-shrink:0}.trio-item.open .trio-chevron{transform:rotate(90deg);color:var(--accent)}.trio-detail{display:grid;grid-template-rows:0fr;grid-column:1/-1;transition:grid-template-rows .28s cubic-bezier(.4,0,.2,1)}.trio-item.open .trio-detail{grid-template-rows:1fr}.trio-detail-inner{overflow:hidden}.trio-detail-text{font-size:16px;line-height:1.7;color:var(--ink-mid);padding-top:12px;border-top:1px solid var(--border);margin-top:12px}.trio-detail-text code{color:var(--accent);background:var(--adim);padding:2px 6px;border-radius:2px;font-size:14px}
+/* checklist */.checklist{margin:0}.ck-item{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;-webkit-user-select:none;user-select:none}.ck-item:last-child{border-bottom:none}.ck-item:hover{background:rgba(58,106,90,.03)}.ck-check{width:26px;height:26px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;margin-top:1px}.ck-item.checked .ck-check{background:var(--green);border-color:var(--green)}.ck-item.checked .ck-check::after{content:'✓';color:#fff;font-size:14px;font-weight:800}.ck-body{flex:1}.ck-title{font-size:16px;font-weight:600;color:var(--ink);line-height:1.35;transition:all .2s}.ck-item.checked .ck-title{color:var(--ink-dim);text-decoration:line-through;text-decoration-color:var(--border)}.ck-hint{font-size:14px;color:var(--ink-dim);line-height:1.4;margin-top:2px}.ck-progress{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}.ck-progress-bar{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}.ck-progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width .3s}.ck-progress-text{font-size:13px;font-weight:700;color:var(--ink-dim);font-family:var(--mono);min-width:44px;text-align:right}
+/* cover */.cover{display:none;flex-direction:column;align-items:center;justify-content:center;position:absolute;inset:0;background:var(--dark);overflow:hidden;padding:24px 24px 40px;z-index:30}.cover.on{display:flex}.cover::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(255,255,255,.018) 59px,rgba(255,255,255,.018) 60px),repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,255,255,.018) 59px,rgba(255,255,255,.018) 60px);pointer-events:none}.cover::after{content:'';position:absolute;width:400px;height:400px;top:40%;left:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(58,106,90,.12) 0%,transparent 70%);pointer-events:none;animation:cvGlow 4s ease-in-out infinite}@keyframes cvGlow{0%,100%{opacity:.4}50%{opacity:.9}}@keyframes cvFadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.cv-visual{position:relative;z-index:1;margin-bottom:20px;width:280px;height:220px;display:flex;align-items:center;justify-content:center}
+.cv-keyhole{width:220px;height:200px;z-index:2;overflow:visible}
+/* keyhole */
+.cv-kh-circle{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-dasharray:130;stroke-dashoffset:130;animation:cvDraw 1s ease .3s forwards}
+.cv-kh-slot{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-dasharray:100;stroke-dashoffset:100;animation:cvDraw .6s ease 1s forwards}
+.cv-kh-fill{fill:rgba(58,106,90,.08);opacity:0;animation:cvFill .4s ease 1.4s forwards}
+@keyframes cvDraw{to{stroke-dashoffset:0}}
+@keyframes cvFill{to{opacity:1}}
+/* keys flying in */
+.cv-key-g{opacity:0;animation:cvKeyIn .5s ease forwards}
+.cv-key-shape{fill:none;stroke-width:2;stroke-linecap:round}
+.cv-key-g.fail .cv-key-shape{stroke:var(--red)}
+.cv-key-g.fail{animation:cvKeyFail .6s ease forwards}
+.cv-key-g.ok .cv-key-shape{stroke:var(--green);stroke-width:2.5}
+.cv-key-g.ok{animation:cvKeyOk .6s ease forwards}
+@keyframes cvKeyIn{0%{opacity:0;transform:translateX(-40px)}30%{opacity:.7}100%{opacity:0;transform:translateX(10px)}}
+@keyframes cvKeyFail{0%{opacity:0;transform:translateX(-40px)}30%{opacity:.8;transform:translateX(0)}60%{opacity:.6;transform:translateX(5px)}100%{opacity:0;transform:translateX(20px) rotate(15deg)}}
+@keyframes cvKeyOk{0%{opacity:0;transform:translateX(-40px)}40%{opacity:1;transform:translateX(0)}100%{opacity:1;transform:translateX(0)}}
+/* glow on successful key */
+.cv-key-glow{fill:none;stroke:var(--green);stroke-width:1;opacity:0}
+.cv-key-g.ok .cv-key-glow{animation:cvGlowPulse 1.5s ease-in-out infinite .5s}
+@keyframes cvGlowPulse{0%,100%{opacity:0;r:24}50%{opacity:.4;r:32}}
+/* counter */
+.cv-counter{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:10px;letter-spacing:.06em;z-index:3;display:flex;gap:16px}
+.cv-ct-fail{color:var(--red);opacity:0;animation:cvFadeUp .3s ease 2.6s forwards}
+.cv-ct-ok{color:var(--green);opacity:0;animation:cvFadeUp .3s ease 2.8s forwards}
+.cv-badge{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.1em;padding:5px 14px;border-radius:3px;z-index:2;margin-bottom:8px;color:#fff;background:var(--accent);opacity:0;animation:cvFadeUp .4s ease 3s forwards}
+.cv-tag{font-family:var(--mono);font-size:13px;letter-spacing:.15em;text-transform:uppercase;z-index:2;margin-bottom:6px;color:var(--accent);opacity:0;animation:cvFadeUp .4s ease 3.1s forwards}
+.cv-title{font-size:clamp(26px,4.5vw,38px);font-weight:800;color:#f0ede8;letter-spacing:-.02em;line-height:1.15;text-align:center;z-index:2;margin-bottom:4px;opacity:0;animation:cvFadeUp .4s ease 3.2s forwards}
+.cv-sub{font-size:13.5px;color:var(--dark-dim);text-align:center;z-index:2;line-height:1.55;max-width:420px;opacity:0;animation:cvFadeUp .4s ease 3.4s forwards}
+.cv-start{z-index:2;margin-top:22px;opacity:0;animation:cvFadeUp .4s ease 3.6s forwards}.cv-start .btn{background:var(--accent);color:#fff;padding:11px 28px;font-size:13px}
+/* ── ACCENT BANNERS ── */
+.atk-header{display:flex;align-items:center;justify-content:space-between;background:var(--accent);border-radius:6px;padding:18px 24px;flex-shrink:0}
+.atk-label{font-family:var(--mono);font-size:14px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.12em}
+.atk-step{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.7);letter-spacing:.05em}
+.sum-score{font-size:clamp(36px,5vw,48px);font-weight:800;color:var(--green);letter-spacing:-.02em;margin-bottom:8px;line-height:1}
+.sum-score-miss{color:var(--red)}
+.fs-btn{background:none;border:1px solid var(--border);border-radius:3px;color:var(--ink-dim);cursor:pointer;padding:4px 5px;display:flex;align-items:center;justify-content:center;transition:color .12s,border-color .12s;margin-left:8px;flex-shrink:0}
+.fs-btn:hover{color:var(--ink);border-color:var(--border2)}
+html:fullscreen,html:-webkit-full-screen{background:var(--bg)}
+html:fullscreen body,html:-webkit-full-screen body{height:100vh}
+
+@media(max-width:620px){.scr{padding:12px 14px 10px}.lc{font-size:11px}}
+</style>
+</head>
+<body>
+<div class="topbar"><span class="badge">A07</span><span class="sep">/</span><span class="topbar-title">Authentication Failures — OWASP Top 10</span><span class="screen-lbl" id="lbl">00 / 11</span><button class="fs-btn" id="fsBtn" onclick="toggleFS()" title="Toggle fullscreen" aria-label="Toggle fullscreen"><svg id="fsIco" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,5 1,1 5,1"/><polyline points="9,1 13,1 13,5"/><polyline points="13,9 13,13 9,13"/><polyline points="5,13 1,13 1,9"/></svg><svg id="fsIcoExit" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polyline points="5,1 5,5 1,5"/><polyline points="9,5 13,5 9,1"/><polyline points="9,13 9,9 13,9"/><polyline points="1,9 5,9 5,13"/></svg></button></div>
+<div class="navstrip" id="navstrip"></div>
+<div class="prog"><div class="prog-fill" id="pf" style="width:0%"></div></div>
+<div class="wrap" id="wrap">
+
+<div class="cover on" id="s0">
+  <div class="cv-visual">
+    <svg class="cv-keyhole" viewBox="0 0 200 200" id="cvKeys"></svg>
+    <div class="cv-counter"><span class="cv-ct-fail">✗ 13,999 rejected</span><span class="cv-ct-ok">✓ 1 matched</span></div>
+  </div>
+  <span class="cv-badge">A07</span><div class="cv-tag">OWASP Top 10 · 2025</div>
+  <div class="cv-title">Authentication Failures</div>
+  <div class="cv-sub">14,000 reused passwords. No MFA. No anomaly detection. Five months unnoticed. 6.9 million genetic profiles exposed.</div>
+  <div class="cv-start"><button class="btn" onclick="go(1)">Begin Module →</button></div>
+</div>
+
+<div class="scr" id="s1" style="gap:24px">
+  <div class="atk-header"><div class="atk-label">// 23andMe — 2023 — five months, nobody noticed</div></div>
+  <p style="font-size:20px;line-height:1.8">In April 2023, an attacker began feeding stolen credentials from previous breaches into 23andMe's login page. The credentials came from other companies' breaches — LinkedIn, Adobe, Dropbox. Users had reused their passwords. 23andMe didn't require <span class="gloss" data-def="MFA — Multi-Factor Authentication. Requiring two or more independent verification methods: something you know (password), something you have (phone/key), something you are (biometric). Blocks credential stuffing even when the password is correct.">MFA</span>. The password minimum was eight characters. There was no <span class="gloss" data-def="Credential stuffing — an automated attack that tests username/password pairs leaked from one breach against another service's login. Success rate is typically 0.1-2%, but at scale (millions of credentials), even 0.1% yields thousands of compromised accounts.">credential stuffing</span> detection. The attack ran for five months.</p>
+
+  <div class="card" style="background:var(--dark);border-color:var(--dark-border);border-radius:8px;padding:16px 16px 12px">
+    <div class="timeline">
+      <div class="tl-track">
+        <div class="tl-event breach" onclick="tlClick(0)"><div class="tl-dot"></div><div class="tl-time">Apr '23</div><div class="tl-name">Attack begins</div></div>
+        <div class="tl-event breach" onclick="tlClick(1)"><div class="tl-dot"></div><div class="tl-time">Jul '23</div><div class="tl-name">1M logins in one day</div></div>
+        <div class="tl-event breach" onclick="tlClick(2)"><div class="tl-dot"></div><div class="tl-time">Aug '23</div><div class="tl-name">"Hoax" dismissed</div></div>
+        <div class="tl-event breach" onclick="tlClick(3)"><div class="tl-dot"></div><div class="tl-time">Oct '23</div><div class="tl-name">Data sold online</div></div>
+        <div class="tl-event good" onclick="tlClick(4)"><div class="tl-dot"></div><div class="tl-time">Dec '23</div><div class="tl-name">6.9M confirmed</div></div>
+        <div class="tl-event" onclick="tlClick(5)"><div class="tl-dot"></div><div class="tl-time">Mar '25</div><div class="tl-name">Bankruptcy filed</div></div>
+      </div>
+      <div class="tl-detail" id="tl-detail"></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--dark-dim);text-align:center;margin-top:10px;letter-spacing:.06em">↑ click any event to see what happened ↑</div>
+  </div>
+  <div class="nav"><button class="btn btn-g" onclick="go(0)">← Cover</button><button class="btn btn-p" onclick="go(2)">What made this possible? →</button></div>
+</div>
+
+<div class="scr" id="s2">
+  <div class="atk-header"><div class="atk-label">// identify the authentication failure</div></div>
+  <p><strong>14,000 accounts were directly compromised. But 6.9 million profiles were exposed. What turned a credential stuffing attack into a mass data breach?</strong></p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="sigGrid">
+    <div class="card" style="cursor:pointer;transition:all .15s" onclick="pickSig(0)"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">🔑 Weak passwords</div><div style="font-size:14.5px;color:var(--ink-mid);line-height:1.5">Users chose passwords that were easy to guess, making their accounts vulnerable to brute force.</div></div>
+    <div class="card" style="cursor:pointer;transition:all .15s" onclick="pickSig(1)"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">🔗 No MFA + data sharing cascade</div><div style="font-size:14.5px;color:var(--ink-mid);line-height:1.5">No second factor required, and DNA Relatives automatically shared profiles with genetic matches.</div></div>
+    <div class="card" style="cursor:pointer;transition:all .15s" onclick="pickSig(2)"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">🕵️ No encryption</div><div style="font-size:14.5px;color:var(--ink-mid);line-height:1.5">The genetic data was stored unencrypted and could be downloaded without verification.</div></div>
+    <div class="card" style="cursor:pointer;transition:all .15s" onclick="pickSig(3)"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">🌐 API vulnerability</div><div style="font-size:14.5px;color:var(--ink-mid);line-height:1.5">An unpatched API endpoint allowed the attacker to bypass the normal login flow entirely.</div></div>
+  </div>
+  <div style="font-size:16px;line-height:1.6;border-radius:6px;max-height:0;overflow:hidden;opacity:0;transition:max-height .3s,opacity .25s,padding .3s" id="s1fb"></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(1)">← Case Study</button><button class="btn btn-p" id="s1next" onclick="go(3)" disabled>Start Code Review →</button></div>
+</div>
+
+<div class="scr" id="s3">
+  <div class="atk-header"><div class="atk-label">// find the authentication failure</div></div>
+  <p><strong>Express.js login endpoint.</strong> The password check works. The session is created correctly. One missing control makes this endpoint a credential stuffing target. <strong>Click the line.</strong></p>
+  <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">auth/login.js</span><span class="code-status" id="codeStatus"></span></div><div class="code-fb-strip" id="codeFb"></div><div class="cbody" id="code"></div></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(2)">← Question</button><button class="btn btn-p" id="nb2" onclick="go(4)" disabled>See the Cascade →</button></div>
+</div>
+
+<div class="scr" id="s4">
+  <div class="atk-header"><div class="atk-label">// the cascade</div><div class="atk-step" id="sct">step 1 of 4</div></div>
+  <div class="exploit-wrap" id="exploitWrap"></div>
+  <div class="nav"><button class="btn btn-g" id="pb" onclick="step(-1)" disabled>← Back</button><button class="btn btn-p" id="nb3" onclick="step(1)">Next →</button></div>
+</div>
+
+<div class="scr fix-scr" id="s5">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0"><h2>Break the chain at every link.</h2><div class="dleg"><div class="dleg-item"><div class="dleg-dash" style="background:var(--red)"></div>missing</div><div class="dleg-item"><div class="dleg-dash" style="background:var(--green)"></div>added</div></div></div>
+  <p style="font-size:13px;color:var(--ink-mid);margin:0">No single fix would have prevented the entire breach. But any one of these would have dramatically reduced the blast radius.</p>
+  <div class="lang-tabs"><div class="lang-tab active" onclick="switchLang(0)">Node.js</div><div class="lang-tab" onclick="switchLang(1)">Python</div><div class="lang-tab" onclick="switchLang(2)">Java</div></div>
+  <div class="fix-cbox-wrap"><div class="cbox fix-cbox" id="fixCbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" id="fixFilename">auth/login.js</span></div><div class="cbody" id="fixBody"></div></div><div class="why-dot" id="whyDot" onclick="toggleWhyTooltip()"></div><span class="why-dot-hint" id="whyDotHint">click the dot</span><div class="why-tooltip" id="whyTooltip"><div class="why-tooltip-label">why this works</div><div class="why-tooltip-text" id="whyText"></div></div></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(4)">← Cascade</button><button class="btn btn-p" onclick="go(6)">Knowledge Check →</button></div>
+</div>
+
+<div class="scr" id="s6"><div class="atk-header"><div class="atk-label">// knowledge check</div><div class="atk-step">1 / 3</div></div>
+  <p class="tq-prompt">A credential stuffing attack tests 10 million stolen credential pairs against your login endpoint. The typical success rate is 0.1%. How many accounts are compromised?</p>
+  <div class="tq-options" id="q1opts">
+    <div class="tq-opt" onclick="answer(1,0,true)">A — 10,000 accounts — and each one can access data shared by connected users, multiplying the impact</div>
+    <div class="tq-opt" onclick="answer(1,1,false)">B — Effectively zero — modern password hashing makes credential reuse attacks computationally infeasible</div>
+    <div class="tq-opt" onclick="answer(1,2,false)">C — Approximately 100 accounts — the success rate drops significantly on well-built login endpoints</div>
+  </div><div class="tq-fb" id="q1fb"></div><div class="nav"><button class="btn btn-p" id="q1next" onclick="go(7)" disabled>Next Question →</button></div></div>
+
+<div class="scr" id="s7"><div class="atk-header"><div class="atk-label">// knowledge check</div><div class="atk-step">2 / 3</div></div>
+  <p class="tq-prompt">After the breach, 23andMe argued that users were at fault for reusing passwords. Who bears the security responsibility?</p>
+  <div class="tq-options" id="q2opts">
+    <div class="tq-opt" onclick="answer(2,0,false)">A — The users entirely — they chose weak passwords and reused them across services against all advice</div>
+    <div class="tq-opt" onclick="answer(2,1,false)">B — The original breached companies — they leaked the credential pairs that made the attack possible</div>
+    <div class="tq-opt" onclick="answer(2,2,true)">C — The platform — it must assume credential reuse and defend against it with MFA, rate limits, and detection</div>
+  </div><div class="tq-fb" id="q2fb"></div><div class="nav"><button class="btn btn-p" id="q2next" onclick="go(8)" disabled>Next Question →</button></div></div>
+
+<div class="scr" id="s8"><div class="atk-header"><div class="atk-label">// knowledge check</div><div class="atk-step">3 / 3</div></div>
+  <p class="tq-prompt">OWASP recommends treating passwords as a sole authentication factor as fundamentally insufficient. What alternative does NIST 800-63 now endorse?</p>
+  <div class="tq-options" id="q3opts">
+    <div class="tq-opt" onclick="answer(3,0,false)">A — Longer passwords with mandatory complexity rules, special characters, and forced rotation every 90 days</div>
+    <div class="tq-opt" onclick="answer(3,1,true)">B — Multi-factor authentication on all important systems, with password complexity rules simplified, no rotation</div>
+    <div class="tq-opt" onclick="answer(3,2,false)">C — Biometric-only authentication replacing passwords entirely, with fingerprint or facial recognition required</div>
+  </div><div class="tq-fb" id="q3fb"></div><div class="nav"><button class="btn btn-p" id="q3next" onclick="go(9)" disabled>See Results →</button></div></div>
+
+<div class="scr" id="s9"><div class="atk-header"><div class="atk-label">// self-check complete</div></div><div id="hackStage"></div><div class="sum-msg" id="sumMsg"></div><div class="nav"><button class="btn btn-g" id="rerunBtn" onclick="rerunCheck()" style="display:none">↺ Rerun self-check</button><button class="btn btn-p" id="toRuleBtn" onclick="go(10)" style="display:none">The Rule →</button></div></div>
+
+<div class="scr" id="s10"><h3>// the mental model</h3>
+  <div class="rule-card"><div class="rule-ambient" id="ruleAmbient"></div><span class="re">carry this into your next auth review</span>
+    <p class="rt">Passwords are <span class="ra">shared secrets</span> that have already been shared. Your authentication layer must assume every password in your database has been compromised somewhere else — and <span class="ra">still hold</span>.</p>
+    <span class="tag">A07 · Authentication Failures</span></div>
+  <div class="trio">
+    <div class="trio-item" id="tr0" onclick="toggleTrio(0)"><div class="trio-item-main"><div class="trio-label">Scope in 2025</div><div class="trio-val">Credential stuffing · session fixation · missing MFA · hardcoded credentials · weak recovery</div></div><span class="trio-chevron">▶</span><div class="trio-detail"><div class="trio-detail-inner"><div class="trio-detail-text">A07 holds #7 in 2025 with a name change from "Identification and Authentication Failures" to "Authentication Failures." 36 CWEs mapped, 1.12M occurrences, 7,147 CVEs. Key CWEs: CWE-259 (hardcoded password), CWE-287 (improper authentication), CWE-384 (session fixation), CWE-798 (hardcoded credentials). Verizon's 2025 DBIR: compromised credentials were the initial access vector in 22% of breaches. OWASP now explicitly includes hybrid password spray attacks alongside classic credential stuffing.</div></div></div></div>
+    <div class="trio-item" id="tr1" onclick="toggleTrio(1)"><div class="trio-item-main"><div class="trio-label">First fix</div><div class="trio-val">Enforce MFA on all accounts — not optional, not "recommended," required</div></div><span class="trio-chevron">▶</span><div class="trio-detail"><div class="trio-detail-inner"><div class="trio-detail-text">23andMe offered MFA since 2019 but didn't require it. After the breach, they made it mandatory — too late. OWASP and NIST 800-63 both recommend: enforce MFA on all important systems. Stop requiring password rotation and complex character rules (users circumvent them with <code>Password1!</code> → <code>Password2!</code>). Use breached password checking (Have I Been Pwned API) to reject known-compromised passwords at registration and change time.</div></div></div></div>
+    <div class="trio-item" id="tr2" onclick="toggleTrio(2)"><div class="trio-item-main"><div class="trio-label">Defence in depth</div><div class="trio-val">Rate limiting · anomaly detection · session management · credential screening</div></div><span class="trio-chevron">▶</span><div class="trio-detail"><div class="trio-detail-inner"><div class="trio-detail-text">Rate limit login attempts per account (not just per IP). Log all failures and alert on spikes. Detect anomalous logins — new country, new device, impossible travel. Invalidate sessions on logout, enforce idle timeouts, and generate new session IDs after login (prevents session fixation). Check passwords against breach databases at registration. Use a well-tested auth library or service — don't build your own.</div></div></div></div>
+  </div>
+  <div class="nav"><button class="btn btn-g" onclick="rerun()">↺ Run again</button><button class="btn btn-p" onclick="go(11)">One more thing →</button></div>
+</div>
+
+<div class="scr" id="s11"><h3>// check your authentication today</h3><p>Five things you can verify right now.</p>
+  <div class="card" style="padding:0"><div class="checklist" id="cl1">
+    <div class="ck-item" onclick="clToggle(0)"><div class="ck-check"></div><div class="ck-body"><div class="ck-title">Multi-factor authentication</div><div class="ck-hint">Is MFA required — not optional — for all user accounts?</div></div></div>
+    <div class="ck-item" onclick="clToggle(1)"><div class="ck-check"></div><div class="ck-body"><div class="ck-title">Login rate limiting</div><div class="ck-hint">Is rate limiting per account, not just per IP? What happens after 5 failures?</div></div></div>
+    <div class="ck-item" onclick="clToggle(2)"><div class="ck-check"></div><div class="ck-body"><div class="ck-title">Breached password checking</div><div class="ck-hint">Do you check passwords against Have I Been Pwned at registration and change?</div></div></div>
+    <div class="ck-item" onclick="clToggle(3)"><div class="ck-check"></div><div class="ck-body"><div class="ck-title">Session management</div><div class="ck-hint">New session ID after login? Invalidated on logout? Idle timeout enforced?</div></div></div>
+    <div class="ck-item" onclick="clToggle(4)"><div class="ck-check"></div><div class="ck-body"><div class="ck-title">Anomaly detection</div><div class="ck-hint">Would you detect a login from a new country? 1,000 failures in an hour? A 5-month slow attack?</div></div></div>
+  </div><div class="ck-progress"><div class="ck-progress-bar"><div class="ck-progress-fill" id="cl1-fill" style="width:0%"></div></div><div class="ck-progress-text" id="cl1-text">0 / 5</div></div></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(10)">← The Rule</button><button class="btn btn-fin" onclick="finish()">Complete Module ✓</button></div>
+</div>
+
+</div>
+<script>
+const TL_DATA=[
+  {tag:'tag-breach',tagText:'ATTACK BEGINS',text:'Starting April 29, 2023, an attacker begins feeding username/password pairs from previous breaches — LinkedIn, Adobe, Dropbox — into 23andMe\'s login page. The attack is automated, low-volume, and distributed across IP addresses. 23andMe\'s password policy requires only <strong>8 characters minimum</strong>. MFA is offered but not required. There is no credential stuffing detection.'},
+  {tag:'tag-breach',tagText:'MISSED SIGNAL',text:'The attacker logs into a single free account <strong>over one million times in one day</strong>, attempting mass profile transfers. The volume crashes the platform. 23andMe investigates 400 profile transfer attempts but <strong>fails to connect them to an ongoing attack</strong>. The credential stuffing continues undetected.'},
+  {tag:'tag-breach',tagText:'DISMISSED',text:'A claim on Reddit and the 23andMe customer service portal alleges 10 million records have been stolen. <strong>23andMe dismisses it as a hoax.</strong> A second intense wave of credential stuffing begins in September. The attack has now been running for four months undetected.'},
+  {tag:'tag-breach',tagText:'DATA SOLD',text:'On October 1, a threat actor named "Golem" posts stolen data on BreachForums — <strong>specifically targeting Ashkenazi Jewish and Chinese users</strong>, priced at $1-$10 per profile. The data includes ancestry details, family connections, birth years, and geographic locations. 23andMe begins its investigation on October 9 — five months after the attack started.'},
+  {tag:'tag-ok',tagText:'CONFIRMED',text:'23andMe\'s SEC filing confirms: <strong>14,000 accounts</strong> were directly compromised through credential stuffing (0.1% of users). But each compromised account had access to the DNA Relatives feature, which automatically shares profile data with genetic matches. Through this cascade, <strong>6.9 million profiles</strong> were exposed — nearly half of all 23andMe users. $30M settlement. £2.31M UK ICO fine.'},
+  {tag:'tag-warn',tagText:'BANKRUPTCY',text:'In March 2025, 23andMe files for bankruptcy. The breach wasn\'t the only cause — the business model was struggling — but the $30M settlement, regulatory fines, class-action lawsuits, and catastrophic loss of user trust accelerated the collapse. The genetic data of 15 million customers entered bankruptcy proceedings. The company that <strong>didn\'t require MFA</strong> no longer exists.'}
+];
+function tlClick(i){document.querySelectorAll('.tl-event').forEach((e,j)=>e.classList.toggle('active',j===i));const d=TL_DATA[i];if(!d)return;const det=document.getElementById('tl-detail');det.innerHTML='<div class="tl-detail-tag '+d.tag+'">'+d.tagText+'</div>'+d.text;det.classList.add('on');}
+
+let sigPicked=false;
+function pickSig(i){if(sigPicked)return;sigPicked=true;const cards=document.querySelectorAll('#sigGrid .card');const isRight=i===1;const fb=document.getElementById('s1fb');
+cards.forEach((c,j)=>{if(j===i){c.style.borderColor=isRight?'var(--green)':'var(--red)';c.style.background=isRight?'var(--gdim)':'var(--rdim)';}else{c.style.opacity='.22';c.style.pointerEvents='none';if(!isRight&&j===1){c.style.opacity='1';c.style.borderColor='var(--green)';c.style.background='var(--gdim)';}}});
+fb.style.maxHeight='160px';fb.style.opacity='1';fb.style.padding='10px 13px';fb.style.background=isRight?'var(--gdim)':'var(--rdim)';fb.style.border='1px solid '+(isRight?'rgba(39,115,74,.25)':'rgba(192,57,43,.22)');fb.style.color=isRight?'var(--green)':'var(--red)';
+fb.innerHTML=isRight?'<strong>✓ Two failures combined.</strong> First, no MFA meant a correct password was all an attacker needed — no second factor to stop credential stuffing. Second, the DNA Relatives feature automatically shared profile data with genetic matches. One compromised account could see thousands of connected profiles. 14,000 breached accounts cascaded to 6.9 million exposed profiles. MFA alone would have blocked the initial compromise. Data access controls would have limited the blast radius.':'<strong>✗ Contributing factor, but not the root cause.</strong> The key combination: <strong>no MFA</strong> (a correct password was sufficient) plus <strong>DNA Relatives data sharing</strong> (each compromised account accessed thousands of connected profiles). The 14K→6.9M cascade is what turned a credential stuffing attack into a mass genetic data breach.';
+document.getElementById('s1next').disabled=false;}
+
+const CODE=[
+  {n:1,h:'<span class="kw">router</span>.<span class="fn">post</span>(<span class="st">\'/login\'</span>, <span class="kw">async</span> (req, res) => {'},
+  {n:2,h:'  <span class="kw">const</span> { email, password } = req.body;'},
+  {n:3,h:'  <span class="kw">const</span> user = <span class="kw">await</span> db.<span class="fn">findByEmail</span>(email);'},
+  {n:4,h:''},
+  {n:5,h:'  <span class="kw">if</span> (!user || !<span class="kw">await</span> bcrypt.<span class="fn">compare</span>(password, user.hash)) {'},
+  {n:6,h:'    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="nm">401</span>).<span class="fn">json</span>({ error: <span class="st">\'Invalid credentials\'</span> });'},
+  {n:7,h:'  }'},
+  {n:8,h:'  <span class="cm">// No failed attempt counter, no lockout, no MFA check</span>',correct:true},
+  {n:9,h:'  req.session.userId = user.id;'},
+  {n:10,h:'  res.<span class="fn">json</span>({ success: <span class="nm">true</span> });'},
+  {n:11,h:'});'},
+];
+let codePicked=false;
+function renderCode(){const c=document.getElementById('code');c.innerHTML='';CODE.forEach(line=>{const d=document.createElement('div');d.className=line.correct?'cl cl-target':'cl';d.innerHTML='<span class="ln">'+line.n+'</span><span class="lc">'+line.h+'</span>';d.onclick=()=>handleClick(d,line);c.appendChild(d);});}
+let wrongTimer=null;
+function handleClick(el,line){if(codePicked)return;const fb=document.getElementById('codeFb'),st=document.getElementById('codeStatus');
+if(line.correct){codePicked=true;el.classList.remove('cl-target');document.querySelectorAll('#code .cl').forEach(r=>{if(r!==el)r.style.opacity='0.25';});el.classList.add('right');st.textContent='✓ line 8 identified';st.className='code-status show ok';fb.className='code-fb-strip on ok';fb.innerHTML='Line 8: between the password check and the session creation, three controls are missing — <strong>failed attempt counting</strong> (to lock after N failures), <strong>MFA verification</strong> (second factor before session), and <strong>anomaly detection</strong> (new device/country check). The password check is correct. The session creation is correct. The gap between them is the vulnerability.';document.getElementById('nb2').disabled=false;}
+else{if(wrongTimer)clearTimeout(wrongTimer);el.classList.add('wrong');st.textContent='✗ not the auth failure';st.className='code-status show err';fb.className='code-fb-strip on err';const msgs={1:'Route definition — correct.',2:'Destructuring input — correct.',3:'Database lookup by email — correct.',4:'Empty line.',5:'Password comparison using bcrypt — this is actually correct and secure.',6:'Generic error message — good practice (doesn\'t reveal if email exists).',7:'Closing brace.',9:'Session creation — correct implementation.',10:'Success response — correct.',11:'Closing brace.'};fb.innerHTML=msgs[line.n]||'Not the auth failure.';wrongTimer=setTimeout(()=>{el.classList.remove('wrong');fb.className='code-fb-strip';st.className='code-status';},2200);}}
+
+const EXPLOIT=[
+  {num:'01',label:'Buy 10 million credentials for $50',body:'Stolen credential databases are widely available on dark web marketplaces. A dataset of 10 million email/password pairs from previous breaches costs approximately $50. The attacker doesn\'t need to crack anything — these are plaintext credentials that users reused across services.',
+   math:[{l:'Credential pairs purchased',v:'10,000,000',c:''},{l:'Cost',v:'~$50',c:''},{l:'Source',v:'Previous breaches',c:'danger'}]},
+  {num:'02',label:'0.1% success rate = 10,000 accounts',body:'The attacker\'s bot tests each credential pair against the login endpoint. Most fail. But users who reused their password from a breached service get their account compromised. The typical success rate for credential stuffing is 0.1-2%. At 0.1% of 10 million: <strong>10,000 compromised accounts.</strong>',
+   math:[{l:'Credentials tested',v:'10,000,000',c:''},{l:'Success rate',v:'0.1%',c:''},{l:'—',v:'—',c:''},{l:'Accounts compromised',v:'10,000',c:'danger'},{l:'Time (at 1,000/min)',v:'~7 days',c:''}]},
+  {num:'03',label:'DNA Relatives: 10,000 → 6,900,000',body:'Each compromised account has the DNA Relatives feature enabled — which automatically shares profile data (name, ancestry, birth year, location) with genetic matches. One account can see hundreds or thousands of connected profiles. The attacker scrapes every connected profile from every compromised account.',
+   math:[{l:'Accounts compromised',v:'14,000',c:''},{l:'Avg. connected profiles',v:'~490',c:''},{l:'—',v:'—',c:''},{l:'Total profiles exposed',v:'6,900,000',c:'danger'},{l:'% of all users',v:'~49%',c:'danger'}]},
+  {num:'04',label:'Five months, nobody noticed',body:'The attack ran from April to October 2023 — five months. 23andMe\'s detection systems missed: a million logins from one account in a day, 400 profile transfer attempts, a Reddit claim of 10 million stolen records. No anomalous login alerting. No rate limiting triggered. No MFA to block the initial access. The attacker wasn\'t sophisticated — the platform\'s authentication layer was simply absent.',
+   math:[{l:'Attack duration',v:'5 months',c:'danger'},{l:'Warning signs missed',v:'3 distinct signals',c:'danger'},{l:'MFA required',v:'No',c:'danger'},{l:'—',v:'—',c:''},{l:'Detection method',v:'Data found for sale online',c:'danger'}]},
+];
+let stepIdx=0;
+function renderExploit(){const w=document.getElementById('exploitWrap');w.innerHTML='';EXPLOIT.forEach((s,i)=>{const d=document.createElement('div');d.className='exploit-step';d.id='ex'+i;let mathHtml='<div class="math-box">'+s.math.map(m=>m.l==='—'?'<div class="math-divider"></div>':'<div class="math-row"><span class="math-label">'+m.l+'</span><span class="math-val'+(m.c?' '+m.c:'')+'">'+m.v+'</span></div>').join('')+'</div>';d.innerHTML='<div><span class="ex-num">step '+s.num+' / 04</span></div><div class="ex-title">'+s.label+'</div><div class="ex-body">'+s.body+'</div>'+mathHtml;w.appendChild(d);});setStep(0);}
+function setStep(i){const prev=stepIdx;stepIdx=i;if(prev!==i){const pe=document.getElementById('ex'+prev);if(pe)pe.classList.remove('active');}document.getElementById('ex'+i).classList.add('active');document.getElementById('sct').textContent='step '+(i+1)+' of '+EXPLOIT.length;document.getElementById('pb').disabled=i===0;const nb=document.getElementById('nb3');if(i>=EXPLOIT.length-1){nb.textContent='See the Fix →';nb.onclick=()=>go(5);}else{nb.textContent='Next →';nb.onclick=()=>step(1);}}
+function step(d){const n=stepIdx+d;if(n>=0&&n<EXPLOIT.length)setStep(n);}
+
+const FIX_LANGS=[
+  {name:'auth/login.js',lines:[
+    {h:'<span class="cm">// 1. Rate limit per account (Redis)</span>'},
+    {h:'<span class="kw">const</span> fails = <span class="kw">await</span> redis.<span class="fn">get</span>(<span class="st">`login:${email}`</span>);'},
+    {h:'<span class="kw">if</span> (fails >= <span class="nm">5</span>) <span class="kw">return</span> res.<span class="fn">status</span>(<span class="nm">429</span>);'},
+    {h:''},
+    {h:'<span class="cm">// 2. Verify password (bcrypt)</span>'},
+    {h:'<span class="kw">if</span> (!<span class="kw">await</span> bcrypt.<span class="fn">compare</span>(pw, user.hash))'},
+    {h:'  <span class="kw">await</span> redis.<span class="fn">incr</span>(<span class="st">`login:${email}`</span>);'},
+    {h:''},
+    {h:'<span class="cm">// 3. Require MFA before session</span>'},
+    {h:'<span class="kw">if</span> (user.mfaEnabled)'},
+    {h:'  <span class="kw">return</span> res.<span class="fn">json</span>({ mfaRequired: <span class="nm">true</span> });'},
+    {h:''},
+    {h:'<span class="cm">// 4. Flag unknown device</span>'},
+    {h:'<span class="kw">if</span> (!<span class="fn">isKnownDevice</span>(req, user))'},
+    {h:'  <span class="kw">await</span> <span class="fn">sendVerificationEmail</span>(user);'},
+  ]},
+  {name:'views/auth.py',lines:[
+    {h:'<span class="cm"># 1. Rate limit per account (django-ratelimit)</span>'},
+    {h:'<span class="kw">@ratelimit</span>(key=<span class="st">"post:email"</span>, rate=<span class="st">"5/15m"</span>)'},
+    {h:'<span class="kw">def</span> <span class="fn">login_view</span>(request):'},
+    {h:''},
+    {h:'<span class="cm"># 2. Authenticate (checks password + active)</span>'},
+    {h:'user = <span class="fn">authenticate</span>(email=email, password=pw)'},
+    {h:''},
+    {h:'<span class="cm"># 3. Require MFA via django-otp</span>'},
+    {h:'<span class="kw">if</span> user_has_device(user):'},
+    {h:'    <span class="kw">return</span> <span class="fn">redirect</span>(<span class="st">"otp-verify"</span>)'},
+    {h:''},
+    {h:'<span class="cm"># 4. Flag unknown device</span>'},
+    {h:'<span class="kw">if</span> <span class="kw">not</span> <span class="fn">is_known_device</span>(request, user):'},
+    {h:'    <span class="fn">send_device_verification</span>(user)'},
+  ]},
+  {name:'AuthController.java',lines:[
+    {h:'<span class="cm">// 1. Rate limit per account (Bucket4j)</span>'},
+    {h:'Bucket bucket = rateLimiter.<span class="fn">resolveBucket</span>(email);'},
+    {h:'<span class="kw">if</span> (!bucket.<span class="fn">tryConsume</span>(<span class="nm">1</span>))'},
+    {h:'    <span class="kw">throw new</span> TooManyRequestsException();'},
+    {h:''},
+    {h:'<span class="cm">// 2. Verify password (BCryptPasswordEncoder)</span>'},
+    {h:'<span class="kw">if</span> (!encoder.<span class="fn">matches</span>(pw, user.getHash()))'},
+    {h:'    rateLimiter.<span class="fn">recordFailure</span>(email);'},
+    {h:''},
+    {h:'<span class="cm">// 3. Require MFA (Spring Security)</span>'},
+    {h:'<span class="kw">if</span> (user.<span class="fn">isMfaEnabled</span>())'},
+    {h:'    <span class="kw">return</span> ResponseEntity.<span class="fn">ok</span>(mfaChallenge);'},
+    {h:''},
+    {h:'<span class="cm">// 4. Flag unknown device</span>'},
+    {h:'<span class="kw">if</span> (!deviceService.<span class="fn">isKnown</span>(request, user))'},
+    {h:'    notificationService.<span class="fn">sendVerification</span>(user);'},
+  ]},
+];
+const WHY_TEXT=[
+  "Express + Redis + bcrypt: <code>redis.get/incr</code> tracks attempts <strong>per email</strong>, not per IP — rotating proxies don't help. 5 failures in 15 minutes locks the account. MFA check happens after password verification but before session creation — the attacker needs the second factor even with the correct password. Device fingerprinting catches logins from new countries or browsers.",
+  "Django's <code>@ratelimit</code> decorator uses <code>key=\"post:email\"</code> to rate-limit per account. <code>authenticate()</code> handles password hashing internally. <code>django-otp</code> provides TOTP/HOTP verification before the session is created. The device check uses IP geolocation and user-agent comparison to flag anomalous logins for email verification.",
+  "Bucket4j provides token-bucket rate limiting — <code>resolveBucket(email)</code> creates a per-account limiter. Spring Security's <code>BCryptPasswordEncoder.matches()</code> handles timing-safe comparison. The MFA challenge is returned as a response entity, forcing the client to complete verification before receiving a session token. Device service tracks known contexts per user."
+];
+function switchLang(i){document.querySelectorAll('.lang-tab').forEach((t,j)=>t.classList.toggle('active',j===i));const lang=FIX_LANGS[i];document.getElementById('fixFilename').textContent=lang.name;const cb=document.getElementById('fixBody');cb.classList.remove('fading');void cb.offsetWidth;cb.classList.add('fading');cb.innerHTML='';lang.lines.forEach((line,n)=>{const d=document.createElement('div');d.className='cl';d.style.cursor='default';d.innerHTML='<span class="ln">'+(n+1)+'</span><span class="lc">'+line.h+'</span>';cb.appendChild(d);});document.getElementById('whyText').innerHTML=WHY_TEXT[i];document.getElementById('whyTooltip').classList.remove('show');const dot=document.getElementById('whyDot');dot.classList.remove('show');setTimeout(()=>{dot.classList.add('show');const hint=document.getElementById('whyDotHint');if(hint)hint.classList.add('show');},200);}
+function toggleWhyTooltip(){document.getElementById('whyTooltip').classList.toggle('show');const h=document.getElementById('whyDotHint');if(h)h.classList.remove('show');}
+
+const Q_FB=[null,
+  {right:"<strong>✓ 10,000 accounts.</strong> And that's just the direct compromise. At 23andMe, each account accessed hundreds of connected profiles through DNA Relatives, turning 14,000 compromised accounts into 6.9 million exposed profiles. Credential stuffing is a numbers game — a 0.1% hit rate sounds low until you realize attackers are working from lists of hundreds of millions of credentials.",
+   wrong:"0.1% of 10 million is <strong>10,000 accounts</strong>. Password hashing protects stored passwords from being reversed, but doesn't help when the attacker already has the plaintext password from another breach. The success rate doesn't depend on your hashing — it depends on how many users reused their password from a breached service."},
+  {right:"<strong>✓ The platform bears the responsibility.</strong> Verizon's 2025 DBIR found that in the median case, only 49% of a user's passwords across services were distinct — meaning password reuse is the norm, not the exception. A platform must design for this reality: enforce MFA, rate-limit logins, detect anomalies, and check passwords against breach databases. Blaming users for reusing passwords is like blaming pedestrians for jaywalking while designing roads without crosswalks.",
+   wrong:"The platform bears primary responsibility. <strong>Password reuse is a known, measured behaviour</strong> — DBIR data shows only 49% of passwords are unique across services. A platform that stores sensitive data must assume credential reuse and defend against it with MFA, rate limiting, and breach-credential checking. The court agreed: $30M settlement."},
+  {right:"<strong>✓ MFA + simplified passwords.</strong> NIST 800-63 now recommends: enforce MFA on all important systems, allow long passphrases rather than complex character requirements, stop forcing rotation (which encourages <code>Password1!</code> → <code>Password2!</code>), and screen passwords against known breach databases. The emphasis shifted from password complexity to authentication architecture.",
+   wrong:"NIST 800-63 now recommends <strong>MFA + simplified password rules</strong>. Complex character requirements and forced rotation actually weaken security — users respond with predictable patterns. Biometric-only authentication isn't recommended as a sole factor because biometrics can't be changed if compromised. The right approach: MFA as the primary defence, with passwords as one factor among several."}
+];
+let tqScore=0,tqAnswers=[null,null,null];
+function answer(qIdx,optIdx,isRight){if(tqAnswers[qIdx-1]!==null)return;tqAnswers[qIdx-1]=isRight;if(isRight)tqScore++;document.querySelectorAll('#q'+qIdx+'opts .tq-opt').forEach((o,i)=>{if(i===optIdx)o.classList.add(isRight?'opt-right':'opt-wrong');else o.classList.add('opt-dim');});const fb=document.getElementById('q'+qIdx+'fb');fb.className='tq-fb on '+(isRight?'fb-right':'fb-wrong');fb.innerHTML=isRight?Q_FB[qIdx].right:Q_FB[qIdx].wrong;setTimeout(()=>{document.getElementById('q'+qIdx+'next').disabled=false;},500);}
+function resetTest(){tqScore=0;tqAnswers=[null,null,null];[1,2,3].forEach(i=>{document.querySelectorAll('#q'+i+'opts .tq-opt').forEach(o=>o.className='tq-opt');const fb=document.getElementById('q'+i+'fb');if(fb){fb.className='tq-fb';fb.innerHTML='';}const nb=document.getElementById('q'+i+'next');if(nb)nb.disabled=true;});}
+
+const AUTH_LINES=[
+  {flow:'POST /login',flaw:'attempts: unlimited, MFA: optional',icon:'🔑',comment:'10 million credentials tested, 14,000 found — nobody asked for a second factor'},
+  {flow:'GET /dna-relatives',flaw:'no re-authentication for sensitive data',icon:'🧬',comment:'one compromised account scraped 490 genetic profiles — no additional verification required'},
+  {flow:'GET /raw-dna-download',flaw:'no step-up auth for irreversible action',icon:'💀',comment:'your entire genome downloaded with a session cookie — no confirmation, no MFA challenge'},
+];
+function renderSummary(){const msg=document.getElementById('sumMsg'),hs=document.getElementById('hackStage');const rerunBtn=document.getElementById('rerunBtn'),toRuleBtn=document.getElementById('toRuleBtn');
+if(tqScore===3){hs.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;gap:10px"><svg width="72" height="80" viewBox="0 0 72 80"><rect x="8" y="34" width="56" height="38" rx="6" fill="var(--green)" opacity=".8"/><path d="M20,36 L20,22 A16,16 0 0,1 52,22 L52,36" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round" stroke-dasharray="60" stroke-dashoffset="60" style="animation:shClose .5s ease .3s forwards"/><polyline points="24,52 32,61 48,46" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20" style="animation:chDraw .35s ease .7s forwards"/></svg><span style="font-family:var(--mono);font-size:11px;color:var(--green);opacity:0;animation:fadeUp .3s ease 1.2s forwards;letter-spacing:.06em;text-transform:uppercase">authenticated</span></div>';msg.innerHTML='<div class="sum-score">3 / 3</div><strong>Well done — well done.</strong> You identified the cascade math, platform responsibility, and the NIST shift to MFA over password complexity. Click The Rule to finish.';rerunBtn.style.display='none';toRuleBtn.style.display='';}
+else{const missed=3-tqScore;hs.innerHTML='<div class="auth-stage">'+AUTH_LINES.slice(0,missed).map((l,i)=>'<div class="auth-line" style="animation-delay:'+(i*.4)+'s"><span style="color:#82aaff">'+l.flow+'</span> → <span style="color:#f07178">'+l.flaw+'</span> '+l.icon+'\n<span style="color:#546e7a;font-style:italic"># '+l.comment+'</span></div>').join('')+'</div>';msg.innerHTML='<div class="sum-score sum-score-miss">'+tqScore+' / 3</div><strong>.</strong> '+(missed===1?'One question':'Two questions')+' missed. Your login endpoint is still wide open — the credential lists are already compiled. Run through again.';rerunBtn.style.display='';toRuleBtn.style.display='none';}}
+function rerunCheck(){document.getElementById('hackStage').innerHTML='';resetTest();go(6);}
+
+function clToggle(i){const items=document.querySelectorAll('#cl1 .ck-item');items[i].classList.toggle('checked');const total=items.length,checked=document.querySelectorAll('#cl1 .ck-item.checked').length;document.getElementById('cl1-fill').style.width=(checked/total*100)+'%';document.getElementById('cl1-text').textContent=checked+' / '+total;}
+
+let cur=0;const TOTAL=11;const visited={0:true};
+const SCREEN_LABELS=['Cover','Case Study','Question','Code Review','Cascade','Fix','Q1','Q2','Q3','Results','Rule','Checklist'];
+function buildStrip(){const strip=document.getElementById('navstrip');if(!strip)return;const sections=[{screens:[0],type:'pip-cover'},'sep',{screens:[1,2,3,4,5],type:''},'sep',{screens:[6,7,8,9],type:''},'sep',{screens:[10,11],type:'pip-wide'}];strip.innerHTML='';sections.forEach(sec=>{if(sec==='sep'){const s=document.createElement('div');s.className='ns-sep';strip.appendChild(s);return;}sec.screens.forEach(n=>{const pip=document.createElement('button');pip.className='ns-pip '+sec.type;if(n===cur)pip.classList.add('active');else if(visited[n])pip.classList.add('visited');pip.title=SCREEN_LABELS[n]||'';pip.onclick=()=>go(n);strip.appendChild(pip);});});}
+function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');cur=n;visited[n]=true;const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');document.getElementById('wrap').scrollTop=0;document.getElementById('pf').style.width=(n/TOTAL*100)+'%';document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;if(n===4)renderExploit();if(n===9)renderSummary();if(n===10){revealRule();buildRuleAmbient();}buildStrip();}
+function revealRule(){const rt=document.querySelector('.rt');if(!rt||rt.dataset.revealed)return;rt.dataset.revealed='1';const html=rt.innerHTML;rt.innerHTML='';const tmp=document.createElement('div');tmp.innerHTML=html;let delay=0;tmp.childNodes.forEach(node=>{if(node.nodeType===3){node.textContent.split(/(\s+)/).forEach(tok=>{if(!tok)return;if(/^\s+$/.test(tok)){rt.appendChild(document.createTextNode(tok));return;}const sp=document.createElement('span');sp.className='w';sp.style.animationDelay=delay+'ms';sp.textContent=tok;rt.appendChild(sp);delay+=42;});}else{node.textContent.split(/(\s+)/).forEach(tok=>{if(!tok)return;if(/^\s+$/.test(tok)){rt.appendChild(document.createTextNode(tok));return;}const sp=document.createElement('span');sp.className='w ra';sp.style.animationDelay=delay+'ms';sp.textContent=tok;rt.appendChild(sp);delay+=42;});}});}
+function buildRuleAmbient(){const el=document.getElementById('ruleAmbient');if(!el||el.dataset.built)return;el.dataset.built='1';el.textContent=['if (attempts >= 5) return res.status(429)','if (user.mfaEnabled) { requireMfaChallenge() }','if (!isKnownContext(ctx)) { sendVerificationEmail() }','await hibp.checkPassword(password)','req.session.regenerate()'].join('\n').repeat(4);}
+function finish(){window.parent.postMessage({type:'course-next'},'*');}
+function rerun(){sigPicked=false;codePicked=false;stepIdx=0;document.querySelectorAll('#sigGrid .card').forEach(c=>{c.style='cursor:pointer;transition:all .15s';});document.getElementById('s1fb').style.cssText='max-height:0;opacity:0;padding:0';document.getElementById('s1next').disabled=true;document.querySelectorAll('#code .cl').forEach(r=>{r.style.opacity='';r.className='cl';});document.getElementById('codeFb').className='code-fb-strip';document.getElementById('codeFb').innerHTML='';document.getElementById('codeStatus').className='code-status';document.getElementById('nb2').disabled=true;document.getElementById('exploitWrap').innerHTML='';resetTest();document.getElementById('hackStage').innerHTML='';document.getElementById('sumMsg').innerHTML='';document.getElementById('rerunBtn').style.display='none';document.getElementById('toRuleBtn').style.display='none';document.querySelectorAll('.trio-item').forEach(t=>t.classList.remove('open'));const rt=document.querySelector('.rt');if(rt)delete rt.dataset.revealed;const ra=document.getElementById('ruleAmbient');if(ra){delete ra.dataset.built;ra.textContent='';}document.querySelectorAll('#cl1 .ck-item').forEach(c=>c.classList.remove('checked'));document.getElementById('cl1-fill').style.width='0%';document.getElementById('cl1-text').textContent='0 / 5';Object.keys(visited).forEach(k=>{if(k!=='0')delete visited[k];});go(1);}
+let openTrio=-1;function toggleTrio(i){if(openTrio===i){document.getElementById('tr'+i).classList.remove('open');openTrio=-1;return;}if(openTrio>=0)document.getElementById('tr'+openTrio).classList.remove('open');document.getElementById('tr'+i).classList.add('open');openTrio=i;}document.addEventListener('click',e=>{if(openTrio>=0&&!e.target.closest('.trio-item')){document.getElementById('tr'+openTrio).classList.remove('open');openTrio=-1;}});
+(function(){const tip=document.createElement('div');tip.id='gloss-tip';document.body.appendChild(tip);let cur=null;function place(el){const def=el.getAttribute('data-def')||'';tip.textContent=def;const r=el.getBoundingClientRect();tip.style.left='0px';tip.style.top='0px';const tw=tip.offsetWidth,th=tip.offsetHeight;let left=r.left;if(left+tw>window.innerWidth-8)left=window.innerWidth-tw-8;if(left<8)left=8;let top=r.top-th-10;if(top<8)top=r.bottom+10;tip.style.left=left+'px';tip.style.top=top+'px';tip.classList.add('on');cur=el;}function hide(){tip.classList.remove('on');cur=null}document.addEventListener('mouseover',e=>{const g=e.target.closest('.gloss');if(g&&g!==cur)place(g)});document.addEventListener('mouseout',e=>{if(e.target.closest('.gloss'))hide()});document.addEventListener('click',e=>{const g=e.target.closest('.gloss');if(g&&window.matchMedia('(hover:none)').matches){if(cur===g)hide();else place(g);e.preventDefault();return}if(!g)hide()});document.addEventListener('scroll',hide,true);})();
+
+function buildCover(){const svg=document.getElementById('cvKeys');if(!svg)return;svg.innerHTML='';
+const ns='http://www.w3.org/2000/svg';
+// keyhole background fill
+const fill=document.createElementNS(ns,'path');fill.setAttribute('d','M100,45 A22,22 0 1,1 100,44.99 Z M90,67 L82,135 L118,135 L110,67 Z');fill.setAttribute('class','cv-kh-fill');svg.appendChild(fill);
+// keyhole circle
+const circ=document.createElementNS(ns,'circle');circ.setAttribute('cx','100');circ.setAttribute('cy','50');circ.setAttribute('r','22');circ.setAttribute('class','cv-kh-circle');svg.appendChild(circ);
+// keyhole slot
+const slot=document.createElementNS(ns,'path');slot.setAttribute('d','M90,67 L82,135 L118,135 L110,67');slot.setAttribute('class','cv-kh-slot');svg.appendChild(slot);
+// keys — each is a small key shape at different Y positions
+const keys=[
+  {y:35,delay:1.4},{y:55,delay:1.6},{y:45,delay:1.8},{y:65,delay:1.9},
+  {y:40,delay:2.0,ok:true},
+  {y:60,delay:2.2},{y:50,delay:2.3},{y:70,delay:2.4},{y:38,delay:2.5},
+  {y:58,delay:2.6},{y:48,delay:2.7},{y:42,delay:2.8}
+];
+keys.forEach(k=>{
+  const g=document.createElementNS(ns,'g');
+  g.setAttribute('class','cv-key-g');
+  g.style.animationDelay=k.delay+'s';
+  // key shape: handle circle + shaft + teeth
+  const shape=document.createElementNS(ns,'path');
+  shape.setAttribute('d','M30,'+k.y+' L70,'+k.y+' M60,'+(k.y-4)+' L60,'+(k.y+4)+' M66,'+(k.y-3)+' L66,'+(k.y+3));
+  shape.setAttribute('class','cv-key-shape');
+  g.appendChild(shape);
+  const handle=document.createElementNS(ns,'circle');
+  handle.setAttribute('cx','25');handle.setAttribute('cy',k.y);handle.setAttribute('r','6');
+  handle.setAttribute('fill','none');handle.setAttribute('class','cv-key-shape');
+  g.appendChild(handle);
+  if(k.ok){
+    // glow for successful key
+    const glow=document.createElementNS(ns,'circle');
+    glow.setAttribute('cx','100');glow.setAttribute('cy','50');glow.setAttribute('r','24');
+    glow.setAttribute('class','cv-key-glow');
+    g.appendChild(glow);
+  }
+  svg.appendChild(g);
+  setTimeout(()=>{g.classList.add(k.ok?'ok':'fail');},k.delay*1000);
+});}
+
+/* ═══ FULLSCREEN ═══ */
+function toggleFS(){if(!document.fullscreenElement&&!document.webkitFullscreenElement){const el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen).call(el);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}}
+document.addEventListener('fullscreenchange',updateFSIcon);document.addEventListener('webkitfullscreenchange',updateFSIcon);
+function updateFSIcon(){const isFS=!!(document.fullscreenElement||document.webkitFullscreenElement);document.getElementById('fsIco').style.display=isFS?'none':'';document.getElementById('fsIcoExit').style.display=isFS?'':'none';}
+
+renderCode();switchLang(0);buildCover();buildStrip();
+</script>
+</body>
+</html>

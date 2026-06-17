@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A08 · Software or Data Integrity Failures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2f0ec;--surface:#fdfcfa;--surface2:#ece9e2;--border:#dbd6cc;--border2:#bfb8ac;
+  --ink:#181614;--ink-mid:#3d3830;--ink-dim:#7a7268;
+  --accent:#5a3a7a;--adim:rgba(90,58,122,.09);--aglow:rgba(90,58,122,.3);
+  --red:#b83232;--rdim:rgba(184,50,50,.1);--green:#1e6e47;--gdim:rgba(30,110,71,.1);--yellow:#b89820;
+  --code-bg:#16181f;--code-surface:#1e2028;--code-border:#2a2d38;
+  --dark:#1a1c22;--dark2:#22252e;--dark-border:#2e3240;--dark-text:#c8ccd8;--dark-dim:#6a7088;
+  --mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+body{display:flex;flex-direction:column;overflow-x:hidden;background-image:repeating-linear-gradient(90deg,transparent,transparent 119px,rgba(0,0,0,.022) 119px,rgba(0,0,0,.022) 120px)}
+.topbar{height:44px;min-height:44px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;flex-shrink:0}
+.badge{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);background:var(--adim);border:1px solid var(--accent);border-radius:2px;padding:3px 10px;letter-spacing:.07em}
+.topbar-title{font-family:var(--mono);font-size:13px;color:var(--ink-dim)}.sep{color:var(--border2)}
+.screen-lbl{font-family:var(--mono);font-size:12px;color:var(--ink-dim);margin-left:auto}
+.prog{height:3px;background:var(--border);flex-shrink:0}.prog-fill{height:100%;background:var(--accent);transition:width .4s cubic-bezier(.4,0,.2,1)}
+.navstrip{display:flex;align-items:center;gap:2px;padding:5px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}.navstrip::-webkit-scrollbar{display:none}
+.ns-pip{height:4px;border-radius:2px;border:none;padding:0;cursor:pointer;flex-shrink:0;background:var(--border);transition:all .18s;appearance:none;width:16px}.ns-pip:hover{background:var(--border2);transform:scaleY(1.5)}.ns-pip.visited{background:var(--border2)}.ns-pip.active{background:var(--accent);transform:scaleY(2)}.ns-pip.pip-cover{width:8px;height:8px;border-radius:50%}.ns-pip.pip-wide{width:22px}.ns-sep{width:1px;height:10px;background:var(--border);flex-shrink:0;margin:0 3px}
+.wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;position:relative}.wrap::-webkit-scrollbar{display:none}
+.scr{display:none;padding:24px 28px 18px;flex-direction:column;gap:14px;width:100%;min-height:100%}.scr.on{display:flex;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.scr.on .nav{animation:slideUp .35s cubic-bezier(.4,0,.2,1) .1s both}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em}p{font-size:17px;line-height:1.75;color:var(--ink-mid)}code{font-family:var(--mono);font-size:14px;color:var(--accent);background:var(--adim);padding:2px 6px;border-radius:2px}strong{color:var(--ink)}.card{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:12px 16px}
+.nav{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;padding:14px 0 6px;border-top:1px solid var(--border);margin-top:10px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:12px 26px;border-radius:5px;font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;border:none;transition:all .14s;letter-spacing:.01em}.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:#48306a;transform:translateY(-1px);box-shadow:0 3px 12px var(--aglow)}.btn-g{background:transparent;color:var(--ink-mid);border:1px solid var(--border2)}.btn-g:hover{border-color:var(--ink-dim);color:var(--ink)}.btn-fin{background:var(--accent);color:#fff;padding:12px 28px;font-size:15px;font-weight:700}.btn-fin:hover{background:#48306a}.btn:disabled{opacity:.3;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.gloss{border-bottom:1px dotted var(--accent);cursor:help;font-weight:600;color:inherit}#gloss-tip{position:fixed;background:#1a1620;color:#F5F2ED;font-size:14px;font-weight:400;line-height:1.55;padding:12px 16px;border-radius:6px;border:1px solid rgba(90,58,122,.4);box-shadow:0 8px 28px rgba(0,0,0,.55);max-width:340px;width:max-content;opacity:0;visibility:hidden;transform:translateY(4px);transition:opacity .18s,transform .18s,visibility .18s;pointer-events:none;z-index:9999;text-align:left;font-family:inherit}#gloss-tip.on{opacity:1;visibility:visible;transform:translateY(0)}
+/* timeline */.tl-track{position:relative;display:flex;align-items:flex-start;gap:0;padding-bottom:16px}.tl-track::before{content:'';position:absolute;top:18px;left:24px;right:24px;height:2px;background:rgba(255,255,255,.08);z-index:0}.tl-event{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;cursor:pointer;padding:0 4px;min-width:0}.tl-dot{width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);transition:all .25s;flex-shrink:0}.tl-event:hover .tl-dot,.tl-event.active .tl-dot{background:var(--accent);border-color:var(--accent);box-shadow:0 0 12px var(--aglow)}.tl-event.breach .tl-dot{border-color:rgba(184,50,50,.4)}.tl-event.breach.active .tl-dot{background:var(--red);border-color:var(--red)}.tl-event.good .tl-dot{border-color:rgba(30,110,71,.4)}.tl-event.good.active .tl-dot{background:var(--green);border-color:var(--green)}.tl-time{font-size:12px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.5px;font-family:var(--mono)}.tl-name{font-size:13px;color:rgba(255,255,255,.5);text-align:center;line-height:1.3;font-weight:500;transition:color .2s}.tl-event.active .tl-name{color:#fff}.tl-detail{margin-top:8px;padding:14px 18px;background:linear-gradient(170deg,#1c1820,#181820);border:1px solid rgba(90,58,122,.3);border-radius:10px;font-size:15px;color:rgba(245,242,237,.8);line-height:1.7;display:none}.tl-detail.on{display:block;animation:tl-slide .25s ease}.tl-detail strong{color:#fff}.tl-detail-tag{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}.tl-detail-tag.tag-breach{color:var(--red)}.tl-detail-tag.tag-warn{color:var(--yellow)}.tl-detail-tag.tag-ok{color:var(--green)}@keyframes tl-slide{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+/* code */.cbox{background:var(--code-bg);border:1px solid var(--code-border);border-radius:5px;font-family:var(--mono);display:flex;flex-direction:column;overflow:hidden}.chead{background:var(--code-surface);border-bottom:1px solid var(--code-border);padding:6px 13px;display:flex;align-items:center;gap:8px;flex-shrink:0}.dots{display:flex;gap:4px}.dot{width:8px;height:8px;border-radius:50%}.dr{background:#e0585844;border:1px solid #e0585888}.dy{background:#f0a50044;border:1px solid #f0a50088}.dg{background:#3ecf7244;border:1px solid #3ecf7288}.cfn{font-family:var(--mono);font-size:11.5px;color:#555a6a;margin-left:3px}.code-status{margin-left:auto;font-family:var(--mono);font-size:11.5px;opacity:0;transition:opacity .2s ease}.code-status.show{opacity:1}.code-status.ok{color:#4ecb71}.code-status.err{color:#f07178}.cbody{padding:8px 0;overflow-y:auto;flex:1}.cl{display:flex;align-items:flex-start;padding:1.5px 12px;transition:background .1s;cursor:pointer}.cl:hover{background:rgba(90,58,122,.07)}.cl:hover .ln{color:var(--accent)}.cl.wrong{background:rgba(192,57,43,.14);animation:shake .28s ease}.cl.right{background:rgba(90,58,122,.1)}@keyframes shake{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}70%{transform:translateX(4px)}}.cl-target .ln{animation:blink-ln 1.1s ease-in-out infinite}@keyframes blink-ln{0%,100%{color:#3a3e4f}50%{color:rgba(90,58,122,.8)}}.cl.right{animation:ripple-ok .6s ease-out forwards}@keyframes ripple-ok{0%{box-shadow:0 0 0 0 rgba(90,58,122,.5)}100%{box-shadow:0 0 0 18px rgba(90,58,122,0)}}.ln{width:32px;min-width:32px;text-align:right;color:#3a3e4f;font-size:12.5px;user-select:none;padding-right:12px;line-height:1.85}.lc{flex:1;color:#c8ccd8;line-height:1.85;white-space:pre;font-size:14.5px}.kw{color:#c792ea}.fn{color:#82aaff}.st{color:#c3e88d}.cm{color:#546e7a;font-style:italic}.nm{color:#f78c6c}.op{color:#f07178}.code-fb-strip{font-family:var(--mono);font-size:13px;line-height:1.5;max-height:0;overflow:hidden;opacity:0;transition:max-height .3s cubic-bezier(.4,0,.2,1),opacity .25s ease,padding .3s ease;padding:0 12px}.code-fb-strip.on{max-height:100px;opacity:1;padding:8px 12px;border-top:1px solid var(--code-border)}.code-fb-strip.ok{color:#4ecb71;background:rgba(78,203,113,.06)}.code-fb-strip.err{color:#f07178;background:rgba(240,113,120,.06)}.cl.right .lc{position:relative;overflow:hidden}.cl.right .lc::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(90,58,122,.2),transparent);animation:sweep .6s ease .1s forwards;pointer-events:none}@keyframes sweep{to{left:100%}}
+/* fix */.lang-tabs{display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;width:fit-content;flex-shrink:0}.lang-tab{font-family:var(--mono);font-size:13px;padding:8px 16px;cursor:pointer;color:var(--ink-dim);background:var(--surface);border-right:1px solid var(--border);transition:all .12s}.lang-tab:last-child{border-right:none}.lang-tab:hover{color:var(--ink)}.lang-tab.active{background:var(--accent);color:#fff;font-weight:700}@keyframes langFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}.fix-cbox .cbody.fading{animation:langFade .18s ease both}.dleg{display:flex;gap:14px;align-items:center}.dleg-item{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:12px;color:var(--ink-dim)}.dleg-dash{width:14px;height:3px;border-radius:1px}.fix-cbox-wrap{position:relative}.why-dot{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:11px;height:11px;border-radius:50%;background:var(--accent);cursor:pointer;opacity:0;transition:opacity .3s ease .15s;z-index:10}.why-dot.show{opacity:1}.why-dot::before{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:dotPulse 2s cubic-bezier(.4,0,.6,1) infinite}@keyframes dotPulse{0%{opacity:.6;transform:scale(.7)}70%{opacity:0;transform:scale(1.6)}100%{opacity:0}}.why-dot-hint{position:absolute;right:30px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10px;color:var(--accent);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .3s ease}.why-dot-hint.show{opacity:1}.why-tooltip{position:absolute;right:36px;top:50%;transform:translateY(-50%) scale(.95);width:340px;background:#1a1c24;border:1px solid rgba(90,58,122,.4);border-radius:7px;padding:14px 18px;opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s cubic-bezier(.34,1.2,.64,1);z-index:20;box-shadow:0 8px 28px rgba(0,0,0,.4)}.why-tooltip::after{content:'';position:absolute;right:-6px;top:50%;width:10px;height:10px;background:#1a1c24;border-right:1px solid rgba(90,58,122,.4);border-top:1px solid rgba(90,58,122,.4);transform:translateY(-50%) rotate(45deg)}.why-tooltip.show{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1)}.why-tooltip-label{font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:7px}.why-tooltip-label::before{content:'';width:16px;height:1px;background:var(--accent);flex-shrink:0}.why-tooltip-text{font-size:15px;line-height:1.7;color:#c8ccd8}.why-tooltip-text code{color:#f0a500;background:rgba(240,165,0,.12);padding:2px 5px;border-radius:2px;font-size:13.5px;font-family:var(--mono)}
+/* quiz */.tq-counter{font-family:var(--mono);font-size:13px;color:var(--ink-dim)}.tq-prompt{font-size:clamp(22px,3vw,28px);font-weight:800;color:var(--ink);line-height:1.35;letter-spacing:-.01em;margin-top:8px;flex-shrink:0}.tq-options{display:flex;flex-direction:column;gap:12px;margin-top:6px;flex-shrink:0}.tq-opt{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 18px;font-size:16px;color:var(--ink-mid);cursor:pointer;transition:border-color .14s,background .14s,transform .14s;line-height:1.5;position:relative;overflow:hidden}.tq-opt:hover{border-color:var(--border2);background:var(--surface2);transform:translateX(4px)}.tq-opt.opt-right{border-color:var(--green);background:var(--gdim);color:var(--green);cursor:default;transform:none;font-weight:600}.tq-opt.opt-wrong{border-color:var(--red);background:var(--rdim);color:var(--red);cursor:default;transform:none;animation:shake .28s ease}.tq-opt.opt-dim{opacity:.3;cursor:default;pointer-events:none;transform:none}.tq-opt.opt-right::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(30,110,71,.12),transparent);animation:secureSweep .5s ease forwards;pointer-events:none;border-radius:inherit}@keyframes secureSweep{0%{opacity:0;transform:translateX(-100%)}50%{opacity:1}100%{opacity:0;transform:translateX(100%)}}.tq-fb{font-size:16px;line-height:1.6;border-radius:6px;max-height:0;overflow:hidden;opacity:0;padding:0 16px;transition:max-height .35s cubic-bezier(.4,0,.2,1),opacity .28s ease,padding .32s ease}.tq-fb.on{max-height:200px;opacity:1;padding:14px 18px}.tq-fb.fb-right{background:var(--gdim);border:1px solid rgba(30,110,71,.25);color:var(--green)}.tq-fb.fb-wrong{background:var(--rdim);border:1px solid rgba(184,50,50,.22);color:var(--red)}
+/* threat spotlight */.spotlight{position:relative;width:100%;height:400px;background:var(--dark);border:1px solid var(--dark-border);border-radius:10px;overflow:hidden}
+.spot-node{position:absolute;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;z-index:2;transition:all .25s}
+.spot-box{padding:10px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:8px;font-size:14px;font-weight:600;color:rgba(255,255,255,.6);text-align:center;transition:all .25s;white-space:nowrap;font-family:var(--mono)}
+.spot-node:hover .spot-box,.spot-node.active .spot-box{border-color:var(--accent);background:rgba(90,58,122,.15);color:#fff;box-shadow:0 0 20px rgba(90,58,122,.2)}
+.spot-node.infected .spot-box{border-color:var(--red)!important;background:rgba(184,50,50,.12)!important;color:#fff!important;box-shadow:0 0 16px rgba(184,50,50,.2)!important}
+.spot-status{font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,.25);text-transform:uppercase;transition:all .25s}
+.spot-node.active .spot-status{color:var(--accent)}.spot-node.infected .spot-status{color:var(--red)}
+.spot-line{position:absolute;z-index:1;transition:all .4s}
+.spot-line-h{height:2px;background:rgba(255,255,255,.06)}.spot-line-v{width:2px;background:rgba(255,255,255,.06)}
+.spot-line.hl{background:rgba(90,58,122,.4)!important}.spot-line.infected{background:var(--red)!important;box-shadow:0 0 8px rgba(184,50,50,.3)}
+.spot-detail{position:absolute;bottom:10px;left:10px;right:10px;background:linear-gradient(170deg,#1c1820,#181820);border:1px solid rgba(90,58,122,.35);border-radius:8px;padding:16px 20px;font-size:15px;color:rgba(245,242,237,.85);line-height:1.6;opacity:0;visibility:hidden;transform:translateY(6px);transition:all .25s;z-index:5}
+.spot-detail.on{opacity:1;visibility:visible;transform:translateY(0)}.spot-detail strong{color:#fff}.spot-detail-tag{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;color:var(--accent)}
+.spot-detail-tag.tag-red{color:var(--red)}.spot-hint{font-family:var(--mono);font-size:11px;color:var(--dark-dim);text-align:center;margin-top:6px;letter-spacing:.06em}
+/* score */.sum-msg{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px 26px;font-size:19px;line-height:1.7;color:var(--ink);flex-shrink:0;animation:fadeUp .3s ease .2s both}.sum-msg strong{color:var(--accent)}.integ-stage{background:var(--code-bg);border:1px solid var(--code-border);border-radius:8px;padding:20px;font-family:var(--mono);font-size:13.5px;line-height:2;color:var(--dark-text);overflow:hidden}.integ-line{opacity:0;animation:fadeUp .3s ease forwards}
+/* rule */.rule-card{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:28px;background:var(--surface);border:1px solid var(--border);border-radius:8px;flex-shrink:0;position:relative;overflow:hidden}.rule-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 70%,rgba(90,58,122,.05) 0%,transparent 65%);pointer-events:none}.re{font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.12em}@keyframes wordIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}.rt .w{display:inline;opacity:0;animation:wordIn .3s ease forwards}.rt{font-size:clamp(18px,2.4vw,22px);font-weight:700;color:var(--ink);line-height:1.45;max-width:600px}.ra{color:var(--accent)}.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:3px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.05em;background:var(--adim);color:var(--accent);border:1px solid rgba(90,58,122,.22)}.rule-ambient{position:absolute;inset:0;pointer-events:none;opacity:.04;font-family:var(--mono);font-size:10px;color:var(--accent);line-height:2;padding:8px 12px;overflow:hidden;white-space:pre;animation:ambientScroll 20s linear infinite}@keyframes ambientScroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}@keyframes shClose{to{stroke-dashoffset:0}}@keyframes chDraw{to{stroke-dashoffset:0}}
+/* trio */.trio{display:flex;flex-direction:column;gap:10px;flex-shrink:0}.trio-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px 20px;cursor:pointer;transition:border-color .15s;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}.trio-item:hover{border-color:var(--border2)}.trio-item.open{border-color:var(--accent);background:var(--surface2)}.trio-item-main{display:flex;align-items:center;gap:14px}.trio-label{font-family:var(--mono);font-size:13px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.08em;min-width:110px;font-weight:600}.trio-val{font-size:17px;color:var(--ink);line-height:1.5}.trio-chevron{font-size:14px;color:var(--ink-dim);transition:transform .22s;flex-shrink:0}.trio-item.open .trio-chevron{transform:rotate(90deg);color:var(--accent)}.trio-detail{display:grid;grid-template-rows:0fr;grid-column:1/-1;transition:grid-template-rows .28s cubic-bezier(.4,0,.2,1)}.trio-item.open .trio-detail{grid-template-rows:1fr}.trio-detail-inner{overflow:hidden}.trio-detail-text{font-size:16px;line-height:1.7;color:var(--ink-mid);padding-top:12px;border-top:1px solid var(--border);margin-top:12px}.trio-detail-text code{color:var(--accent);background:var(--adim);padding:2px 6px;border-radius:2px;font-size:14px}
+/* checklist */.checklist{margin:0}.ck-item{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;-webkit-user-select:none;user-select:none}.ck-item:last-child{border-bottom:none}.ck-item:hover{background:rgba(90,58,122,.03)}.ck-check{width:26px;height:26px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;margin-top:1px}.ck-item.checked .ck-check{background:var(--green);border-color:var(--green)}.ck-item.checked .ck-check::after{content:'✓';color:#fff;font-size:14px;font-weight:800}.ck-body{flex:1}.ck-title{font-size:16px;font-weight:600;color:var(--ink);line-height:1.35;transition:all .2s}.ck-item.checked .ck-title{color:var(--ink-dim);text-decoration:line-through;text-decoration-color:var(--border)}.ck-hint{font-size:14px;color:var(--ink-dim);line-height:1.4;margin-top:2px}.ck-progress{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}.ck-progress-bar{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}.ck-progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width .3s}.ck-progress-text{font-size:13px;font-weight:700;color:var(--ink-dim);font-family:var(--mono);min-width:44px;text-align:right}
+/* cover */.cover{display:none;flex-direction:column;align-items:center;justify-content:center;position:absolute;inset:0;background:var(--dark);overflow:hidden;padding:24px 24px 40px;z-index:30}.cover.on{display:flex}.cover::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(255,255,255,.018) 59px,rgba(255,255,255,.018) 60px),repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,255,255,.018) 59px,rgba(255,255,255,.018) 60px);pointer-events:none}.cover::after{content:'';position:absolute;width:400px;height:400px;top:40%;left:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(90,58,122,.12) 0%,transparent 70%);pointer-events:none;animation:cvGlow 4s ease-in-out infinite}@keyframes cvGlow{0%,100%{opacity:.4}50%{opacity:.9}}@keyframes cvFadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.cv-visual{position:relative;z-index:1;margin-bottom:20px;width:240px;height:180px;display:flex;align-items:center;justify-content:center}
+.cv-doc{width:120px;height:150px;z-index:2}
+.cv-doc-page{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:400;stroke-dashoffset:400;animation:cvDraw 1s ease .3s forwards}
+.cv-doc-fill{fill:rgba(90,58,122,.04);opacity:0;animation:cvFill .4s ease 1.2s forwards}
+.cv-doc-lines{fill:none;stroke:rgba(255,255,255,.1);stroke-width:1;opacity:0;animation:cvFill .3s ease 1.4s forwards}
+.cv-doc-seal{fill:var(--green);opacity:0;animation:cvFill .3s ease 1.6s forwards}
+.cv-doc-seal-check{fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:15;stroke-dashoffset:15;animation:shClose .3s ease 1.8s forwards}
+.cv-doc-morph{fill:none;stroke:var(--red);stroke-width:1;opacity:0;animation:cvMorph .6s ease 2.2s forwards}
+@keyframes cvDraw{to{stroke-dashoffset:0}}@keyframes cvFill{to{opacity:1}}
+@keyframes cvMorph{0%{opacity:0}50%{opacity:.6}100%{opacity:.8}}
+.cv-badge{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.1em;padding:5px 14px;border-radius:3px;z-index:2;margin-bottom:8px;color:#fff;background:var(--accent);opacity:0;animation:cvFadeUp .4s ease 2.8s forwards}
+.cv-tag{font-family:var(--mono);font-size:13px;letter-spacing:.15em;text-transform:uppercase;z-index:2;margin-bottom:6px;color:var(--accent);opacity:0;animation:cvFadeUp .4s ease 2.9s forwards}
+.cv-title{font-size:clamp(22px,4vw,34px);font-weight:800;color:#f0ede8;letter-spacing:-.02em;line-height:1.15;text-align:center;z-index:2;margin-bottom:4px;opacity:0;animation:cvFadeUp .4s ease 3s forwards}
+.cv-sub{font-size:13.5px;color:var(--dark-dim);text-align:center;z-index:2;line-height:1.55;max-width:420px;opacity:0;animation:cvFadeUp .4s ease 3.2s forwards}
+.cv-start{z-index:2;margin-top:22px;opacity:0;animation:cvFadeUp .4s ease 3.4s forwards}.cv-start .btn{background:var(--accent);color:#fff;padding:11px 28px;font-size:13px}
+/* ── ACCENT BANNERS ── */
+.atk-header{display:flex;align-items:center;justify-content:space-between;background:var(--accent);border-radius:6px;padding:18px 24px;flex-shrink:0}
+.atk-label{font-family:var(--mono);font-size:14px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.12em}
+.atk-step{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.7);letter-spacing:.05em}
+.sum-score{font-size:clamp(36px,5vw,48px);font-weight:800;color:var(--green);letter-spacing:-.02em;margin-bottom:8px;line-height:1}
+.sum-score-miss{color:var(--red)}
+.fs-btn{background:none;border:1px solid var(--border);border-radius:3px;color:var(--ink-dim);cursor:pointer;padding:4px 5px;display:flex;align-items:center;justify-content:center;transition:color .12s,border-color .12s;margin-left:8px;flex-shrink:0}
+.fs-btn:hover{color:var(--ink);border-color:var(--border2)}
+html:fullscreen,html:-webkit-full-screen{background:var(--bg)}
+html:fullscreen body,html:-webkit-full-screen body{height:100vh}
+
+@media(max-width:620px){.scr{padding:12px 14px 10px}.lc{font-size:11px}.spotlight{height:360px}}
+</style>
+</head>
+<body>
+<div class="topbar"><span class="badge">A08</span><span class="sep">/</span><span class="topbar-title">Software or Data Integrity Failures — OWASP Top 10</span><span class="screen-lbl" id="lbl">00 / 11</span><button class="fs-btn" id="fsBtn" onclick="toggleFS()" title="Toggle fullscreen" aria-label="Toggle fullscreen"><svg id="fsIco" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,5 1,1 5,1"/><polyline points="9,1 13,1 13,5"/><polyline points="13,9 13,13 9,13"/><polyline points="5,13 1,13 1,9"/></svg><svg id="fsIcoExit" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polyline points="5,1 5,5 1,5"/><polyline points="9,5 13,5 9,1"/><polyline points="9,13 9,9 13,9"/><polyline points="1,9 5,9 5,13"/></svg></button></div>
+<div class="navstrip" id="navstrip"></div>
+<div class="prog"><div class="prog-fill" id="pf" style="width:0%"></div></div>
+<div class="wrap" id="wrap">
+
+<div class="cover on" id="s0">
+  <div class="cv-visual">
+    <svg class="cv-doc" viewBox="0 0 100 130">
+      <rect class="cv-doc-fill" x="5" y="5" width="90" height="120" rx="4"/>
+      <rect class="cv-doc-page" x="5" y="5" width="90" height="120" rx="4"/>
+      <g class="cv-doc-lines"><line x1="20" y1="30" x2="80" y2="30"/><line x1="20" y1="45" x2="70" y2="45"/><line x1="20" y1="60" x2="75" y2="60"/><line x1="20" y1="75" x2="60" y2="75"/></g>
+      <circle class="cv-doc-seal" cx="70" cy="105" r="12"/>
+      <polyline class="cv-doc-seal-check" points="63,105 68,110 77,100"/>
+      <g class="cv-doc-morph"><line x1="20" y1="30" x2="80" y2="30" stroke-dasharray="4,3"/><line x1="20" y1="45" x2="80" y2="45" stroke-dasharray="3,4"/><line x1="20" y1="60" x2="80" y2="60" stroke-dasharray="5,2"/><line x1="20" y1="75" x2="70" y2="75" stroke-dasharray="2,5"/></g>
+    </svg>
+  </div>
+  <span class="cv-badge">A08</span><div class="cv-tag">OWASP Top 10 · 2025</div>
+  <div class="cv-title">Software or Data<br>Integrity Failures</div>
+  <div class="cv-sub">The certificate was valid. The signature checked out. The software was malicious. Trust is not the same as verification.</div>
+  <div class="cv-start"><button class="btn" onclick="go(1)">Begin Module →</button></div>
+</div>
+
+<div class="scr" id="s1" style="gap:24px">
+  <div class="atk-header"><div class="atk-label">// 3CX — 2023 — the first cascading integrity compromise</div></div>
+  <p style="font-size:20px;line-height:1.8">In March 2023, security vendors detected that 3CX's desktop phone application — used by 600,000 companies and 12 million daily users — was distributing malware. The software was <strong>digitally signed with a valid certificate.</strong> Every integrity check passed. The malicious code was embedded in the legitimate build by attackers who had compromised 3CX's build servers. But that compromise started somewhere else: a single employee had downloaded a tampered financial trading application, <span class="gloss" data-def="X_TRADER — a financial trading platform by Trading Technologies, discontinued in 2020 but still available for download in 2022. North Korean attackers compromised its installer and signed it with the company's valid certificate.">X_TRADER</span>, months earlier. It was the first documented case of one supply chain attack causing another — a cascading integrity failure.</p>
+  <div class="card" style="background:var(--dark);border-color:var(--dark-border);border-radius:8px;padding:16px 16px 12px">
+    <div class="tl-track">
+      <div class="tl-event breach" onclick="tlClick(0)"><div class="tl-dot"></div><div class="tl-time">Late '21</div><div class="tl-name">X_TRADER compromised</div></div>
+      <div class="tl-event breach" onclick="tlClick(1)"><div class="tl-dot"></div><div class="tl-time">Apr '22</div><div class="tl-name">3CX employee downloads it</div></div>
+      <div class="tl-event breach" onclick="tlClick(2)"><div class="tl-dot"></div><div class="tl-time">Late '22</div><div class="tl-name">Build servers compromised</div></div>
+      <div class="tl-event breach" onclick="tlClick(3)"><div class="tl-dot"></div><div class="tl-time">Mar '23</div><div class="tl-name">Malicious app distributed</div></div>
+      <div class="tl-event good" onclick="tlClick(4)"><div class="tl-dot"></div><div class="tl-time">Mar '23</div><div class="tl-name">Detected by EDR vendors</div></div>
+    </div>
+    <div class="tl-detail" id="tl-detail"></div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--dark-dim);text-align:center;margin-top:10px;letter-spacing:.06em">↑ click any event to see what happened ↑</div>
+  </div>
+  <div class="nav"><button class="btn btn-g" onclick="go(0)">← Cover</button><button class="btn btn-p" onclick="go(2)">What failed? →</button></div>
+</div>
+
+<div class="scr" id="s2">
+  <div class="atk-header"><div class="atk-label">// classify the failure</div></div>
+  <p><strong>3CX had code signing. They had a build pipeline. The software was signed with a valid certificate. What was the integrity failure?</strong></p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="sigGrid">
+    <div class="card" style="cursor:pointer;transition:all .15s" onclick="pickSig(0)"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">🔑 Weak signing key</div><div style="font-size:14.5px;color:var(--ink-mid);line-height:1.5">The code signing certificate used a short key that attackers were able to forge or brute-force.</div></div>
+    <div class="card" style="cursor:pointer;transition:all .15s" onclick="pickSig(1)"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">🏗️ Build environment trusted blindly</div><div style="font-size:14.5px;color:var(--ink-mid);line-height:1.5">The build servers were compromised, but the pipeline had no way to detect that the build input had been tampered with.</div></div>
+    <div class="card" style="cursor:pointer;transition:all .15s" onclick="pickSig(2)"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">📦 Missing dependency audit</div><div style="font-size:14.5px;color:var(--ink-mid);line-height:1.5">A malicious third-party library was introduced through an unreviewed dependency update.</div></div>
+    <div class="card" style="cursor:pointer;transition:all .15s" onclick="pickSig(3)"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">🌐 Insecure distribution</div><div style="font-size:14.5px;color:var(--ink-mid);line-height:1.5">The download server was compromised and served a different binary than what was built.</div></div>
+  </div>
+  <div style="font-size:16px;line-height:1.6;border-radius:6px;max-height:0;overflow:hidden;opacity:0;transition:max-height .3s,opacity .25s,padding .3s" id="s1fb"></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(1)">← Case Study</button><button class="btn btn-p" id="s1next" onclick="go(3)" disabled>Start Code Review →</button></div>
+</div>
+
+<div class="scr" id="s3">
+  <div class="atk-header"><div class="atk-label">// find the integrity failure</div></div>
+  <p><strong>A CI/CD pipeline configuration.</strong> Artifacts are built, signed, and deployed. One step trusts its input without verification. <strong>Click the line.</strong></p>
+  <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">build-pipeline.yml</span><span class="code-status" id="codeStatus"></span></div><div class="code-fb-strip" id="codeFb"></div><div class="cbody" id="code"></div></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(2)">← Question</button><button class="btn btn-p" id="nb2" onclick="go(4)" disabled>See the Attack Path →</button></div>
+</div>
+
+<!-- ══ S4: THREAT SPOTLIGHT ══ -->
+<div class="scr" id="s4">
+  <div class="atk-header"><div class="atk-label">// attack path — click each node to trace the cascade</div></div>
+  <p>Five systems. Each one trusted the previous without independent verification. Click any node to see how the integrity failure propagated.</p>
+  <div class="spotlight" id="spot1">
+    <div class="spot-node" id="sn-xtrader" style="top:15px;left:10px" onclick="spotClick('sn-xtrader')"><div class="spot-box">📦 X_TRADER</div><div class="spot-status">compromised late 2021</div></div>
+    <div class="spot-node" id="sn-employee" style="top:15px;left:50%;transform:translateX(-50%)" onclick="spotClick('sn-employee')"><div class="spot-box">💻 Employee PC</div><div class="spot-status">downloaded apr 2022</div></div>
+    <div class="spot-node" id="sn-build" style="top:15px;right:10px" onclick="spotClick('sn-build')"><div class="spot-box">🏗️ Build Servers</div><div class="spot-status">lateral movement</div></div>
+    <div class="spot-node" id="sn-app" style="top:130px;left:50%;transform:translateX(-50%)" onclick="spotClick('sn-app')"><div class="spot-box">📱 3CX DesktopApp</div><div class="spot-status">trojanized + signed</div></div>
+    <div class="spot-node" id="sn-customers" style="top:130px;right:10px" onclick="spotClick('sn-customers')"><div class="spot-box">🏢 600K Customers</div><div class="spot-status">12M daily users</div></div>
+    <div class="spot-line spot-line-h" id="sl-1" style="top:28px;left:120px;width:calc(50% - 160px)"></div>
+    <div class="spot-line spot-line-h" id="sl-2" style="top:28px;left:calc(50% + 40px);width:calc(50% - 150px)"></div>
+    <div class="spot-line spot-line-v" id="sl-3" style="top:50px;left:50%;height:80px"></div>
+    <div class="spot-line spot-line-h" id="sl-4" style="top:145px;left:calc(50% + 60px);width:calc(50% - 170px)"></div>
+    <div class="spot-detail" id="spot1-detail"></div>
+  </div>
+  <div class="spot-hint">↑ click any node to trace the attack path ↑</div>
+  <div class="nav"><button class="btn btn-g" onclick="go(3)">← Code Review</button><button class="btn btn-p" onclick="go(5)">See the Fix →</button></div>
+</div>
+
+<div class="scr fix-scr" id="s5">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0"><h2>Verify at every boundary.</h2><div class="dleg"><div class="dleg-item"><div class="dleg-dash" style="background:var(--red)"></div>missing</div><div class="dleg-item"><div class="dleg-dash" style="background:var(--green)"></div>added</div></div></div>
+  <p style="font-size:13px;color:var(--ink-mid);margin:0">Integrity isn't one check — it's verification at every trust boundary. The build environment, the artifacts, the distribution, the client-side verification.</p>
+  <div class="lang-tabs"><div class="lang-tab active" onclick="switchLang(0)">Node.js</div><div class="lang-tab" onclick="switchLang(1)">Python</div><div class="lang-tab" onclick="switchLang(2)">Java</div></div>
+  <div class="fix-cbox-wrap"><div class="cbox fix-cbox" id="fixCbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" id="fixFilename">build-pipeline.yml</span></div><div class="cbody" id="fixBody"></div></div><div class="why-dot" id="whyDot" onclick="toggleWhyTooltip()"></div><span class="why-dot-hint" id="whyDotHint">click the dot</span><div class="why-tooltip" id="whyTooltip"><div class="why-tooltip-label">why this works</div><div class="why-tooltip-text" id="whyText"></div></div></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(4)">← Attack Path</button><button class="btn btn-p" onclick="go(6)">Knowledge Check →</button></div>
+</div>
+
+<div class="scr" id="s6"><div class="atk-header"><div class="atk-label">// knowledge check</div><div class="atk-step">1 / 3</div></div>
+  <p class="tq-prompt">Your web application loads a JavaScript analytics library from a third-party CDN. How do you verify its integrity?</p>
+  <div class="tq-options" id="q1opts">
+    <div class="tq-opt" onclick="answer(1,0,false)">A — Check that the CDN uses HTTPS — encrypted transport guarantees the file hasn't been tampered with</div>
+    <div class="tq-opt" onclick="answer(1,1,true)">B — Add a Subresource Integrity (SRI) hash to the script tag so the browser rejects modified files</div>
+    <div class="tq-opt" onclick="answer(1,2,false)">C — Verify the CDN provider's reputation and only use well-known providers like Cloudflare or AWS</div>
+  </div><div class="tq-fb" id="q1fb"></div><div class="nav"><button class="btn btn-p" id="q1next" onclick="go(7)" disabled>Next Question →</button></div></div>
+
+<div class="scr" id="s7"><div class="atk-header"><div class="atk-label">// knowledge check</div><div class="atk-step">2 / 3</div></div>
+  <p class="tq-prompt">What makes A08 (Integrity Failures) different from A03 (Supply Chain Failures)?</p>
+  <div class="tq-options" id="q2opts">
+    <div class="tq-opt" onclick="answer(2,0,false)">A — A08 covers only deserialization attacks, while A03 covers everything else in the dependency chain</div>
+    <div class="tq-opt" onclick="answer(2,1,true)">B — A03 covers upstream compromise of dependencies. A08 covers integrity failures within your own environment</div>
+    <div class="tq-opt" onclick="answer(2,2,false)">C — A08 is the newer category introduced in 2025, while A03 has existed since the 2017 OWASP Top 10 list</div>
+  </div><div class="tq-fb" id="q2fb"></div><div class="nav"><button class="btn btn-p" id="q2next" onclick="go(8)" disabled>Next Question →</button></div></div>
+
+<div class="scr" id="s8"><div class="atk-header"><div class="atk-label">// knowledge check</div><div class="atk-step">3 / 3</div></div>
+  <p class="tq-prompt">A Java application deserializes user-provided data using <code>ObjectInputStream</code>. What's the primary risk?</p>
+  <div class="tq-options" id="q3opts">
+    <div class="tq-opt" onclick="answer(3,0,true)">A — Arbitrary code execution — the attacker crafts a serialized object that runs commands on deserialization</div>
+    <div class="tq-opt" onclick="answer(3,1,false)">B — Data corruption — the deserialized object will have incorrect field values that break application logic</div>
+    <div class="tq-opt" onclick="answer(3,2,false)">C — Memory exhaustion — large serialized objects consume all available heap space and crash the JVM</div>
+  </div><div class="tq-fb" id="q3fb"></div><div class="nav"><button class="btn btn-p" id="q3next" onclick="go(9)" disabled>See Results →</button></div></div>
+
+<div class="scr" id="s9"><div class="atk-header"><div class="atk-label">// self-check complete</div></div><div id="hackStage"></div><div class="sum-msg" id="sumMsg"></div><div class="nav"><button class="btn btn-g" id="rerunBtn" onclick="rerunCheck()" style="display:none">↺ Rerun self-check</button><button class="btn btn-p" id="toRuleBtn" onclick="go(10)" style="display:none">The Rule →</button></div></div>
+
+<div class="scr" id="s10"><h3>// the mental model</h3>
+  <div class="rule-card"><div class="rule-ambient" id="ruleAmbient"></div><span class="re">carry this into your next pipeline review</span>
+    <p class="rt">A valid signature proves the <span class="ra">signer</span> signed it. It doesn't prove the signer wasn't <span class="ra">compromised</span>. Integrity requires verification at every trust boundary — not just at the front door.</p>
+    <span class="tag">A08 · Software or Data Integrity Failures</span></div>
+  <div class="trio">
+    <div class="trio-item" id="tr0" onclick="toggleTrio(0)"><div class="trio-item-main"><div class="trio-label">Scope in 2025</div><div class="trio-val">Unsigned updates · CDN trust · insecure deserialization · CI/CD tampering</div></div><span class="trio-chevron">▶</span><div class="trio-detail"><div class="trio-detail-inner"><div class="trio-detail-text">A08 holds #8 in 2025 with 14 CWEs mapped, 501K occurrences, and 3,331 CVEs. Key CWEs: CWE-829 (inclusion from untrusted sphere), CWE-494 (download without integrity check), CWE-502 (deserialization of untrusted data), CWE-915 (mass assignment). The scope explicitly covers integrity failures at a lower level than A03's supply chain focus — your own build, update, and serialization trust boundaries.</div></div></div></div>
+    <div class="trio-item" id="tr1" onclick="toggleTrio(1)"><div class="trio-item-main"><div class="trio-label">First fix</div><div class="trio-val">Verify every artifact's integrity before execution — SRI, checksums, signatures</div></div><span class="trio-chevron">▶</span><div class="trio-detail"><div class="trio-detail-inner"><div class="trio-detail-text">Add <code>integrity</code> attributes (SRI hashes) to all CDN-loaded scripts. Verify checksums of Docker images before deployment. Sign build artifacts and verify signatures before distribution. For deserialization: never deserialize untrusted data with native serializers (Java ObjectInputStream, Python pickle). Use allowlists for deserialization classes. Prefer JSON or protobuf over native serialization formats.</div></div></div></div>
+    <div class="trio-item" id="tr2" onclick="toggleTrio(2)"><div class="trio-item-main"><div class="trio-label">A08 vs A03</div><div class="trio-val">A03 = upstream (dependencies) · A08 = your environment (builds, updates, data)</div></div><span class="trio-chevron">▶</span><div class="trio-detail"><div class="trio-detail-inner"><div class="trio-detail-text">A03 covers compromises in upstream dependencies and build systems — the xz Utils backdoor, malicious npm packages. A08 covers integrity failures within your own environment — trusting build artifacts without verification, deserializing user-controlled data, loading CDN scripts without SRI, accepting updates without signature checks. The 3CX case spans both: the upstream X_TRADER compromise is A03, but 3CX's failure to verify the software on the employee's machine and to protect its build servers is A08.</div></div></div></div>
+  </div>
+  <div class="nav"><button class="btn btn-g" onclick="rerun()">↺ Run again</button><button class="btn btn-p" onclick="go(11)">One more thing →</button></div>
+</div>
+
+<div class="scr" id="s11"><h3>// check your integrity boundaries today</h3><p>Five things you can verify right now.</p>
+  <div class="card" style="padding:0"><div class="checklist" id="cl1">
+    <div class="ck-item" onclick="clToggle(0)"><div class="ck-check"></div><div class="ck-body"><div class="ck-title">CDN scripts have SRI hashes</div><div class="ck-hint">Every &lt;script&gt; from a CDN should have an integrity attribute. Check your HTML head.</div></div></div>
+    <div class="ck-item" onclick="clToggle(1)"><div class="ck-check"></div><div class="ck-body"><div class="ck-title">Docker images pinned by digest</div><div class="ck-hint">Using :latest or :v3? Pin to sha256 digest. Tags are mutable.</div></div></div>
+    <div class="ck-item" onclick="clToggle(2)"><div class="ck-check"></div><div class="ck-body"><div class="ck-title">Build server access controls</div><div class="ck-hint">Who can access your build servers? Are they isolated from developer workstations?</div></div></div>
+    <div class="ck-item" onclick="clToggle(3)"><div class="ck-check"></div><div class="ck-body"><div class="ck-title">No native deserialization of user input</div><div class="ck-hint">Are you using ObjectInputStream, pickle, or Marshal on untrusted data? Switch to JSON.</div></div></div>
+    <div class="ck-item" onclick="clToggle(4)"><div class="ck-check"></div><div class="ck-body"><div class="ck-title">Auto-update verification</div><div class="ck-hint">Does your application verify update signatures before applying them?</div></div></div>
+  </div><div class="ck-progress"><div class="ck-progress-bar"><div class="ck-progress-fill" id="cl1-fill" style="width:0%"></div></div><div class="ck-progress-text" id="cl1-text">0 / 5</div></div></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(10)">← The Rule</button><button class="btn btn-fin" onclick="finish()">Complete Module ✓</button></div>
+</div>
+
+</div>
+<script>
+const TL_DATA=[
+  {tag:'tag-breach',tagText:'UPSTREAM COMPROMISE',text:'North Korean hackers (UNC4736) compromise the X_TRADER financial trading platform, which Trading Technologies had <strong>discontinued in 2020</strong> but left available for download. They inject a backdoor (VEILEDSIGNAL) into the installer and sign it with <strong>Trading Technologies\' valid code signing certificate</strong>. The signature checks out. The software looks legitimate.'},
+  {tag:'tag-breach',tagText:'EMPLOYEE DOWNLOADS',text:'A 3CX employee downloads the tampered X_TRADER installer from the official Trading Technologies website. The software is <strong>digitally signed with a valid certificate</strong>. It installs normally. The VEILEDSIGNAL backdoor gives the attackers full access to the employee\'s personal computer. 3CX has no mechanism to detect that an employee\'s workstation has been compromised by a trojanized third-party application.'},
+  {tag:'tag-breach',tagText:'LATERAL MOVEMENT',text:'From the employee\'s machine, the attackers use stolen credentials and the Fast Reverse Proxy tool to move laterally through 3CX\'s network. They reach <strong>both the Windows and macOS build environments</strong>. On Windows, they deploy TAXHAUL/COLDCAT via DLL hijacking. On macOS, they install a POOLRAT backdoor via LaunchDaemons. The build servers are now under attacker control.'},
+  {tag:'tag-breach',tagText:'DISTRIBUTION',text:'The attackers inject malicious code into the 3CX DesktopApp. The compromised application is <strong>built and signed through 3CX\'s legitimate build pipeline</strong> — the signature is valid because the signing infrastructure itself is compromised. Versions 18.12.416 and earlier are distributed to <strong>600,000 customers</strong>. The malware (SUDDENICON) downloads additional payloads from encrypted icon files on GitHub.'},
+  {tag:'tag-ok',tagText:'DETECTED',text:'CrowdStrike, SentinelOne, and other EDR vendors detect the malicious behaviour in late March 2023. Mandiant is hired to investigate. Their finding: <strong>"This is the first time we\'ve ever found concrete evidence of a software supply chain attack leading to another supply chain attack."</strong> The attack chain: X_TRADER → Employee → Build Servers → 3CX App → Customers. Attributed to North Korean state actors with high confidence.'}
+];
+function tlClick(i){document.querySelectorAll('.tl-event').forEach((e,j)=>e.classList.toggle('active',j===i));const d=TL_DATA[i];if(!d)return;const det=document.getElementById('tl-detail');det.innerHTML='<div class="tl-detail-tag '+d.tag+'">'+d.tagText+'</div>'+d.text;det.classList.add('on');}
+
+let sigPicked=false;
+function pickSig(i){if(sigPicked)return;sigPicked=true;const cards=document.querySelectorAll('#sigGrid .card');const isRight=i===1;const fb=document.getElementById('s1fb');
+cards.forEach((c,j)=>{if(j===i){c.style.borderColor=isRight?'var(--green)':'var(--red)';c.style.background=isRight?'var(--gdim)':'var(--rdim)';}else{c.style.opacity='.22';c.style.pointerEvents='none';if(!isRight&&j===1){c.style.opacity='1';c.style.borderColor='var(--green)';c.style.background='var(--gdim)';}}});
+fb.style.maxHeight='140px';fb.style.opacity='1';fb.style.padding='10px 13px';fb.style.background=isRight?'var(--gdim)':'var(--rdim)';fb.style.border='1px solid '+(isRight?'rgba(39,115,74,.25)':'rgba(192,57,43,.22)');fb.style.color=isRight?'var(--green)':'var(--red)';
+fb.innerHTML=isRight?'<strong>✓ The build environment was trusted blindly.</strong> The attackers compromised both Windows and macOS build servers, then injected malicious code that was built and signed through the legitimate pipeline. The code signing was intact — but it was signing compromised code. The integrity failure wasn\'t the signature mechanism itself. It was the assumption that anything reaching the build server was trustworthy. No independent verification of build inputs, no build environment integrity monitoring, no reproducible builds.':'<strong>✗ Not quite.</strong> The root failure: <strong>the build environment was compromised and trusted blindly</strong>. The signing key and certificate were valid — attackers didn\'t need to forge them because they controlled the build servers. The pipeline signed whatever it was told to sign. No verification of build inputs, no monitoring of the build environment.';
+document.getElementById('s1next').disabled=false;}
+
+const CODE=[
+  {n:1,h:'<span class="cm"># CI/CD Pipeline — build and deploy</span>'},
+  {n:2,h:'<span class="kw">steps</span>:'},
+  {n:3,h:'  - <span class="fn">checkout</span>: main branch'},
+  {n:4,h:'  - <span class="fn">install</span>: dependencies from lockfile'},
+  {n:5,h:'  - <span class="fn">build</span>: compile application'},
+  {n:6,h:'  - <span class="fn">sign</span>: code-sign with HSM certificate'},
+  {n:7,h:'  - <span class="fn">deploy</span>: push to CDN for distribution'},
+  {n:8,h:''},
+  {n:9,h:'<span class="cm"># Build environment</span>'},
+  {n:10,h:'<span class="kw">build_server</span>: <span class="op">shared-runner-01</span>',correct:true},
+  {n:11,h:'<span class="kw">access</span>: <span class="op">developer workstations (unrestricted)</span>'},
+  {n:12,h:'<span class="cm"># No input verification, no environment attestation</span>'},
+];
+let codePicked=false;
+function renderCode(){const c=document.getElementById('code');c.innerHTML='';CODE.forEach(line=>{const d=document.createElement('div');d.className=line.correct?'cl cl-target':'cl';d.innerHTML='<span class="ln">'+line.n+'</span><span class="lc">'+line.h+'</span>';d.onclick=()=>handleClick(d,line);c.appendChild(d);});}
+let wrongTimer=null;
+function handleClick(el,line){if(codePicked)return;const fb=document.getElementById('codeFb'),st=document.getElementById('codeStatus');
+if(line.correct){codePicked=true;el.classList.remove('cl-target');document.querySelectorAll('#code .cl').forEach(r=>{if(r!==el)r.style.opacity='0.25';});el.classList.add('right');st.textContent='✓ line 10 identified';st.className='code-status show ok';fb.className='code-fb-strip on ok';fb.innerHTML='<code style="color:#f0a500">shared-runner-01</code> — the build server is shared and <strong>accessible from developer workstations</strong> without isolation. A compromised developer machine can reach the build environment directly. In the 3CX case, this is exactly how the attackers moved from one employee\'s laptop to both build servers. Build environments must be isolated, ephemeral, and independently attested.';document.getElementById('nb2').disabled=false;}
+else{if(wrongTimer)clearTimeout(wrongTimer);el.classList.add('wrong');st.textContent='✗ not the integrity failure';st.className='code-status show err';fb.className='code-fb-strip on err';const msgs={1:'Comment.',2:'Steps section.',3:'Checkout — correct step.',4:'Install from lockfile — correct (lockfile pins versions).',5:'Build step — correct.',6:'Code signing with HSM — this is actually good practice. But signing only proves the signer signed it, not that the input was clean.',7:'Deploy to CDN — correct step.',8:'Empty.',9:'Comment.',11:'Unrestricted access — part of the problem, but the root is line 10: the shared, non-isolated build server.',12:'Comment describing the problem.'};fb.innerHTML=msgs[line.n]||'Not the root integrity failure.';wrongTimer=setTimeout(()=>{el.classList.remove('wrong');fb.className='code-fb-strip';st.className='code-status';},2200);}}
+
+/* ═══ THREAT SPOTLIGHT ═══ */
+const SPOT_DATA={
+  'sn-xtrader':{tag:'UPSTREAM COMPROMISE',tagClass:'tag-red',text:'Trading Technologies\' X_TRADER installer was compromised by North Korean hackers and signed with a <strong>valid certificate</strong>. The software was discontinued in 2020 but still available for download in 2022. The valid signature meant no security tool flagged it.',lines:['sl-1'],infect:['sn-xtrader']},
+  'sn-employee':{tag:'INITIAL ACCESS',tagClass:'tag-red',text:'A 3CX employee downloaded the trojanized X_TRADER. The valid certificate passed all checks. The VEILEDSIGNAL backdoor gave attackers <strong>full access to the employee\'s workstation</strong>. No endpoint detection flagged the signed application.',lines:['sl-1','sl-2'],infect:['sn-xtrader','sn-employee']},
+  'sn-build':{tag:'LATERAL MOVEMENT',tagClass:'tag-red',text:'From the employee\'s machine, attackers used stolen credentials to reach <strong>both Windows and macOS build servers</strong>. The build environment had no isolation from developer workstations — a single compromised laptop gave access to the entire build infrastructure.',lines:['sl-1','sl-2','sl-3'],infect:['sn-xtrader','sn-employee','sn-build']},
+  'sn-app':{tag:'TROJANIZED BUILD',tagClass:'tag-red',text:'Attackers injected malicious code into the 3CX DesktopApp. The code was <strong>built and signed through the legitimate pipeline</strong> — the signature was valid because the signing infrastructure was compromised. The app downloaded encrypted payloads from icon files hosted on GitHub.',lines:['sl-1','sl-2','sl-3','sl-4'],infect:['sn-xtrader','sn-employee','sn-build','sn-app']},
+  'sn-customers':{tag:'MASS DISTRIBUTION',tagClass:'tag-red',text:'The trojanized app was distributed to <strong>600,000 companies</strong> via normal update channels. 12 million daily users ran compromised software. EDR vendors detected the malware in late March 2023. Mandiant called it the <strong>first cascading supply chain attack</strong> ever documented.',lines:['sl-1','sl-2','sl-3','sl-4'],infect:['sn-xtrader','sn-employee','sn-build','sn-app','sn-customers']}
+};
+function spotClick(nodeId){
+  const data=SPOT_DATA[nodeId];if(!data)return;
+  document.querySelectorAll('.spot-node').forEach(n=>n.classList.remove('active','infected'));
+  document.querySelectorAll('.spot-line').forEach(l=>{l.classList.remove('hl','infected');});
+  document.getElementById(nodeId).classList.add('active');
+  data.infect.forEach(id=>{document.getElementById(id).classList.add('infected');});
+  data.lines.forEach(lid=>{const l=document.getElementById(lid);if(l){l.classList.add('hl');l.classList.add('infected');}});
+  const det=document.getElementById('spot1-detail');
+  det.innerHTML='<div class="spot-detail-tag '+data.tagClass+'">'+data.tag+'</div>'+data.text;
+  det.classList.add('on');
+}
+
+const FIX_LANGS=[
+  {name:'integrity.js + Dockerfile',lines:[
+    {h:'<span class="cm">// 1. SRI hash for CDN scripts</span>'},
+    {h:'<span class="st">&lt;script src="https://cdn.example/lib.js"</span>'},
+    {h:'  <span class="st">integrity="sha384-oqVuAfXR..."</span>'},
+    {h:'  <span class="st">crossorigin="anonymous"&gt;</span>'},
+    {h:''},
+    {h:'<span class="cm">// 2. Safe deserialization (JSON + Joi)</span>'},
+    {h:'<span class="kw">const</span> data = <span class="fn">JSON.parse</span>(req.body);'},
+    {h:'<span class="kw">const</span> { error } = schema.<span class="fn">validate</span>(data);'},
+    {h:'<span class="cm">// JSON can\'t carry executable code</span>'},
+    {h:''},
+    {h:'<span class="cm"># 3. Docker image pinned by digest</span>'},
+    {h:'FROM node:<span class="nm">20-alpine</span><span class="st">@sha256:abc123...</span>'},
+    {h:'<span class="cm"># Tag :latest is mutable — digest is not</span>'},
+  ]},
+  {name:'integrity.py + Dockerfile',lines:[
+    {h:'<span class="cm"># 1. Hash-pinned dependencies</span>'},
+    {h:'<span class="st">requests==2.31.0 \\</span>'},
+    {h:'  <span class="st">--hash=sha256:942c5a75...</span>'},
+    {h:''},
+    {h:'<span class="cm"># 2. Safe deserialization (json + pydantic)</span>'},
+    {h:'data = json.<span class="fn">loads</span>(request.body)'},
+    {h:'order = Order.<span class="fn">model_validate</span>(data)'},
+    {h:'<span class="cm"># NEVER: pickle.loads(user_input)</span>'},
+    {h:'<span class="cm"># pickle can instantiate any class → RCE</span>'},
+    {h:''},
+    {h:'<span class="cm"># 3. Docker image pinned by digest</span>'},
+    {h:'FROM python:<span class="nm">3.12-slim</span><span class="st">@sha256:def456...</span>'},
+  ]},
+  {name:'IntegrityCheck.java + Dockerfile',lines:[
+    {h:'<span class="cm">// 1. Verify JAR signatures at startup</span>'},
+    {h:'JarVerifier.<span class="fn">verify</span>(dependency, expectedHash);'},
+    {h:''},
+    {h:'<span class="cm">// 2. Safe deserialization (Jackson + allowlist)</span>'},
+    {h:'ObjectMapper mapper = <span class="kw">new</span> ObjectMapper();'},
+    {h:'mapper.<span class="fn">activateDefaultTyping</span>('},
+    {h:'  LaissezFaireSubTypeValidator.instance,'},
+    {h:'  DefaultTyping.NON_FINAL);'},
+    {h:'<span class="cm">// NEVER: new ObjectInputStream(userInput)</span>'},
+    {h:'<span class="cm">// ObjectInputStream → arbitrary class → RCE</span>'},
+    {h:''},
+    {h:'<span class="cm"># 3. Docker pinned by digest</span>'},
+    {h:'FROM eclipse-temurin:<span class="nm">21-jre</span><span class="st">@sha256:789abc...</span>'},
+  ]},
+];
+const WHY_TEXT=[
+  "Node.js integrity: SRI hashes tell the browser to reject modified CDN files. <code>JSON.parse()</code> is inherently safe — JSON can only contain primitives (strings, numbers, booleans, arrays, objects), never executable code. Joi schema validation adds structure enforcement on top. Docker digest pinning ensures the exact image you tested is the image you deploy — tags like <code>:latest</code> can be reassigned to a different image at any time.",
+  "Python integrity: hash pinning in <code>requirements.txt</code> verifies each package matches its expected hash — pip refuses to install if tampered. <code>json.loads()</code> is safe; <code>pickle.loads()</code> is not — pickle can instantiate arbitrary Python classes, including <code>os.system()</code>. Pydantic's <code>model_validate()</code> enforces type safety and structure. Always use <code>json</code> for user input, reserve <code>pickle</code> for trusted internal data only.",
+  "Java integrity: JAR signature verification ensures dependencies haven't been modified. Jackson with <code>activateDefaultTyping</code> and a validator restricts which classes can be deserialized — unlike <code>ObjectInputStream</code> which instantiates any class in the classpath. The <code>rO0</code> signature in HTTP traffic is a red flag: it means someone is sending serialized Java objects. Docker digest pinning works the same across all languages — it's a container-level integrity check."
+];
+function switchLang(i){document.querySelectorAll('.lang-tab').forEach((t,j)=>t.classList.toggle('active',j===i));const lang=FIX_LANGS[i];document.getElementById('fixFilename').textContent=lang.name;const cb=document.getElementById('fixBody');cb.classList.remove('fading');void cb.offsetWidth;cb.classList.add('fading');cb.innerHTML='';lang.lines.forEach((line,n)=>{const d=document.createElement('div');d.className='cl';d.style.cursor='default';d.innerHTML='<span class="ln">'+(n+1)+'</span><span class="lc">'+line.h+'</span>';cb.appendChild(d);});document.getElementById('whyText').innerHTML=WHY_TEXT[i];document.getElementById('whyTooltip').classList.remove('show');const dot=document.getElementById('whyDot');dot.classList.remove('show');setTimeout(()=>{dot.classList.add('show');const hint=document.getElementById('whyDotHint');if(hint)hint.classList.add('show');},200);}
+function toggleWhyTooltip(){document.getElementById('whyTooltip').classList.toggle('show');const h=document.getElementById('whyDotHint');if(h)h.classList.remove('show');}
+
+const Q_FB=[null,
+  {right:"<strong>✓ Subresource Integrity.</strong> SRI hashes tell the browser exactly what content to expect. If the CDN is compromised and serves a modified file, the browser refuses to execute it. HTTPS only protects transit — it doesn't guarantee the file on the CDN hasn't been tampered with at the source. Reputation doesn't prevent compromise — even major CDNs have served malicious content.",
+   wrong:"HTTPS protects transport, not content. A compromised CDN serves tampered files over HTTPS just fine. <strong>SRI hashes</strong> are the correct defence — the browser computes the hash of the downloaded file and rejects it if it doesn't match the expected value."},
+  {right:"<strong>✓ Scope distinction.</strong> A03 covers upstream compromises — a malicious package in npm, a backdoored dependency like xz Utils. A08 covers integrity failures within your own environment — your build server trusting unverified inputs, your app deserializing user-controlled data, your HTML loading CDN scripts without SRI. The 3CX case spans both: X_TRADER compromise is A03, but 3CX's non-isolated build servers and missing verification is A08.",
+   wrong:"The distinction: <strong>A03 = upstream</strong> (compromised dependencies, build systems you don't control). <strong>A08 = your environment</strong> (how you verify what enters your build, your runtime, your data layer). A08 covers deserialization, unsigned updates, CDN trust, and CI/CD integrity — not just deserialization."},
+  {right:"<strong>✓ Remote code execution.</strong> Java's ObjectInputStream, Python's pickle, and Ruby's Marshal can instantiate arbitrary classes during deserialization. An attacker crafts a serialized object containing a class that executes system commands on instantiation. The classic example: the <code>rO0</code> Java object signature detected in HTTP traffic means someone is passing serialized Java objects — and if those come from user input, it's likely exploitable.",
+   wrong:"The primary risk is <strong>arbitrary code execution</strong>. Native serialization formats can instantiate classes that run system commands. Data corruption and memory issues are possible but secondary — RCE is the critical risk that makes deserialization of untrusted data a high-severity finding."}
+];
+let tqScore=0,tqAnswers=[null,null,null];
+function answer(qIdx,optIdx,isRight){if(tqAnswers[qIdx-1]!==null)return;tqAnswers[qIdx-1]=isRight;if(isRight)tqScore++;document.querySelectorAll('#q'+qIdx+'opts .tq-opt').forEach((o,i)=>{if(i===optIdx)o.classList.add(isRight?'opt-right':'opt-wrong');else o.classList.add('opt-dim');});const fb=document.getElementById('q'+qIdx+'fb');fb.className='tq-fb on '+(isRight?'fb-right':'fb-wrong');fb.innerHTML=isRight?Q_FB[qIdx].right:Q_FB[qIdx].wrong;setTimeout(()=>{document.getElementById('q'+qIdx+'next').disabled=false;},500);}
+function resetTest(){tqScore=0;tqAnswers=[null,null,null];[1,2,3].forEach(i=>{document.querySelectorAll('#q'+i+'opts .tq-opt').forEach(o=>o.className='tq-opt');const fb=document.getElementById('q'+i+'fb');if(fb){fb.className='tq-fb';fb.innerHTML='';}const nb=document.getElementById('q'+i+'next');if(nb)nb.disabled=true;});}
+
+const INTEG_LINES=[
+  {flow:'docker pull app:latest',flaw:'no digest verification',icon:'🐳',comment:'the tag was reassigned yesterday — you\'re running a different image than you tested'},
+  {flow:'<script src="cdn/lib.js">',flaw:'no SRI hash',icon:'📜',comment:'the CDN was compromised last week — your analytics script now exfiltrates form data'},
+  {flow:'pickle.loads(request.body)',flaw:'native deserialization of user input',icon:'🧪',comment:'the attacker sent a crafted object — your server just ran os.system("rm -rf /")'},
+];
+function renderSummary(){const msg=document.getElementById('sumMsg'),hs=document.getElementById('hackStage');const rerunBtn=document.getElementById('rerunBtn'),toRuleBtn=document.getElementById('toRuleBtn');
+if(tqScore===3){hs.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;gap:10px"><svg width="72" height="80" viewBox="0 0 72 80"><rect x="8" y="34" width="56" height="38" rx="6" fill="var(--green)" opacity=".8"/><path d="M20,36 L20,22 A16,16 0 0,1 52,22 L52,36" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round" stroke-dasharray="60" stroke-dashoffset="60" style="animation:shClose .5s ease .3s forwards"/><polyline points="24,52 32,61 48,46" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="20" stroke-dashoffset="20" style="animation:chDraw .35s ease .7s forwards"/></svg><span style="font-family:var(--mono);font-size:11px;color:var(--green);opacity:0;animation:fadeUp .3s ease 1.2s forwards;letter-spacing:.06em;text-transform:uppercase">integrity verified</span></div>';msg.innerHTML='<div class="sum-score">3 / 3</div><strong>Well done — well done.</strong> You identified SRI for CDN integrity, the A03/A08 distinction, and the deserialization RCE risk. Click The Rule to finish.';rerunBtn.style.display='none';toRuleBtn.style.display='';}
+else{const missed=3-tqScore;hs.innerHTML='<div class="integ-stage">'+INTEG_LINES.slice(0,missed).map((l,i)=>'<div class="integ-line" style="animation-delay:'+(i*.4)+'s"><span style="color:#82aaff">'+l.flow+'</span> → <span style="color:#f07178">'+l.flaw+'</span> '+l.icon+'\n<span style="color:#546e7a;font-style:italic"># '+l.comment+'</span></div>').join('')+'</div>';msg.innerHTML='<div class="sum-score sum-score-miss">'+tqScore+' / 3</div><strong>.</strong> '+(missed===1?'One question':'Two questions')+' missed. Your artifacts are still unverified — the seal looks valid but the contents have changed. Run through again.';rerunBtn.style.display='';toRuleBtn.style.display='none';}}
+function rerunCheck(){document.getElementById('hackStage').innerHTML='';resetTest();go(6);}
+
+function clToggle(i){const items=document.querySelectorAll('#cl1 .ck-item');items[i].classList.toggle('checked');const total=items.length,checked=document.querySelectorAll('#cl1 .ck-item.checked').length;document.getElementById('cl1-fill').style.width=(checked/total*100)+'%';document.getElementById('cl1-text').textContent=checked+' / '+total;}
+
+let cur=0;const TOTAL=11;const visited={0:true};
+const SCREEN_LABELS=['Cover','Case Study','Question','Code Review','Attack Path','Fix','Q1','Q2','Q3','Results','Rule','Checklist'];
+function buildStrip(){const strip=document.getElementById('navstrip');if(!strip)return;const sections=[{screens:[0],type:'pip-cover'},'sep',{screens:[1,2,3,4,5],type:''},'sep',{screens:[6,7,8,9],type:''},'sep',{screens:[10,11],type:'pip-wide'}];strip.innerHTML='';sections.forEach(sec=>{if(sec==='sep'){const s=document.createElement('div');s.className='ns-sep';strip.appendChild(s);return;}sec.screens.forEach(n=>{const pip=document.createElement('button');pip.className='ns-pip '+sec.type;if(n===cur)pip.classList.add('active');else if(visited[n])pip.classList.add('visited');pip.title=SCREEN_LABELS[n]||'';pip.onclick=()=>go(n);strip.appendChild(pip);});});}
+function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');cur=n;visited[n]=true;const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');document.getElementById('wrap').scrollTop=0;document.getElementById('pf').style.width=(n/TOTAL*100)+'%';document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;if(n===9)renderSummary();if(n===10){revealRule();buildRuleAmbient();}buildStrip();}
+function revealRule(){const rt=document.querySelector('.rt');if(!rt||rt.dataset.revealed)return;rt.dataset.revealed='1';const html=rt.innerHTML;rt.innerHTML='';const tmp=document.createElement('div');tmp.innerHTML=html;let delay=0;tmp.childNodes.forEach(node=>{if(node.nodeType===3){node.textContent.split(/(\s+)/).forEach(tok=>{if(!tok)return;if(/^\s+$/.test(tok)){rt.appendChild(document.createTextNode(tok));return;}const sp=document.createElement('span');sp.className='w';sp.style.animationDelay=delay+'ms';sp.textContent=tok;rt.appendChild(sp);delay+=42;});}else{node.textContent.split(/(\s+)/).forEach(tok=>{if(!tok)return;if(/^\s+$/.test(tok)){rt.appendChild(document.createTextNode(tok));return;}const sp=document.createElement('span');sp.className='w ra';sp.style.animationDelay=delay+'ms';sp.textContent=tok;rt.appendChild(sp);delay+=42;});}});}
+function buildRuleAmbient(){const el=document.getElementById('ruleAmbient');if(!el||el.dataset.built)return;el.dataset.built='1';el.textContent=['integrity="sha384-oqVuAfXRKap..."','isolation: hardware-backed-VM','attestation: SLSA level 3','const data = JSON.parse(userInput)','docker pull app@sha256:abc123...','crossorigin="anonymous"'].join('\n').repeat(4);}
+function finish(){window.parent.postMessage({type:'course-next'},'*');}
+function rerun(){sigPicked=false;codePicked=false;document.querySelectorAll('#sigGrid .card').forEach(c=>{c.style='cursor:pointer;transition:all .15s';});document.getElementById('s1fb').style.cssText='max-height:0;opacity:0;padding:0';document.getElementById('s1next').disabled=true;document.querySelectorAll('#code .cl').forEach(r=>{r.style.opacity='';r.className='cl';});document.getElementById('codeFb').className='code-fb-strip';document.getElementById('codeFb').innerHTML='';document.getElementById('codeStatus').className='code-status';document.getElementById('nb2').disabled=true;document.querySelectorAll('.spot-node').forEach(n=>n.classList.remove('active','infected'));document.querySelectorAll('.spot-line').forEach(l=>{l.classList.remove('hl','infected');});document.getElementById('spot1-detail').classList.remove('on');resetTest();document.getElementById('hackStage').innerHTML='';document.getElementById('sumMsg').innerHTML='';document.getElementById('rerunBtn').style.display='none';document.getElementById('toRuleBtn').style.display='none';document.querySelectorAll('.trio-item').forEach(t=>t.classList.remove('open'));const rt=document.querySelector('.rt');if(rt)delete rt.dataset.revealed;const ra=document.getElementById('ruleAmbient');if(ra){delete ra.dataset.built;ra.textContent='';}document.querySelectorAll('#cl1 .ck-item').forEach(c=>c.classList.remove('checked'));document.getElementById('cl1-fill').style.width='0%';document.getElementById('cl1-text').textContent='0 / 5';Object.keys(visited).forEach(k=>{if(k!=='0')delete visited[k];});go(1);}
+let openTrio=-1;function toggleTrio(i){if(openTrio===i){document.getElementById('tr'+i).classList.remove('open');openTrio=-1;return;}if(openTrio>=0)document.getElementById('tr'+openTrio).classList.remove('open');document.getElementById('tr'+i).classList.add('open');openTrio=i;}document.addEventListener('click',e=>{if(openTrio>=0&&!e.target.closest('.trio-item')){document.getElementById('tr'+openTrio).classList.remove('open');openTrio=-1;}});
+(function(){const tip=document.createElement('div');tip.id='gloss-tip';document.body.appendChild(tip);let cur=null;function place(el){const def=el.getAttribute('data-def')||'';tip.textContent=def;const r=el.getBoundingClientRect();tip.style.left='0px';tip.style.top='0px';const tw=tip.offsetWidth,th=tip.offsetHeight;let left=r.left;if(left+tw>window.innerWidth-8)left=window.innerWidth-tw-8;if(left<8)left=8;let top=r.top-th-10;if(top<8)top=r.bottom+10;tip.style.left=left+'px';tip.style.top=top+'px';tip.classList.add('on');cur=el;}function hide(){tip.classList.remove('on');cur=null}document.addEventListener('mouseover',e=>{const g=e.target.closest('.gloss');if(g&&g!==cur)place(g)});document.addEventListener('mouseout',e=>{if(e.target.closest('.gloss'))hide()});document.addEventListener('click',e=>{const g=e.target.closest('.gloss');if(g&&window.matchMedia('(hover:none)').matches){if(cur===g)hide();else place(g);e.preventDefault();return}if(!g)hide()});document.addEventListener('scroll',hide,true);})();
+
+/* ═══ FULLSCREEN ═══ */
+function toggleFS(){if(!document.fullscreenElement&&!document.webkitFullscreenElement){const el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen).call(el);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}}
+document.addEventListener('fullscreenchange',updateFSIcon);document.addEventListener('webkitfullscreenchange',updateFSIcon);
+function updateFSIcon(){const isFS=!!(document.fullscreenElement||document.webkitFullscreenElement);document.getElementById('fsIco').style.display=isFS?'none':'';document.getElementById('fsIcoExit').style.display=isFS?'':'none';}
+
+renderCode();switchLang(0);buildStrip();
+</script>
+</body>
+</html>
