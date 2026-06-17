@@ -310,7 +310,7 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
   <div class="cv-visual">
     <div class="cv-hash"><span>5f4dcc3b5aa765d61d83</span><span class="cv-crack">████████████████████</span></div>
     <div class="cv-arrow">▼ MD5 reversed in 0.003s ▼</div>
-    <div class="cv-plain">password123</div>
+    <div class="cv-plain">password</div>
     <div class="cv-time">~200 billion hashes/sec on a modern GPU</div>
   </div>
   <span class="cv-badge">A04</span>
@@ -325,6 +325,8 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
   <div class="atk-header">
     <div class="atk-label">// adobe — 2013 — how were 153 million passwords reversed?</div>
   </div>
+
+  <p style="font-size:19px;line-height:1.8"><em style="color:var(--ink-dim)">You just saw how fast MD5 falls — a hashing failure. Adobe's mistake was different: they used reversible <strong>encryption</strong> instead of one-way hashing. Both are cryptographic failures, but with different root causes.</em></p>
 
   <p style="font-size:19px;line-height:1.8">In October 2013, Adobe disclosed a breach affecting 153 million accounts. Each record contained an email, an encrypted password, and a plaintext password hint. The passwords weren't hashed — they were encrypted using <span class="gloss" data-def="3DES — Triple DES. A symmetric encryption algorithm that applies DES three times. Unlike hashing, encryption is reversible if you have the key. Not designed for password storage.">3DES</span> in <span class="gloss" data-def="ECB — Electronic Codebook mode. The simplest block cipher mode. Each block is encrypted independently with the same key. Identical plaintext blocks produce identical ciphertext blocks — leaking patterns.">ECB mode</span> with a single key for all 153 million passwords. Within hours, researchers had identified the top 100 most common passwords without even cracking the encryption — because ECB mode and plaintext hints gave everything away.</p>
 
@@ -489,7 +491,7 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
     <div class="trio-item" id="tr0" onclick="toggleTrio(0)">
       <div class="trio-item-main"><div class="trio-label">Scope in 2025</div><div class="trio-val">Weak algorithms · ECB mode · hardcoded keys · missing encryption · <span style="color:var(--accent)">PRNG</span></div></div>
       <span class="trio-chevron">▶</span>
-      <div class="trio-detail"><div class="trio-detail-inner"><div class="trio-detail-text">A04 dropped from #2 to #4 in 2025 — reflecting better TLS adoption (Let's Encrypt, CPU AES acceleration). But 32 CWEs are still mapped with 1.6M occurrences. Key weaknesses: CWE-327 (broken algorithms), CWE-331 (insufficient entropy), CWE-338 (weak PRNG). Password storage and key management remain the most common failures. OWASP now explicitly recommends preparing for post-quantum cryptography by 2030.</div></div></div>
+      <div class="trio-detail"><div class="trio-detail-inner"><div class="trio-detail-text">A04 dropped from #2 to #4 in 2025 — reflecting better TLS adoption (Let's Encrypt, CPU AES acceleration). But 32 CWEs are still mapped with 1.6M occurrences. Key weaknesses: CWE-327 (broken algorithms), CWE-331 (insufficient entropy), CWE-338 (weak PRNG). Password storage and key management remain the most common failures. OWASP now explicitly recommends preparing for post-quantum cryptography by 2030. <strong>Ownership is split:</strong> app developers own password hashing and data-at-rest encryption; DevOps/platform teams own TLS configuration, certificate rotation, and key/secret management in the pipeline. Both sides contribute to A04.</div></div></div>
     </div>
     <div class="trio-item" id="tr1" onclick="toggleTrio(1)">
       <div class="trio-item-main"><div class="trio-label">First fix</div><div class="trio-val">Replace MD5/SHA with <code>bcrypt</code> or <code>argon2id</code> — cost ≥ 12</div></div>
@@ -586,7 +588,7 @@ const EXPLOIT=[
    bars:[{label:'MD5',pct:100,text:'200B hashes/sec',cls:'fast'},{label:'SHA-256',pct:55,text:'~8B hashes/sec',cls:'fast'},{label:'bcrypt 12',pct:8,text:'~4 hashes/sec',cls:'slow'}]},
   {num:'02',label:'No salt = rainbow tables',
    body:'Without a unique salt per password, identical passwords produce identical hashes. Pre-computed lookup tables (<span class="gloss" data-def="Rainbow table — a pre-computed table mapping hash values back to their original plaintext inputs. Effective against unsalted hashes. A single table can reverse millions of common passwords instantly.">rainbow tables</span>) contain billions of pre-hashed values. Lookup is instant — no computation needed. A salt makes every hash unique, killing rainbow tables entirely.',
-   bars:[{label:'Unsalted',pct:100,text:'all "password123" → 5f4dcc3b5aa7...',cls:'fast'},{label:'Salted',pct:50,text:'each one unique — rainbow tables useless',cls:'slow'}]},
+   bars:[{label:'Unsalted',pct:100,text:'all "password" → 5f4dcc3b5aa7...',cls:'fast'},{label:'Salted',pct:50,text:'each one unique — rainbow tables useless',cls:'slow'}]},
   {num:'03',label:'bcrypt: designed to be slow',
    body:'<span class="gloss" data-def="bcrypt — a password hashing function based on the Blowfish cipher. Introduced in 1999. Uses a configurable cost parameter where each increment doubles the work. Automatically generates and stores a unique 128-bit salt per hash.">bcrypt</span> with cost=12 takes ~250ms per hash. That\'s tolerable for a user logging in, but catastrophic for an attacker. At 4 hashes/sec, that same 8-character password takes <strong>48 million years</strong>. The cost parameter is adjustable — as hardware improves, increase the cost to keep pace.',
    bars:[{label:'MD5',pct:100,text:'8.5 hours for 8-char password',cls:'fast'},{label:'bcrypt 12',pct:8,text:'48,000,000 years',cls:'slow'}]},
@@ -621,7 +623,7 @@ function resetTest(){tqScore=0;tqAnswers=[null,null,null];[1,2,3].forEach(i=>{do
 
 /* ═══ SUMMARY ═══ */
 const CRYPTO_LINES=[
-  {hash:'5f4dcc3b5aa765d61d83',plain:'password123',icon:'💀',comment:'MD5 — reversed in 0.003 seconds. 200 billion guesses per second on a GPU'},
+  {hash:'5f4dcc3b5aa765d61d83',plain:'password',icon:'💀',comment:'MD5 — reversed in 0.003 seconds. 200 billion guesses per second on a GPU'},
   {hash:'e10adc3949ba59abbe56',plain:'123456',icon:'🔓',comment:'1.9 million Adobe users chose this — ECB mode meant they all looked identical'},
   {hash:'d8578edf8458ce06fbc5',plain:'qwerty',icon:'⌨️',comment:'the third most common password in every breach since 2009 — still going strong'},
 ];

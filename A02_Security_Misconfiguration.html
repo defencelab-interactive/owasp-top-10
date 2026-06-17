@@ -584,7 +584,7 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
       <div class="trio-item-main"><div class="trio-label">Scope in 2025</div><div class="trio-val">Cloud misconfig · default creds · verbose errors · <span style="color:var(--accent)">XXE</span> · missing headers</div></div>
       <span class="trio-chevron">▶</span>
       <div class="trio-detail"><div class="trio-detail-inner">
-        <div class="trio-detail-text">A02 rose from #5 to #2 in 2025. 16 mapped CWEs, 719K occurrences. The shift to cloud-native and IaC means more of an application's behaviour lives in configuration files, not code. XXE (CWE-611) is now included in this category. 100% of applications tested had some form of misconfiguration.</div>
+        <div class="trio-detail-text">A02 rose from #5 to #2 in 2025. 16 mapped CWEs, 719K occurrences. The shift to cloud-native and IaC means more of an application's behaviour lives in configuration files, not code. XXE (CWE-611) is now included in this category. 100% of applications tested had some form of misconfiguration. <strong>For developers:</strong> your slice of A02 includes debug mode left on in production, verbose stack traces leaking to users, missing security headers (HSTS, CSP), overly permissive CORS, and insecure framework defaults. <strong>For DevOps:</strong> cloud storage exposure, IaC drift, default credentials, and unnecessary open ports. Both sides own this category.</div>
       </div></div>
     </div>
     <div class="trio-item" id="tr1" onclick="toggleTrio(1)">

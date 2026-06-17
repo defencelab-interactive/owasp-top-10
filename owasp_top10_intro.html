@@ -458,7 +458,7 @@ const CASES = [
     signal:'Passwords in the users table are hashed with MD5, no salt. A DB dump would reverse most of them in minutes. This has been the case since 2018.',
     choices:['Broken access control','Injection','Cryptographic failure','Misconfiguration'],
     correct:2,
-    fb:'MD5 is designed to be fast — billions of hashes per second on a GPU. Without salt, identical passwords produce identical hashes. Pre-computed tables reverse them instantly.',
+    fb:'MD5 is designed to be fast — ~200 billion hashes per second on a modern GPU. Without salt, identical passwords produce identical hashes. Pre-computed tables reverse them instantly.',
     principle:'Password hashes must be deliberately slow. Use bcrypt, scrypt, or argon2id — never MD5 or SHA.',
     note:'Moved from #2 to #4 in 2025'
   },

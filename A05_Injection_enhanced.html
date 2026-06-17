@@ -964,6 +964,7 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
     <div class="atk-step">3 / 3</div>
   </div>
   <p class="tq-prompt">What does this payload achieve?</p>
+  <p style="font-size:13.5px;color:var(--ink-dim);line-height:1.6;margin:0"><em>Quick reference: <strong>Tautology</strong> = makes WHERE always true (e.g., OR 1=1). <strong>UNION-based</strong> = appends a second query to extract other tables. <strong>Blind/boolean</strong> = infers data character by character from true/false responses.</em></p>
   <div class="cbox tq-cbox">
     <div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">HTTP request</span></div>
     <div class="cbody" id="q3code"></div>
@@ -1064,7 +1065,7 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
   <div class="modal-body">
     <div class="modal-section">
       <div class="modal-section-label">Entry point</div>
-      <p>Apache Struts 2 contained a critical remote code execution vulnerability (CVE-2017-5638) in its file upload handling. A patch was released on 7 March 2017. Equifax's security team received the advisory and issued an internal directive to patch within 48 hours. The directive was not followed. Attackers exploited the unpatched system on 13 May 2017 — 66 days after the patch was available.</p>
+      <p>Apache Struts 2 contained a critical remote code execution vulnerability (CVE-2017-5638) in its file upload handling — specifically an OGNL expression injection, a different flavor from the SQL injection you'll practice next. A patch was released on 7 March 2017. Equifax's security team received the advisory and issued an internal directive to patch within 48 hours. The directive was not followed. Attackers exploited the unpatched system on 13 May 2017 — 66 days after the patch was available. <em>The root cause is the same across all injection variants: untrusted input reaching an interpreter without structural separation.</em></p>
     </div>
     <div class="modal-section">
       <div class="modal-section-label">78 days undetected</div>
