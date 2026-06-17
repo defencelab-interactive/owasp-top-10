@@ -108,7 +108,26 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 <div class="scr" id="s4">
   <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 1</div></div>
   <p><strong>Higher leverage: fix the error responses (A10).</strong></p>
-  <p>The parameterized query already blocks SQL injection — the A05 risk is mitigated. But the verbose error messages hand an attacker a map of your database: table names, column types, constraint names, even the query structure. Input validation is good defense-in-depth, but it protects against a theoretical future bypass. The error messages are leaking information <em>right now</em>, on every failed request.</p>
+  <p>The parameterized query already blocks SQL injection — the A05 risk is mitigated. But the verbose error messages hand an attacker a map of your database on every failed request.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0">
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--red)">before — leaks schema</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="kw">catch</span> (err) {
+  res.<span class="fn">status</span>(<span class="nm">500</span>).<span class="fn">json</span>({
+    error: err.message,
+    detail: err.detail,
+    query: err.query
+  });
+}</div></div></div>
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">after — generic + structured log</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="kw">catch</span> (err) {
+  <span class="fn">logger.error</span>({
+    event: <span class="st">'search_error'</span>,
+    err: err.message,
+    query: req.query.q
+  });
+  res.<span class="fn">status</span>(<span class="nm">500</span>).<span class="fn">json</span>({
+    error: <span class="st">'Search failed'</span>
+  });
+}</div></div></div>
+  </div>
   <div class="persona-row">
     <div class="persona"><div class="persona-name">Renata · CISO</div><div class="persona-text">"The parameterized query buys us time. The error messages are active intelligence leakage. Fix the leak, then schedule the input validation for the next sprint."</div></div>
     <div class="persona"><div class="persona-name">Marcus · Developer</div><div class="persona-text">"Took 20 minutes. Replaced the catch block with a generic message and added structured logging. The input validation is in the backlog — it's not urgent while parameterization holds."</div></div>
@@ -120,8 +139,24 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 <div class="scr" id="s5">
   <div class="atk-header"><div class="atk-label">// scenario 2 of 5</div></div>
   <h2>The build server that trusts everything</h2>
-  <p>A CI/CD pipeline pulls dependencies from npm without a lockfile pinned to exact hashes. The <code>package-lock.json</code> exists but isn't committed — <code>npm install</code> resolves fresh ranges on every build. Meanwhile, the build server shares a network segment with developer workstations. A compromised dev laptop could reach the build server directly.</p>
-  <p style="font-size:15px;color:var(--ink-dim)">Two supply chain risks: unpinned dependencies that could be swapped for malicious versions (A03), and a build environment that's reachable from compromised endpoints (A08 — integrity of the build pipeline itself).</p>
+  <p>A CI/CD pipeline pulls dependencies from npm without a lockfile pinned to exact hashes. The <code>package-lock.json</code> exists but isn't committed — <code>npm install</code> resolves fresh ranges on every build.</p>
+  <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">Jenkinsfile</span></div><div class="cbody"><div class="lc"><span class="fn">pipeline</span> {
+  <span class="fn">agent</span> { label <span class="st">'build-01'</span> }  <span class="cm">// shared VLAN with dev workstations</span>
+  <span class="fn">stages</span> {
+    <span class="fn">stage</span>(<span class="st">'Install'</span>) {
+      <span class="fn">steps</span> {
+        sh <span class="st">'npm install'</span>           <span class="cm">// resolves fresh ranges every time</span>
+      }                              <span class="cm">// no npm ci, no integrity check</span>
+    }
+    <span class="fn">stage</span>(<span class="st">'Build'</span>) {
+      <span class="fn">steps</span> {
+        sh <span class="st">'npm run build'</span>
+        <span class="fn">archiveArtifacts</span> <span class="st">'dist/**'</span>
+      }
+    }
+  }
+}</div></div></div>
+  <p style="font-size:15px;color:var(--ink-dim)">Two supply chain risks: unpinned dependencies that could be swapped for malicious versions (A03), and a build environment on the same network as developer laptops — reachable via lateral movement (A08).</p>
   <div class="nav"><button class="btn btn-g" onclick="go(4)">← Previous</button><button class="btn btn-p" onclick="go(6)">Make the call →</button></div>
 </div>
 
@@ -146,7 +181,24 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 <div class="scr" id="s7">
   <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 2</div></div>
   <p><strong>Higher leverage: isolate the build server (A08).</strong></p>
-  <p>Lockfile pinning stops one attack vector — dependency substitution. But if the build server is reachable from compromised endpoints, an attacker doesn't need to poison a package. They can inject code directly into the build process, modify artifacts, or exfiltrate secrets from CI environment variables. Network isolation is the single point of protection: it removes the build server from the attacker's reachable surface entirely.</p>
+  <p>Lockfile pinning stops one attack vector — dependency substitution. But if the build server is reachable from compromised endpoints, an attacker doesn't need to poison a package. They can inject code directly into the build process, modify artifacts, or exfiltrate secrets from CI environment variables.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0">
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--red)">before — shared VLAN</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="cm">┌──────────────┐
+│  Dev laptops  │──┐
+└──────────────┘  │  same VLAN
+┌──────────────┐  │
+│  Build srv   │──┘
+│  (build-01)  │
+└──────────────┘</span></div></div></div>
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">after — isolated VPC</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="cm">┌──────────────┐
+│  Dev laptops  │  corp network
+└──────────────┘
+       ✗ no route
+┌──────────────┐
+│  Build srv   │  isolated VPC
+│  webhook in  │→ artifacts out
+└──────────────┘</span></div></div></div>
+  </div>
   <div class="persona-row">
     <div class="persona"><div class="persona-name">Renata · CISO</div><div class="persona-text">"A compromised build server is game over — it touches every artifact we ship. Lockfile pinning matters, but it only covers one supply chain vector. Isolation covers them all."</div></div>
     <div class="persona"><div class="persona-name">Marcus · Developer</div><div class="persona-text">"We moved CI to an isolated VPC with no inbound SSH. Deployments trigger via webhook, not direct access. Lockfile pinning went in the same week — it was a one-line CI change."</div></div>
@@ -158,8 +210,22 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 <div class="scr" id="s8">
   <div class="atk-header"><div class="atk-label">// scenario 3 of 5</div></div>
   <h2>The password reset nobody rate-limits</h2>
-  <p>A SaaS application has two authentication paths. The login page uses email + password — no MFA. The password-reset flow sends a 6-digit code by email, valid for 15 minutes. There's no rate limit on reset code attempts. An attacker can try all 1 million combinations of a 6-digit code in under 10 minutes with a basic script.</p>
-  <p style="font-size:15px;color:var(--ink-dim)">The reset flow is a design flaw — a guessable code without rate limiting (A06 insecure design). The login page lacks MFA (A07 authentication failures). Budget for one fix this quarter.</p>
+  <p>A SaaS application has two authentication paths. The login page uses email + password — no MFA. The password-reset flow sends a 6-digit code by email, valid for 15 minutes. There's no rate limit on reset code attempts.</p>
+  <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">reset.controller.js</span></div><div class="cbody"><div class="lc"><span class="fn">router.post</span>(<span class="st">'/reset/verify'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { email, code } = req.body;
+  <span class="kw">const</span> reset = <span class="kw">await</span> db.<span class="fn">findReset</span>(email);
+  <span class="kw">if</span> (reset.code === code) {          <span class="cm">// 6 digits: 000000–999999</span>
+    <span class="kw">return</span> res.<span class="fn">json</span>({ token: <span class="fn">issueResetToken</span>(email) });
+  }
+  res.<span class="fn">status</span>(<span class="nm">400</span>).<span class="fn">json</span>({ error: <span class="st">'Invalid code'</span> });
+  <span class="cm">// no rate limit</span>
+  <span class="cm">// no attempt counter</span>
+  <span class="cm">// no lockout after failures</span>
+});</div></div></div>
+  <div class="card" style="border-left:3px solid var(--yellow);background:var(--surface)">
+    <p style="font-size:14px;color:var(--ink-mid);margin:0;line-height:1.5;font-family:var(--mono)">6 digits = 1,000,000 combinations · 15 min window · ~1,100 req/sec = <strong style="color:var(--red)">full keyspace in under 15 minutes</strong></p>
+  </div>
+  <p style="font-size:15px;color:var(--ink-dim)">The reset flow is a design flaw — a guessable code without rate limiting (A06). The login page lacks MFA (A07). Budget for one fix this quarter.</p>
   <div class="nav"><button class="btn btn-g" onclick="go(7)">← Previous</button><button class="btn btn-p" onclick="go(9)">Make the call →</button></div>
 </div>
 
@@ -184,7 +250,21 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 <div class="scr" id="s10">
   <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 3</div></div>
   <p><strong>Higher leverage: add MFA to login (A07).</strong></p>
-  <p>The login page is the primary authentication path — it's hit by credential stuffing attacks daily. MFA blocks them all, regardless of how the credentials were obtained (phishing, breach reuse, social engineering). The password-reset flow is a secondary path. It's vulnerable, and fixing it matters — but the login page is where the volume is. Protecting the front door beats reinforcing the side entrance.</p>
+  <p>The login page is the primary authentication path — it's hit by credential stuffing attacks daily. MFA blocks them all, regardless of how the credentials were obtained.</p>
+  <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">login.controller.js — with TOTP</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:13px;white-space:pre-wrap"><span class="kw">const</span> user = <span class="kw">await</span> db.<span class="fn">findByEmail</span>(email);
+<span class="kw">if</span> (!user || !<span class="kw">await</span> <span class="fn">bcrypt.compare</span>(password, user.hash))
+  <span class="kw">return</span> res.<span class="fn">status</span>(<span class="nm">401</span>).<span class="fn">json</span>({ error: <span class="st">'Invalid credentials'</span> });
+
+<span class="kw">if</span> (user.mfaEnabled) {
+  <span class="kw">const</span> valid = <span class="fn">speakeasy.totp.verify</span>({
+    secret: user.mfaSecret,
+    token: req.body.totpCode,
+    window: <span class="nm">1</span>
+  });
+  <span class="kw">if</span> (!valid) <span class="kw">return</span> res.<span class="fn">status</span>(<span class="nm">401</span>).<span class="fn">json</span>({ error: <span class="st">'Invalid MFA code'</span> });
+}
+res.<span class="fn">json</span>({ token: <span class="fn">issueJWT</span>(user) });</div></div></div>
+  <p style="font-size:15px;color:var(--ink-dim)">The reset flow is vulnerable, and fixing it matters — but the login page is where the volume is. Protecting the front door beats reinforcing the side entrance.</p>
   <div class="persona-row">
     <div class="persona"><div class="persona-name">Renata · CISO</div><div class="persona-text">"MFA on login is the single highest-impact control in our entire auth stack. The reset flow is exploitable, but it's a narrower attack surface. Fix the high-traffic path first."</div></div>
     <div class="persona"><div class="persona-name">Marcus · Developer</div><div class="persona-text">"We shipped TOTP in two weeks. The reset-flow rate limit was a half-day fix — we did it in the same sprint. But if we'd had to choose, MFA first, every time."</div></div>
@@ -196,7 +276,19 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 <div class="scr" id="s11">
   <div class="atk-header"><div class="atk-label">// scenario 4 of 5</div></div>
   <h2>The admin panel nobody changed the password for</h2>
-  <p>A monitoring dashboard (Grafana) is exposed on the internal network with default credentials: <code>admin / admin</code>. It has read access to production metrics and database connection health. The organization also has no centralized security logging — application logs exist but aren't aggregated, there's no alerting, and no one reviews them.</p>
+  <p>A monitoring dashboard (Grafana) is exposed on the internal network with default credentials. It has read access to production metrics, database connection health, and service topology. The organization also has no centralized security logging.</p>
+  <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">$ terminal — anyone on the network</span></div><div class="cbody"><div class="lc"><span class="cm"># this works right now, from any machine on the internal network</span>
+
+<span class="fn">curl</span> <span class="st">'http://grafana.internal:3000/api/datasources'</span> \
+  -u <span class="op">admin:admin</span> | <span class="fn">jq</span> <span class="st">'.[].url'</span>
+
+<span class="cm"># output:</span>
+<span class="cm"># "postgres://prod-db.internal:5432/main"</span>
+<span class="cm"># "http://prometheus.internal:9090"</span>
+<span class="cm"># "http://elasticsearch.internal:9200"</span>
+
+<span class="cm"># full database connection strings, internal hostnames,</span>
+<span class="cm"># service map — all with zero authentication effort</span></div></div></div>
   <p style="font-size:15px;color:var(--ink-dim)">Default credentials on an admin panel (A02 security misconfiguration). No security monitoring or alerting (A09 logging failures). The team can fix one this sprint.</p>
   <div class="nav"><button class="btn btn-g" onclick="go(10)">← Previous</button><button class="btn btn-p" onclick="go(12)">Make the call →</button></div>
 </div>
@@ -222,7 +314,23 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 <div class="scr" id="s13">
   <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 4</div></div>
   <p><strong>Higher leverage: change the credentials (A02).</strong></p>
-  <p>Default credentials are exploitable <em>right now</em>, by anyone on the network, with zero skill required. Centralized logging helps you detect attacks — but it doesn't stop one that's already in progress through an open door. The Grafana panel gives an attacker production metrics, database connection strings, and a foothold for lateral movement. Close the door first, then build the alarm system.</p>
+  <p>Default credentials are exploitable <em>right now</em>, by anyone on the network, with zero skill required. The Grafana panel gives an attacker production connection strings and service topology — a foothold for lateral movement.</p>
+  <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">grafana.ini — the 5-minute fix</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:13px;white-space:pre-wrap"><span class="cm"># Step 1: Disable local admin login</span>
+[auth]
+disable_login_form = <span class="kw">true</span>
+
+<span class="cm"># Step 2: Enable SSO via corporate identity</span>
+[auth.generic_oauth]
+enabled = <span class="kw">true</span>
+client_id = <span class="st">grafana-prod</span>
+auth_url = <span class="st">https://sso.corp.internal/authorize</span>
+token_url = <span class="st">https://sso.corp.internal/token</span>
+allowed_domains = <span class="st">company.com</span>
+
+<span class="cm"># Step 3: Restrict data source access</span>
+[security]
+admin_user = <span class="st">""</span>  <span class="cm"># no local admin at all</span></div></div></div>
+  <p style="font-size:15px;color:var(--ink-dim)">Centralized logging helps you detect attacks — but it doesn't stop one that's already possible through an open door. Close the door first, then build the alarm system.</p>
   <div class="persona-row">
     <div class="persona"><div class="persona-name">Renata · CISO</div><div class="persona-text">"This is a 5-minute fix that removes an active vulnerability. Logging infrastructure takes weeks to deploy well. We need both, but the open admin panel can't wait."</div></div>
     <div class="persona"><div class="persona-name">Marcus · Developer</div><div class="persona-text">"Changed the password in 2 minutes. Started SSO integration that afternoon. The SIEM project is in the quarterly roadmap — it's important but not the fire we need to put out today."</div></div>
@@ -234,13 +342,30 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 <div class="scr" id="s14">
   <div class="atk-header"><div class="atk-label">// scenario 5 of 5</div></div>
   <h2>The microservice that trusts everyone</h2>
-  <p>A backend microservice accepts JWTs from the API gateway but doesn't validate the signature — it base64-decodes the payload and trusts the claims. The same service runs as <code>root</code> in its container because the Dockerfile doesn't specify a user.</p>
-  <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">auth-middleware.js</span></div><div class="cbody"><div class="lc"><span class="kw">const</span> payload = <span class="fn">JSON.parse</span>(
-  <span class="fn">atob</span>(token.<span class="fn">split</span>(<span class="st">'.'</span>)[<span class="nm">1</span>])  <span class="cm">// decode payload, skip signature</span>
+  <p>A backend microservice accepts JWTs from the API gateway but doesn't validate the signature — it base64-decodes the payload and trusts the claims. The same service runs as <code>root</code> in its container.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0">
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">auth-middleware.js</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="cm">// decodes JWT payload without</span>
+<span class="cm">// verifying signature</span>
+<span class="kw">const</span> payload = <span class="fn">JSON.parse</span>(
+  <span class="fn">atob</span>(token.<span class="fn">split</span>(<span class="st">'.'</span>)[<span class="nm">1</span>])
 );
-req.user = { id: payload.sub, role: payload.role };
-<span class="fn">next</span>();  <span class="cm">// anyone can forge this token</span></div></div></div>
-  <p style="font-size:15px;color:var(--ink-dim)">Missing JWT signature validation (A01 broken access control). Container running as root (A02 security misconfiguration). Both are real problems — but which one creates the vulnerability?</p>
+req.user = {
+  id: payload.sub,
+  role: payload.role  <span class="cm">// forgeable</span>
+};
+<span class="fn">next</span>();</div></div></div>
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">Dockerfile</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="kw">FROM</span> <span class="st">node:20-alpine</span>
+<span class="kw">WORKDIR</span> <span class="st">/app</span>
+<span class="kw">COPY</span> . .
+<span class="kw">RUN</span> npm ci --production
+
+<span class="cm"># no USER directive</span>
+<span class="cm"># runs as root by default</span>
+<span class="cm"># container escape = host root</span>
+
+<span class="kw">CMD</span> [<span class="st">"node"</span>, <span class="st">"server.js"</span>]</div></div></div>
+  </div>
+  <p style="font-size:15px;color:var(--ink-dim)">Missing JWT signature validation means anyone can forge tokens (A01 broken access control). Running as root means a container escape gives the attacker host-level access (A02 security misconfiguration). Both are real — but which one creates the vulnerability?</p>
   <div class="nav"><button class="btn btn-g" onclick="go(13)">← Previous</button><button class="btn btn-p" onclick="go(15)">Make the call →</button></div>
 </div>
 
@@ -265,10 +390,36 @@ req.user = { id: payload.sub, role: payload.role };
 <div class="scr" id="s16">
   <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 5</div></div>
   <p><strong>Higher leverage: validate the JWT signature (A01).</strong></p>
-  <p>Without signature validation, <em>anyone</em> can forge a token with any claims — admin, any user, any role. The service has no access control at all. Running as root worsens what happens <em>after</em> a compromise (container escape, lateral movement), but it doesn't create the vulnerability. Fix the access control to close the door; fix the container to limit the blast radius.</p>
+  <p>Without signature validation, <em>anyone</em> can forge a token with any claims. The service has no access control at all. Running as root worsens the blast radius but doesn't create the vulnerability.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0">
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--red)">before — trusts any token</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="kw">const</span> payload = <span class="fn">JSON.parse</span>(
+  <span class="fn">atob</span>(token.<span class="fn">split</span>(<span class="st">'.'</span>)[<span class="nm">1</span>])
+);
+req.user = {
+  id: payload.sub,
+  role: payload.role
+};
+<span class="fn">next</span>();</div></div></div>
+    <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">after — cryptographic verification</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="kw">try</span> {
+  <span class="kw">const</span> payload = <span class="fn">jwt.verify</span>(
+    token,
+    GATEWAY_PUBLIC_KEY,
+    { algorithms: [<span class="st">'RS256'</span>] }
+  );
+  req.user = {
+    id: payload.sub,
+    role: payload.role
+  };
+  <span class="fn">next</span>();
+} <span class="kw">catch</span> {
+  res.<span class="fn">status</span>(<span class="nm">401</span>).<span class="fn">json</span>({
+    error: <span class="st">'Invalid token'</span>
+  });
+}</div></div></div>
+  </div>
   <div class="persona-row">
     <div class="persona"><div class="persona-name">Renata · CISO</div><div class="persona-text">"The JWT validation is the vulnerability. Running as root is a severity multiplier. Always fix the vulnerability before reducing the blast radius — you can't contain what you can't prevent."</div></div>
-    <div class="persona"><div class="persona-name">Marcus · Developer</div><div class="persona-text">"Added jsonwebtoken.verify() with the gateway's public key — 4 lines of code. The Dockerfile USER change was a separate PR the same day. Both shipped, but the signature check was the blocker."</div></div>
+    <div class="persona"><div class="persona-name">Marcus · Developer</div><div class="persona-text">"Added jwt.verify() with the gateway's public key — 4 lines of code. The Dockerfile USER change was a separate PR the same day. Both shipped, but the signature check was the blocker."</div></div>
   </div>
   <div class="nav"><button class="btn btn-g" onclick="go(15)">← Choice</button><button class="btn btn-p" onclick="go(17)">The 10 Habits →</button></div>
 </div>
