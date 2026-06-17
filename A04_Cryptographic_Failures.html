@@ -404,6 +404,10 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
     <div class="dleg"><div class="dleg-item"><div class="dleg-dash" style="background:var(--red)"></div>vulnerable</div><div class="dleg-item"><div class="dleg-dash" style="background:var(--green)"></div>secure</div></div>
   </div>
   <p style="font-size:17px;color:var(--ink-mid);margin:0;line-height:1.65">Passwords → slow hash (<span class="gloss" data-def="bcrypt — a password hashing function designed to be slow. Uses a configurable cost factor (work factor) that increases computation time exponentially. Auto-generates a unique salt per hash.">bcrypt</span>, <span class="gloss" data-def="argon2id — the winner of the 2015 Password Hashing Competition. Designed to resist both GPU and memory-based attacks. Takes parameters for time cost, memory cost, and parallelism.">argon2id</span>). Data at rest → authenticated encryption (<span class="gloss" data-def="AES-GCM — AES in Galois/Counter Mode. Provides both encryption and authentication in one operation. Prevents tampering and padding oracle attacks. The current standard for symmetric encryption.">AES-GCM</span>). Transport → TLS 1.2+.</p>
+  <div style="background:var(--adim);border:1px solid rgba(138,106,58,.22);border-radius:6px;padding:14px 18px;margin:4px 0">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:700">🎯 the one habit</div>
+    <p style="font-size:16px;color:var(--ink);line-height:1.6;margin:0;font-weight:600">Passwords → bcrypt or argon2id (cost ≥ 12). Data at rest → AES-256-GCM. Transport → TLS 1.2+. If you see MD5 or SHA on a password, stop and fix it.</p>
+  </div>
   <div class="lang-tabs">
     <div class="lang-tab active" onclick="switchLang(0)">Passwords</div>
     <div class="lang-tab" onclick="switchLang(1)">Data at rest</div>

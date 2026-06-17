@@ -797,25 +797,25 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
   </div>
 
   <div class="s1-body">
-    <p class="s1-context" id="s1ctx">Attackers were inside Equifax's network for <strong>78 days</strong>. CVE-2017-5638 had been patched two months prior. Four signals were present during the breach. <strong>Which one finally triggered detection?</strong></p>
+    <p class="s1-context" id="s1ctx">CVE-2017-5638 was an OGNL expression injection in Apache Struts' file upload handler. A patch existed two months before the breach. <strong>What made this an injection vulnerability rather than another type of flaw?</strong></p>
     <div class="s1-feedback" id="s1fb"></div>
 
     <div class="signal-grid">
       <div class="signal-card" id="sc0" onclick="pickSignal(0)">
-        <span class="sig-ico">📈</span>
-        <div><div class="sig-title">Unusual data egress</div><div class="sig-body">Traffic spiking on internal DB servers, several GB/day for weeks.</div></div>
+        <span class="sig-ico">📨</span>
+        <div><div class="sig-title">Untrusted input reached an interpreter</div><div class="sig-body">The HTTP Content-Type header was parsed by Struts’ OGNL expression evaluator without sanitization.</div></div>
       </div>
       <div class="signal-card" id="sc1" onclick="pickSignal(1)">
-        <span class="sig-ico">🔐</span>
-        <div><div class="sig-title">Failed auth attempts</div><div class="sig-body">Repeated failures on admin consoles from non-admin internal IPs.</div></div>
+        <span class="sig-ico">🛡</span>
+        <div><div class="sig-title">Missing firewall rules</div><div class="sig-body">The Struts server was directly reachable from the internet with no WAF filtering.</div></div>
       </div>
       <div class="signal-card" id="sc2" onclick="pickSignal(2)">
-        <span class="sig-ico">🌐</span>
-        <div><div class="sig-title">Expired SSL certificate</div><div class="sig-body">Inspection cert had expired 19 months prior — egress flowing uninspected.</div></div>
+        <span class="sig-ico">⚙️</span>
+        <div><div class="sig-title">Server misconfiguration</div><div class="sig-body">Struts was running with excessive privileges, allowing the exploit to access sensitive data.</div></div>
       </div>
       <div class="signal-card" id="sc3" onclick="pickSignal(3)">
-        <span class="sig-ico">🚨</span>
-        <div><div class="sig-title">External notification</div><div class="sig-body">Message from outside reporting customer data on criminal forums.</div></div>
+        <span class="sig-ico">📋</span>
+        <div><div class="sig-title">Unpatched known vulnerability</div><div class="sig-body">The CVE had been public for 66 days with a fix available — Equifax hadn’t applied it.</div></div>
       </div>
     </div>
   </div>
@@ -878,6 +878,10 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
   </div>
 
   <p style="font-size:13px;color:var(--ink-mid);margin:0;flex-shrink:0">Structure and data are compiled separately — the attacker's input can never change what the query <em>does</em>.</p>
+  <div style="background:var(--adim);border:1px solid rgba(26,86,160,.22);border-radius:6px;padding:14px 18px;margin:4px 0">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:700">🎯 the one habit</div>
+    <p style="font-size:16px;color:var(--ink);line-height:1.6;margin:0;font-weight:600">Parameterize every query. Never concatenate user input into a command, query, or template — regardless of language, framework, or interpreter.</p>
+  </div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
     <div class="lang-tabs">
@@ -1087,14 +1091,14 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
 <script>
 /* ── SIGNAL DATA ── */
 const SIGNALS=[
-  {right:false,title:"Unusual data egress",
-   msg:"Present but invisible — the expired SSL cert (card 3) meant encrypted egress was flowing uninspected. The spike existed; nobody could see it."},
-  {right:false,title:"Failed auth attempts",
-   msg:"Logs existed. No alert thresholds were set for internal lateral movement. The events were recorded; nobody was watching."},
-  {right:false,title:"Expired SSL certificate",
-   msg:"This caused the blindness — but Equifax only found it after being notified externally. A contributing factor, not the trigger."},
-  {right:true,title:"External notification",
-   msg:"Correct. Equifax was told by an outside party. 78 days of egress spikes, failed auth events, lateral movement — all present, none actioned. This is what A09 looks like in production."}
+  {right:true,title:"Untrusted input reached an interpreter",
+   msg:"Correct. The HTTP Content-Type header — attacker-controlled input — was parsed by Struts’ OGNL expression evaluator, which executed it as code. This is injection’s root cause across all variants: data crosses into an interpreter without structural separation. SQL, OGNL, OS commands, XSS — same pattern, different interpreter."},
+  {right:false,title:"Missing firewall rules",
+   msg:"Network exposure made the server reachable, but it’s not what made this an injection flaw. Even behind a WAF, if the application parses untrusted input through an expression evaluator, it’s injectable. The vulnerability is in how the input is processed, not how it arrives."},
+  {right:false,title:"Server misconfiguration",
+   msg:"Excessive privileges worsened the impact (the attacker could read sensitive files), but the injection existed regardless of privilege level. Misconfiguration is A02; injection is about untrusted input reaching an interpreter."},
+  {right:false,title:"Unpatched known vulnerability",
+   msg:"Patching would have prevented exploitation, but the question is what made it an injection flaw. The unpatched state is a process failure; the injection is a code-level flaw — the OGNL evaluator accepting unsanitized header input. Patching fixes the symptom; parameterization fixes the root cause."}
 ];
 
 /* ── CODE DATA ── */

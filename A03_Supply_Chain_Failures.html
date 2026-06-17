@@ -446,6 +446,10 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
     <div class="dleg"><div class="dleg-item"><div class="dleg-dash" style="background:var(--red)"></div>vulnerable</div><div class="dleg-item"><div class="dleg-dash" style="background:var(--green)"></div>secure</div></div>
   </div>
   <p style="font-size:17px;color:var(--ink-mid);margin:0;line-height:1.65">Supply chain security isn't one fix. It's a set of practices: audit in CI, lock dependencies, pin actions by commit hash, verify integrity. <strong>Important nuance:</strong> standard scanning (SCA, Dependabot) catches the vast majority of supply chain risk — known-vulnerable packages, the 95%. But xz-class attacks — patient, trusted-maintainer backdoors hidden in build artifacts — evade all standard tooling. xz was caught by luck, not by scanning. For the exotic 5%, you need additional defenses: minimize dependencies, scrutinize ownership changes, and invest in build reproducibility.</p>
+  <div style="background:var(--adim);border:1px solid rgba(122,90,138,.22);border-radius:6px;padding:14px 18px;margin:4px 0">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:700">🎯 the one habit</div>
+    <p style="font-size:16px;color:var(--ink);line-height:1.6;margin:0;font-weight:600">Before adding a dependency, ask: do I need this? Run the audit in CI. Update regularly. The boring hygiene retires 95% of supply chain risk.</p>
+  </div>
   <div class="lang-tabs">
     <div class="lang-tab active" onclick="switchLang(0)">npm</div>
     <div class="lang-tab" onclick="switchLang(1)">Python</div>

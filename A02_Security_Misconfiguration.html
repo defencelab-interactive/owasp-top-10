@@ -488,6 +488,10 @@ html:fullscreen body,html:-webkit-full-screen body{height:100vh}
     </div>
   </div>
   <p style="font-size:17px;color:var(--ink-mid);margin:0;line-height:1.65">The fix isn't complex code. It's a configuration change — and an automated check to make sure it stays changed. <span class="gloss" data-def="IaC — Infrastructure as Code. Managing infrastructure (servers, databases, cloud services) through machine-readable config files rather than manual setup. Terraform, CloudFormation, Pulumi are common tools.">IaC</span> should be treated like application code: linted, scanned, reviewed.</p>
+  <div style="background:var(--adim);border:1px solid rgba(90,122,58,.22);border-radius:6px;padding:14px 18px;margin:4px 0">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:700">🎯 the one habit</div>
+    <p style="font-size:16px;color:var(--ink);line-height:1.6;margin:0;font-weight:600">Every new resource starts closed. Scan config in CI — tfsec, Checkov — and fail the build before misconfiguration reaches production.</p>
+  </div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
     <div class="lang-tabs">
