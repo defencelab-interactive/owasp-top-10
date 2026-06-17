@@ -283,6 +283,14 @@ const FIX_LANGS=[
     {h:'<span class="cm">// 4. Flag unknown device</span>'},
     {h:'<span class="kw">if</span> (!<span class="fn">isKnownDevice</span>(req, user))'},
     {h:'  <span class="kw">await</span> <span class="fn">sendVerificationEmail</span>(user);'},
+    {h:''},
+    {h:'<span class="cm">// 5. Breached-password check (at registration/change)</span>'},
+    {h:'<span class="cm">//    k-anonymity: hash the password, send first 5 chars</span>'},
+    {h:'<span class="cm">//    to HIBP API, check locally. Password never leaves.</span>'},
+    {h:'<span class="kw">const</span> sha1 = crypto.<span class="fn">createHash</span>(<span class="st">"sha1"</span>).<span class="fn">update</span>(pw).<span class="fn">digest</span>(<span class="st">"hex"</span>);'},
+    {h:'<span class="kw">const</span> resp = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="st">`https://api.pwnedpasswords.com/range/${sha1.slice(0,5)}`</span>);'},
+    {h:'<span class="kw">if</span> (resp.text().<span class="fn">includes</span>(sha1.<span class="fn">slice</span>(<span class="nm">5</span>).<span class="fn">toUpperCase</span>()))'},
+    {h:'  <span class="kw">return</span> res.<span class="fn">status</span>(<span class="nm">400</span>).<span class="fn">json</span>({ error: <span class="st">"password found in breach"</span> });'},
   ]},
   {name:'views/auth.py',lines:[
     {h:'<span class="cm"># 1. Rate limit per account (django-ratelimit)</span>'},
@@ -299,6 +307,13 @@ const FIX_LANGS=[
     {h:'<span class="cm"># 4. Flag unknown device</span>'},
     {h:'<span class="kw">if</span> <span class="kw">not</span> <span class="fn">is_known_device</span>(request, user):'},
     {h:'    <span class="fn">send_device_verification</span>(user)'},
+    {h:''},
+    {h:'<span class="cm"># 5. Breached-password check (at registration/change)</span>'},
+    {h:'<span class="cm">#    k-anonymity: only first 5 chars of SHA-1 sent</span>'},
+    {h:'sha1 = hashlib.<span class="fn">sha1</span>(pw.<span class="fn">encode</span>()).<span class="fn">hexdigest</span>()'},
+    {h:'resp = requests.<span class="fn">get</span>(<span class="kw">f</span><span class="st">"https://api.pwnedpasswords.com/range/{sha1[:5]}"</span>)'},
+    {h:'<span class="kw">if</span> sha1[<span class="nm">5</span>:].<span class="fn">upper</span>() <span class="kw">in</span> resp.text:'},
+    {h:'    <span class="kw">raise</span> ValidationError(<span class="st">"password found in breach"</span>)'},
   ]},
   {name:'AuthController.java',lines:[
     {h:'<span class="cm">// 1. Rate limit per account (Bucket4j)</span>'},
@@ -317,12 +332,20 @@ const FIX_LANGS=[
     {h:'<span class="cm">// 4. Flag unknown device</span>'},
     {h:'<span class="kw">if</span> (!deviceService.<span class="fn">isKnown</span>(request, user))'},
     {h:'    notificationService.<span class="fn">sendVerification</span>(user);'},
+    {h:''},
+    {h:'<span class="cm">// 5. Breached-password check (at registration/change)</span>'},
+    {h:'<span class="cm">//    k-anonymity via HaveIBeenPwned API</span>'},
+    {h:'String sha1 = DigestUtils.<span class="fn">sha1Hex</span>(pw);'},
+    {h:'String resp = restTemplate.<span class="fn">getForObject</span>('},
+    {h:'    <span class="st">"https://api.pwnedpasswords.com/range/"</span> + sha1.<span class="fn">substring</span>(<span class="nm">0</span>,<span class="nm">5</span>), String.<span class="kw">class</span>);'},
+    {h:'<span class="kw">if</span> (resp.<span class="fn">contains</span>(sha1.<span class="fn">substring</span>(<span class="nm">5</span>).<span class="fn">toUpperCase</span>()))'},
+    {h:'    <span class="kw">throw new</span> BreachedPasswordException();'},
   ]},
 ];
 const WHY_TEXT=[
-  "Express + Redis + bcrypt: <code>redis.get/incr</code> tracks attempts <strong>per email</strong>, not per IP — rotating proxies don't help. 5 failures in 15 minutes locks the account. MFA check happens after password verification but before session creation — the attacker needs the second factor even with the correct password. Device fingerprinting catches logins from new countries or browsers.",
-  "Django's <code>@ratelimit</code> decorator uses <code>key=\"post:email\"</code> to rate-limit per account. <code>authenticate()</code> handles password hashing internally. <code>django-otp</code> provides TOTP/HOTP verification before the session is created. The device check uses IP geolocation and user-agent comparison to flag anomalous logins for email verification.",
-  "Bucket4j provides token-bucket rate limiting — <code>resolveBucket(email)</code> creates a per-account limiter. Spring Security's <code>BCryptPasswordEncoder.matches()</code> handles timing-safe comparison. The MFA challenge is returned as a response entity, forcing the client to complete verification before receiving a session token. Device service tracks known contexts per user."
+  "Express + Redis + bcrypt: <code>redis.get/incr</code> tracks attempts <strong>per email</strong>, not per IP — rotating proxies don't help. 5 failures in 15 minutes locks the account. MFA check happens after password verification but before session creation — the attacker needs the second factor even with the correct password. Device fingerprinting catches logins from new countries or browsers. The breached-password check uses HaveIBeenPwned's k-anonymity API: only the first 5 characters of the SHA-1 hash are sent, so the full password never leaves your server.",
+  "Django's <code>@ratelimit</code> decorator uses <code>key=\"post:email\"</code> to rate-limit per account. <code>authenticate()</code> handles password hashing internally. <code>django-otp</code> provides TOTP/HOTP verification before the session is created. The device check uses IP geolocation and user-agent comparison to flag anomalous logins for email verification. The breached-password check at registration/change time uses k-anonymity — only 5 hex characters sent to the API, local match on the rest.",
+  "Bucket4j provides token-bucket rate limiting — <code>resolveBucket(email)</code> creates a per-account limiter. Spring Security's <code>BCryptPasswordEncoder.matches()</code> handles timing-safe comparison. The MFA challenge is returned as a response entity, forcing the client to complete verification before receiving a session token. Device service tracks known contexts per user. The HIBP check at registration uses k-anonymity so the password hash prefix is all that leaves the server."
 ];
 function switchLang(i){document.querySelectorAll('.lang-tab').forEach((t,j)=>t.classList.toggle('active',j===i));const lang=FIX_LANGS[i];document.getElementById('fixFilename').textContent=lang.name;const cb=document.getElementById('fixBody');cb.classList.remove('fading');void cb.offsetWidth;cb.classList.add('fading');cb.innerHTML='';lang.lines.forEach((line,n)=>{const d=document.createElement('div');d.className='cl';d.style.cursor='default';d.innerHTML='<span class="ln">'+(n+1)+'</span><span class="lc">'+line.h+'</span>';cb.appendChild(d);});document.getElementById('whyText').innerHTML=WHY_TEXT[i];document.getElementById('whyTooltip').classList.remove('show');const dot=document.getElementById('whyDot');dot.classList.remove('show');setTimeout(()=>{dot.classList.add('show');const hint=document.getElementById('whyDotHint');if(hint)hint.classList.add('show');},200);}
 function toggleWhyTooltip(){document.getElementById('whyTooltip').classList.toggle('show');const h=document.getElementById('whyDotHint');if(h)h.classList.remove('show');}
