@@ -88,7 +88,7 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 
 <!-- ══ SCENARIO 1: A05 + A10 ══ -->
 <div class="scr" id="s3">
-  <div class="atk-header"><div class="atk-label">// scenario 1 of 5</div></div>
+  <div class="atk-header"><div class="atk-label">// scenario 1 of 10</div></div>
   <h2>The search endpoint that talks too much</h2>
   <p>An internal API accepts user input in a search query and passes it to a SQL backend. The input is parameterized — but the error handler is not. When a query fails, the endpoint returns detailed error messages: table names, column types, query structure. When a query targets a nonexistent table, it returns a different error than when it targets an existing table with wrong permissions.</p>
   <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">search.controller.js</span></div><div class="cbody"><div class="lc"><span class="kw">try</span> {
@@ -158,7 +158,7 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 
 <!-- ══ SCENARIO 2: A03 + A08 ══ -->
 <div class="scr" id="s6">
-  <div class="atk-header"><div class="atk-label">// scenario 2 of 5</div></div>
+  <div class="atk-header"><div class="atk-label">// scenario 2 of 10</div></div>
   <h2>The build server that trusts everything</h2>
   <p>A CI/CD pipeline pulls dependencies from npm without a lockfile pinned to exact hashes. The <code>package-lock.json</code> exists but isn't committed — <code>npm install</code> resolves fresh ranges on every build.</p>
   <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">Jenkinsfile</span></div><div class="cbody"><div class="lc"><span class="fn">pipeline</span> {
@@ -234,7 +234,7 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 
 <!-- ══ SCENARIO 3: A06 + A07 ══ -->
 <div class="scr" id="s9">
-  <div class="atk-header"><div class="atk-label">// scenario 3 of 5</div></div>
+  <div class="atk-header"><div class="atk-label">// scenario 3 of 10</div></div>
   <h2>The password reset nobody rate-limits</h2>
   <p>A SaaS application has two authentication paths. The login page uses email + password — no MFA. The password-reset flow sends a 6-digit code by email, valid for 15 minutes. There's no rate limit on reset code attempts.</p>
   <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">reset.controller.js</span></div><div class="cbody"><div class="lc"><span class="fn">router.post</span>(<span class="st">'/reset/verify'</span>, <span class="kw">async</span> (req, res) => {
@@ -300,7 +300,7 @@ res.<span class="fn">json</span>({ token: <span class="fn">issueJWT</span>(user)
 
 <!-- ══ SCENARIO 4: A02 + A09 ══ -->
 <div class="scr" id="s12">
-  <div class="atk-header"><div class="atk-label">// scenario 4 of 5</div></div>
+  <div class="atk-header"><div class="atk-label">// scenario 4 of 10</div></div>
   <h2>The admin panel nobody changed the password for</h2>
   <p>A monitoring dashboard (Grafana) is exposed on the internal network with default credentials. It has read access to production metrics, database connection health, and service topology. The organization also has no centralized security logging.</p>
   <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">$ terminal — anyone on the network</span></div><div class="cbody"><div class="lc"><span class="cm"># this works right now, from any machine on the internal network</span>
@@ -366,7 +366,7 @@ admin_user = <span class="st">""</span>  <span class="cm"># no local admin at al
 
 <!-- ══ SCENARIO 5: A01 + A02 ══ -->
 <div class="scr" id="s15">
-  <div class="atk-header"><div class="atk-label">// scenario 5 of 5</div></div>
+  <div class="atk-header"><div class="atk-label">// scenario 5 of 10</div></div>
   <h2>The microservice that trusts everyone</h2>
   <p>A backend microservice accepts JWTs from the API gateway but doesn't validate the signature — it base64-decodes the payload and trusts the claims. The same service runs as <code>root</code> in its container.</p>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0">
@@ -454,11 +454,198 @@ req.user = {
     <div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">The JWT validation is the vulnerability. Running as root is a severity multiplier. Always fix the vulnerability before reducing the blast radius — you can't contain what you can't prevent.</div></div>
     <div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">Added jwt.verify() with the gateway's public key — 4 lines of code. The Dockerfile USER change was a separate PR the same day. Both shipped, but the signature check was the blocker.</div></div>
   </div>
-  <div class="nav"><button class="btn btn-g" onclick="go(16)">← Choice</button><button class="btn btn-p" onclick="go(18)">The 10 Habits →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(16)">← Choice</button><button class="btn btn-p" onclick="go(18)">Scenario 6 →</button></div>
+</div>
+
+<!-- ══ SCENARIO 6: A04 + A03 ══ -->
+<div class="scr" id="s18">
+  <div class="atk-header"><div class="atk-label">// scenario 6 of 10</div></div>
+  <h2>The API keys hashed with MD5</h2>
+  <p>An internal service stores API keys for 200+ partner integrations. The keys are hashed — but with unsalted MD5. Meanwhile, a dependency audit flagged a medium-severity CVE in a logging library. No known exploit, CVSS 5.3.</p>
+  <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">key_store.py</span></div><div class="cbody"><div class="lc"><span class="kw">import</span> hashlib
+
+<span class="kw">def</span> <span class="fn">store_api_key</span>(partner_id, raw_key):
+    hashed = hashlib.<span class="fn">md5</span>(
+        raw_key.<span class="fn">encode</span>()
+    ).<span class="fn">hexdigest</span>()            <span class="cm"># unsalted MD5</span>
+    db.<span class="fn">execute</span>(
+        <span class="st">"INSERT INTO keys (partner, hash) VALUES (%s, %s)"</span>,
+        (partner_id, hashed)
+    )</div></div></div>
+  <p style="font-size:15px;color:var(--ink-dim)">MD5-hashed API keys without salt (A04). A medium-severity CVE with no known exploit (A03). One fix this sprint.</p>
+  <div class="nav"><button class="btn btn-g" onclick="go(17)">← Previous</button><button class="btn btn-p" onclick="go(19)">Make the call →</button></div>
+</div>
+
+<div class="scr" id="s19">
+  <div class="atk-header"><div class="atk-label">// scenario 6</div><div class="atk-step">which fix has higher leverage?</div></div>
+  <div class="choice-grid" id="ch6"><div class="choice-card" onclick="pick(6,0)"><div class="choice-tag">A04 · Cryptographic Failures</div><div class="choice-title">Re-hash all API keys with bcrypt + per-key salt</div><div class="choice-desc">Unsalted MD5 hashes are reversible in seconds on commodity hardware. A database leak = every partner key compromised instantly.</div></div><div class="choice-card" onclick="pick(6,1)"><div class="choice-tag">A03 · Supply Chain</div><div class="choice-title">Patch the vulnerable logging library</div><div class="choice-desc">Update to patched version. Run <code>pip audit</code> in CI. Close the CVE before an exploit appears in the wild.</div></div></div>
+  <div class="reveal-box" id="rv6"></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(18)">← Scenario</button><button class="btn btn-p" id="nb6" onclick="go(20)" disabled>See Tradeoff →</button></div>
+</div>
+
+<div class="scr" id="s20">
+  <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 6</div></div>
+  <p><strong>Higher leverage: re-hash the API keys (A04).</strong></p>
+  <p>Unsalted MD5 hashes are reversible in seconds. A leaked database gives an attacker every partner's API key immediately. The CVE is medium-severity with no known exploit — a future risk. The MD5 keys are a present one.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0"><div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--red)">before — MD5, no salt</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap">hashlib.<span class="fn">md5</span>(key).<span class="fn">hexdigest</span>()
+<span class="cm"># cracked in &lt;1 sec per key</span></div></div></div><div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">after — bcrypt, cost 12</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap">bcrypt.<span class="fn">hashpw</span>(key, bcrypt.<span class="fn">gensalt</span>(<span class="nm">12</span>))
+<span class="cm"># ~250ms per attempt</span></div></div></div></div>
+  <div class="persona-row"><div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">A database leak with MD5-hashed keys is a full partner compromise. The CVE is a maybe. Fix the certain problem first.</div></div><div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">Key rotation took a weekend. Notified partners, issued new keys, ran both in parallel for 48 hours. The pip audit fix was a one-liner after.</div></div></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(19)">← Choice</button><button class="btn btn-p" onclick="go(21)">Scenario 7 →</button></div>
+</div>
+
+<!-- ══ SCENARIO 7: A05 + A01 ══ -->
+<div class="scr" id="s21">
+  <div class="atk-header"><div class="atk-label">// scenario 7 of 10</div></div>
+  <h2>The report builder that concatenates SQL</h2>
+  <p>An admin dashboard has a custom report builder. Most queries use the ORM — but the "advanced filter" concatenates user input directly into SQL. The same endpoint also lacks tenant-level authorization.</p>
+  <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">reports.controller.js</span></div><div class="cbody"><div class="lc"><span class="fn">router.get</span>(<span class="st">'/reports/advanced'</span>, <span class="fn">requireAdmin</span>, <span class="kw">async</span> (req, res) => {
+  <span class="cm">// no tenant_id check — any admin sees all tenants</span>
+  <span class="kw">const</span> sql = <span class="st">`SELECT * FROM orders
+    WHERE status = '${req.query.status}'
+    AND created > '${req.query.from}'`</span>;   <span class="cm">// string concat!</span>
+  <span class="kw">const</span> rows = <span class="kw">await</span> db.<span class="fn">raw</span>(sql);
+  res.<span class="fn">json</span>(rows);
+});</div></div></div>
+  <p style="font-size:15px;color:var(--ink-dim)">SQL injection via string concatenation (A05). Missing tenant-level access control (A01). Both on the same endpoint.</p>
+  <div class="nav"><button class="btn btn-g" onclick="go(20)">← Previous</button><button class="btn btn-p" onclick="go(22)">Make the call →</button></div>
+</div>
+
+<div class="scr" id="s22">
+  <div class="atk-header"><div class="atk-label">// scenario 7</div><div class="atk-step">which fix has higher leverage?</div></div>
+  <div class="choice-grid" id="ch7"><div class="choice-card" onclick="pick(7,0)"><div class="choice-tag">A05 · Injection</div><div class="choice-title">Parameterize the SQL query</div><div class="choice-desc">Replace string concatenation with parameterized queries. An attacker with injection can read, modify, or delete any data in the entire database.</div></div><div class="choice-card" onclick="pick(7,1)"><div class="choice-tag">A01 · Broken Access Control</div><div class="choice-title">Add tenant-scoped authorization</div><div class="choice-desc">Filter queries by the admin's tenant_id. Each admin only sees their own organization's data.</div></div></div>
+  <div class="reveal-box" id="rv7"></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(21)">← Scenario</button><button class="btn btn-p" id="nb7" onclick="go(23)" disabled>See Tradeoff →</button></div>
+</div>
+
+<div class="scr" id="s23">
+  <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 7</div></div>
+  <p><strong>Higher leverage: parameterize the SQL (A05).</strong></p>
+  <p>SQL injection gives full database access — <code>UNION SELECT * FROM users</code> bypasses any row-level check. Tenant authorization limits what the application shows; injection lets the attacker talk directly to the database.</p>
+  <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">fix — parameterized + tenant-scoped</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="kw">const</span> rows = <span class="kw">await</span> db.<span class="fn">query</span>(
+  <span class="st">'SELECT * FROM orders WHERE status = $1 AND created > $2 AND tenant_id = $3'</span>,
+  [req.query.status, req.query.from, req.user.tenant_id]
+);</div></div></div>
+  <div class="persona-row"><div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">Injection supersedes access control. An attacker with SQLi doesn't need your authorization layer — they talk to the database directly.</div></div><div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">Parameterized it and added tenant_id in the same PR. The parameterization was the blocker — tenant filtering was a WHERE clause addition.</div></div></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(22)">← Choice</button><button class="btn btn-p" onclick="go(24)">Scenario 8 →</button></div>
+</div>
+
+<!-- ══ SCENARIO 8: A06 + A01 ══ -->
+<div class="scr" id="s24">
+  <div class="atk-header"><div class="atk-label">// scenario 8 of 10</div></div>
+  <h2>The file upload that accepts anything</h2>
+  <p>A document-sharing feature lets users upload files with no validation — type, size, or content. The server saves whatever it receives to a publicly accessible directory. The download endpoint doesn't check ownership either.</p>
+  <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">upload.controller.js</span></div><div class="cbody"><div class="lc"><span class="fn">router.post</span>(<span class="st">'/files/upload'</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> file = req.files[<span class="nm">0</span>];
+  <span class="cm">// no type check — .php, .jsp, .exe all accepted</span>
+  <span class="kw">await</span> fs.<span class="fn">writeFile</span>(
+    <span class="st">`/var/www/uploads/${file.originalname}`</span>,  <span class="cm">// public dir!</span>
+    file.buffer
+  );
+  res.<span class="fn">json</span>({ url: <span class="st">`/uploads/${file.originalname}`</span> });
+});</div></div></div>
+  <p style="font-size:15px;color:var(--ink-dim)">Unrestricted file upload to a public directory — potential RCE via webshell (A06). Download endpoint missing ownership check (A01). Budget for one fix.</p>
+  <div class="nav"><button class="btn btn-g" onclick="go(23)">← Previous</button><button class="btn btn-p" onclick="go(25)">Make the call →</button></div>
+</div>
+
+<div class="scr" id="s25">
+  <div class="atk-header"><div class="atk-label">// scenario 8</div><div class="atk-step">which fix has higher leverage?</div></div>
+  <div class="choice-grid" id="ch8"><div class="choice-card" onclick="pick(8,0)"><div class="choice-tag">A06 · Insecure Design</div><div class="choice-title">Validate uploads: allowlist types, scan content, isolate storage</div><div class="choice-desc">Only accept .pdf/.docx/.png. Store outside webroot with randomized names. An unrestricted upload to a public directory is a webshell waiting to happen.</div></div><div class="choice-card" onclick="pick(8,1)"><div class="choice-tag">A01 · Broken Access Control</div><div class="choice-title">Add ownership check on the download endpoint</div><div class="choice-desc">Verify the requesting user owns the file before serving it. Prevents unauthorized access to other users' documents.</div></div></div>
+  <div class="reveal-box" id="rv8"></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(24)">← Scenario</button><button class="btn btn-p" id="nb8" onclick="go(26)" disabled>See Tradeoff →</button></div>
+</div>
+
+<div class="scr" id="s26">
+  <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 8</div></div>
+  <p><strong>Higher leverage: validate the uploads (A06).</strong></p>
+  <p>Unrestricted file upload to a public directory = remote code execution. Upload <code>shell.php</code>, visit <code>/uploads/shell.php</code>, own the server. Broken download auth leaks documents — serious, but not code execution.</p>
+  <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">fix — allowlist + isolated storage</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="kw">const</span> ALLOWED = <span class="kw">new</span> <span class="fn">Set</span>([<span class="st">'.pdf'</span>, <span class="st">'.docx'</span>, <span class="st">'.png'</span>, <span class="st">'.jpg'</span>]);
+<span class="kw">const</span> ext = path.<span class="fn">extname</span>(file.originalname).<span class="fn">toLowerCase</span>();
+<span class="kw">if</span> (!ALLOWED.<span class="fn">has</span>(ext)) <span class="kw">return</span> res.<span class="fn">status</span>(<span class="nm">400</span>).<span class="fn">json</span>({error: <span class="st">'Type not allowed'</span>});
+<span class="kw">const</span> name = <span class="fn">crypto.randomUUID</span>() + ext;
+<span class="kw">await</span> fs.<span class="fn">writeFile</span>(<span class="st">`/var/data/files/${name}`</span>, file.buffer);  <span class="cm">// outside webroot</span></div></div></div>
+  <div class="persona-row"><div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">RCE via webshell is game over. The broken download auth leaks data — but a server compromise lets them get ALL the data anyway.</div></div><div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">Moved uploads out of webroot, added type allowlist and randomized filenames. Download auth check was a follow-up PR same day.</div></div></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(25)">← Choice</button><button class="btn btn-p" onclick="go(27)">Scenario 9 →</button></div>
+</div>
+
+<!-- ══ SCENARIO 9: A03 + A07 ══ -->
+<div class="scr" id="s27">
+  <div class="atk-header"><div class="atk-label">// scenario 9 of 10</div></div>
+  <h2>The typosquatted package already in the build</h2>
+  <p>A security scan discovered <code>lodsah</code> (not <code>lodash</code>) in <code>package.json</code>. It was installed 8 months ago and runs a postinstall script on every <code>npm install</code>. Separately, the password policy allows <code>123456</code> and <code>password</code>.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0"><div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">package.json</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap">{
+  <span class="st">"dependencies"</span>: {
+    <span class="st">"express"</span>: <span class="st">"^4.18.0"</span>,
+    <span class="st">"lodash"</span>: <span class="st">"^4.17.21"</span>,
+    <span class="op">"lodsah"</span>: <span class="op">"^1.0.0"</span>,  <span class="cm">// typosquat!</span>
+    <span class="st">"pg"</span>: <span class="st">"^8.11.0"</span>
+  }
+}</div></div></div><div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">password policy</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="kw">if</span> (password.length >= <span class="nm">6</span>) {
+  <span class="fn">accept</span>();
+}
+<span class="cm">// allows: 123456, password,</span>
+<span class="cm">// qwerty, letmein...</span></div></div></div></div>
+  <p style="font-size:15px;color:var(--ink-dim)">Active malware in the dependency tree running on every build (A03). Weak password policy allowing common passwords (A07). One fix first.</p>
+  <div class="nav"><button class="btn btn-g" onclick="go(26)">← Previous</button><button class="btn btn-p" onclick="go(28)">Make the call →</button></div>
+</div>
+
+<div class="scr" id="s28">
+  <div class="atk-header"><div class="atk-label">// scenario 9</div><div class="atk-step">which fix has higher leverage?</div></div>
+  <div class="choice-grid" id="ch9"><div class="choice-card" onclick="pick(9,0)"><div class="choice-tag">A03 · Supply Chain</div><div class="choice-title">Remove the typosquatted package + rotate all CI secrets</div><div class="choice-desc">Remove <code>lodsah</code>. Audit the postinstall script. Rotate every secret CI had access to. The malware has been executing for 8 months.</div></div><div class="choice-card" onclick="pick(9,1)"><div class="choice-tag">A07 · Authentication</div><div class="choice-title">Implement password strength + breach-list check</div><div class="choice-desc">Require 12+ chars, block common passwords via HIBP, force reset for weak passwords. Stops credential stuffing.</div></div></div>
+  <div class="reveal-box" id="rv9"></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(27)">← Scenario</button><button class="btn btn-p" id="nb9" onclick="go(29)" disabled>See Tradeoff →</button></div>
+</div>
+
+<div class="scr" id="s29">
+  <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 9</div></div>
+  <p><strong>Higher leverage: remove the typosquatted package (A03).</strong></p>
+  <p>This isn't a vulnerability — it's an active compromise. The malware has been running for 8 months on every build. It may have exfiltrated env vars, tokens, and source code. Weak passwords are a risk; the supply chain compromise is a breach in progress.</p>
+  <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">incident response</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap">npm <span class="fn">uninstall</span> lodsah          <span class="cm"># 1. remove immediately</span>
+<span class="cm"># 2. audit the postinstall — what did it send?</span>
+<span class="cm"># 3. rotate ALL secrets CI ever touched</span>
+npm <span class="fn">ci</span> --ignore-scripts       <span class="cm"># 4. rebuild clean</span></div></div></div>
+  <div class="persona-row"><div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">This is incident response, not vulnerability management. Every secret the CI ever touched is potentially exfiltrated. Full rotation.</div></div><div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">Removed the package, rotated every token and key in CI. Took two days. Password policy shipped the following week — important, but not on fire.</div></div></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(28)">← Choice</button><button class="btn btn-p" onclick="go(30)">Scenario 10 →</button></div>
+</div>
+
+<!-- ══ SCENARIO 10: A09 + A10 ══ -->
+<div class="scr" id="s30">
+  <div class="atk-header"><div class="atk-label">// scenario 10 of 10</div></div>
+  <h2>The brute-force nobody notices</h2>
+  <p>A login endpoint is receiving 500+ failed auth attempts per minute from rotating IPs. The app logs them — but nobody is watching. No alerting, no SIEM, no on-call trigger. Error responses on the same endpoint return stack traces with internal service names.</p>
+  <div class="cbox"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn">auth.log — last 60 seconds</span></div><div class="cbody"><div class="lc"><span class="cm">2025-03-15T14:22:01Z</span> <span class="op">FAIL</span> user=admin src=<span class="nm">198.51.100.12</span>
+<span class="cm">2025-03-15T14:22:01Z</span> <span class="op">FAIL</span> user=admin src=<span class="nm">203.0.113.45</span>
+<span class="cm">2025-03-15T14:22:02Z</span> <span class="op">FAIL</span> user=ceo@company.com src=<span class="nm">192.0.2.78</span>
+<span class="cm">... 497 more in the last 60 seconds ...</span>
+<span class="cm">... nobody is paged ...</span></div></div></div>
+  <p style="font-size:15px;color:var(--ink-dim)">No security alerting on auth failures (A09). Stack traces leaking internals (A10). One fix this sprint.</p>
+  <div class="nav"><button class="btn btn-g" onclick="go(29)">← Previous</button><button class="btn btn-p" onclick="go(31)">Make the call →</button></div>
+</div>
+
+<div class="scr" id="s31">
+  <div class="atk-header"><div class="atk-label">// scenario 10</div><div class="atk-step">which fix has higher leverage?</div></div>
+  <div class="choice-grid" id="ch10"><div class="choice-card" onclick="pick(10,0)"><div class="choice-tag">A09 · Logging & Alerting</div><div class="choice-title">Set up auth failure alerting + auto-block</div><div class="choice-desc">Alert on 50+ failures/min. Page on-call. Auto-block source IPs. The attack is happening right now and nobody knows.</div></div><div class="choice-card" onclick="pick(10,1)"><div class="choice-tag">A10 · Exceptional Conditions</div><div class="choice-title">Remove stack traces from error responses</div><div class="choice-desc">Return generic error messages. Log details internally. Stop leaking internal hostnames and service names.</div></div></div>
+  <div class="reveal-box" id="rv10"></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(30)">← Scenario</button><button class="btn btn-p" id="nb10" onclick="go(32)" disabled>See Tradeoff →</button></div>
+</div>
+
+<div class="scr" id="s32">
+  <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 10</div></div>
+  <p><strong>Higher leverage: set up alerting (A09).</strong></p>
+  <p>500 failed logins/min is an active attack running undetected. Without alerting, credential stuffing runs for days until a hit succeeds. Stack traces leak info, but the attacker already has enough to attack. The alert stops the bleeding.</p>
+  <div class="cbox" style="font-size:13px"><div class="chead"><div class="dots"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div></div><span class="cfn" style="color:var(--green)">alerting rule — 15-line fix</span></div><div class="cbody" style="padding:8px 12px"><div class="lc" style="font-size:12.5px;white-space:pre-wrap"><span class="fn">alert</span>: AuthBruteForce
+<span class="fn">expr</span>: <span class="st">rate(auth_failures_total[5m]) > 50</span>
+<span class="fn">for</span>: <span class="st">2m</span>
+<span class="fn">labels</span>:
+  <span class="fn">severity</span>: <span class="st">critical</span>
+<span class="fn">annotations</span>:
+  <span class="fn">summary</span>: <span class="st">"{{ $value }} auth failures/min"</span></div></div></div>
+  <div class="persona-row"><div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">An active attack you can't see is worse than information leakage you can. The alert catches this in 2 minutes instead of 2 weeks.</div></div><div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">Prometheus alert: 15 lines of YAML. Stack trace fix: 1 line in the error handler. Both shipped together, but the alert was the urgent one.</div></div></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(31)">← Choice</button><button class="btn btn-p" onclick="go(33)">The 10 Habits →</button></div>
 </div>
 
 <!-- ══ S17: 10 HABITS REFERENCE CARD ══ -->
-<div class="scr" id="s18">
+<div class="scr" id="s33">
   <h3>// the ten habits — one from each module</h3>
   <div class="habit-grid">
     <div class="habit-card"><div class="habit-badge" style="background:#1a56a0">A01</div><div class="habit-text"><strong>Check ownership, not just authentication.</strong> Every endpoint that takes a resource ID must verify the requestor owns that resource. <code>CWE-639</code></div></div>
@@ -472,11 +659,11 @@ req.user = {
     <div class="habit-card"><div class="habit-badge" style="background:#6a6a3a">A09</div><div class="habit-text"><strong>Alert on auth failures.</strong> If 50 failed logins don't trigger a page, your logging is decoration. <code>CWE-778</code></div></div>
     <div class="habit-card"><div class="habit-badge" style="background:#6a3a3a">A10</div><div class="habit-text"><strong>Audit every catch block.</strong> Does it deny or allow? If a catch block on a security path calls <code>next()</code>, it's a fail-open. <code>CWE-636</code></div></div>
   </div>
-  <div class="nav"><button class="btn btn-g" onclick="go(17)">← Scenario 5</button><button class="btn btn-p" onclick="go(19)">Finish →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(17)">← Scenario 5</button><button class="btn btn-p" onclick="go(34)">Finish →</button></div>
 </div>
 
 <!-- ══ S18: CLOSING ══ -->
-<div class="scr" id="s19">
+<div class="scr" id="s34">
   <h3>// capstone complete</h3>
   <div class="rule-card" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px 28px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px">
     <span style="font-family:var(--mono);font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.14em;font-weight:700">the leverage rule</span>
@@ -486,7 +673,7 @@ req.user = {
   </div>
   <div class="score-bar"><div class="score-num" id="finalScore">0 / 5</div><div class="score-label" id="finalLabel"></div></div>
   <p id="finalMsg"></p>
-  <div class="nav"><button class="btn btn-g" onclick="go(18)">← The 10 Habits</button><button class="btn btn-fin" onclick="finish()">Complete Course ✓</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(33)">← The 10 Habits</button><button class="btn btn-fin" onclick="finish()">Complete Course ✓</button></div>
 </div>
 
 </div>
@@ -731,7 +918,7 @@ const SCENARIOS = [null,
 ];
 
 let score = 0;
-const picked = [null,null,null,null,null,null];
+const picked = [null,null,null,null,null,null,null,null,null,null,null];
 
 function pick(scenario, choice) {
   if (picked[scenario] !== null) return;
@@ -753,10 +940,10 @@ function pick(scenario, choice) {
 }
 
 /* ═══ NAV ═══ */
-let cur=0;const TOTAL=19;const visited={0:true};
-const SCREEN_LABELS=['Cover','Rules','Meet Waspy','S1: Scenario','S1: Choice','S1: Tradeoff','S2: Scenario','S2: Choice','S2: Tradeoff','S3: Scenario','S3: Choice','S3: Tradeoff','S4: Scenario','S4: Choice','S4: Tradeoff','S5: Scenario','S5: Choice','S5: Tradeoff','10 Habits','Complete'];
+let cur=0;const TOTAL=34;const visited={0:true};
+const SCREEN_LABELS=['Cover','Rules','Meet Waspy','S1','S1·','S1··','S2','S2·','S2··','S3','S3·','S3··','S4','S4·','S4··','S5','S5·','S5··','S6','S6·','S6··','S7','S7·','S7··','S8','S8·','S8··','S9','S9·','S9··','S10','S10·','S10··','Habits','Complete'];
 function buildStrip(){const strip=document.getElementById('navstrip');if(!strip)return;const sections=[{screens:[0],type:'pip-cover'},'sep',{screens:[1],type:''},'sep',{screens:[2,3,4],type:''},{screens:[5,6,7],type:''},{screens:[8,9,10],type:''},{screens:[11,12,13],type:''},{screens:[14,15,16],type:''},'sep',{screens:[17,18],type:'pip-wide'}];strip.innerHTML='';sections.forEach(sec=>{if(sec==='sep'){const s=document.createElement('div');s.className='ns-sep';strip.appendChild(s);return;}sec.screens.forEach(n=>{const pip=document.createElement('button');pip.className='ns-pip '+sec.type;if(n===cur)pip.classList.add('active');else if(visited[n])pip.classList.add('visited');pip.title=SCREEN_LABELS[n]||'';pip.onclick=()=>go(n);strip.appendChild(pip);});});}
-function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');cur=n;visited[n]=true;const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');document.getElementById('wrap').scrollTop=0;document.getElementById('pf').style.width=(n/TOTAL*100)+'%';document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;if(n===19)renderFinal();buildStrip();setTimeout(()=>renderWaspy(n),200);}
+function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');cur=n;visited[n]=true;const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');document.getElementById('wrap').scrollTop=0;document.getElementById('pf').style.width=(n/TOTAL*100)+'%';document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;if(n===34)renderFinal();buildStrip();setTimeout(()=>renderWaspy(n),200);}
 
 function renderFinal(){
   document.getElementById('finalScore').textContent=score+' / 5';
@@ -791,8 +978,18 @@ const WASPY_MAP = {
   13:{state:'suspicious', line:'Detection vs prevention. Which one stops the breach that\'s already possible?', ai:true},
   15:{state:'review', line:'atob() without verify(). That payload is entirely user-controlled.'},
   16:{state:'suspicious', line:'The vulnerability or the blast radius. Not the same fix.', ai:true},
-  18:{state:'teaching', line:'One habit per category. CWE-mapped. Print this page.'},
-  19:{state:'capstone', line:'Ten categories. Ten habits. Now go review some code.'}
+  18:{state:'review', line:'MD5 with no salt. Every key reversible in seconds.'},
+  19:{state:'suspicious', line:'A known risk vs a certain one. Check the timeline.', ai:true},
+  21:{state:'review', line:'String concatenation into SQL. In 2025. On an admin endpoint.'},
+  22:{state:'suspicious', line:'Full DB access vs limited app access. Which layer wins?', ai:true},
+  24:{state:'review', line:'User-controlled filename in a public directory. Say it out loud.'},
+  25:{state:'suspicious', line:'Code execution vs data leakage. Different severity classes.', ai:true},
+  27:{state:'review', line:'lodsah. Not lodash. Running for 8 months. In production.'},
+  28:{state:'suspicious', line:'Active compromise vs potential weakness. One is already burning.', ai:true},
+  30:{state:'review', line:'500 failed logins per minute. Nobody is paged. Nobody knows.'},
+  31:{state:'suspicious', line:'Can you stop what you can\'t see? That\'s the question.', ai:true},
+  33:{state:'teaching', line:'One habit per category. CWE-mapped. Print this page.'},
+  34:{state:'capstone', line:'Ten categories. Ten habits. Now go review some code.'}
 };
 
 function renderWaspy(n) {
@@ -851,7 +1048,12 @@ async function checkReasoning(scenario) {
     'CI/CD with unpinned deps (A03) on build server sharing network with dev laptops (A08). Correct: isolate build server (A08). Key reasoning: isolation removes entire lateral-movement surface; lockfile pinning blocks only one supply-chain vector.',
     'Password reset with brute-forceable 6-digit code no rate limit (A06) and login with no MFA (A07). Correct: MFA on login (A07). Key reasoning: login is the primary auth path with highest traffic volume; reset flow is secondary.',
     'Grafana admin panel with admin:admin default credentials (A02) and no centralized security logging (A09). Correct: change credentials (A02). Key reasoning: default creds are exploitable right now with zero skill; logging detects but doesn\'t prevent.',
-    'Microservice trusting JWT claims without signature verification (A01) running as root (A02). Correct: validate JWT signature (A01). Key reasoning: no signature = no access control at all; root = blast radius multiplier, not the vulnerability itself.'
+    'Microservice trusting JWT claims without signature verification (A01) running as root (A02). Correct: validate JWT signature (A01). Key reasoning: no signature = no access control at all; root = blast radius multiplier, not the vulnerability itself.',
+    'API keys hashed with unsalted MD5 (A04) and a medium-severity CVE in a logging library with no known exploit (A03). Correct: re-hash with bcrypt (A04). Key reasoning: MD5 hashes reversible in seconds from any DB leak; CVE is theoretical with no exploit.',
+    'Admin report endpoint with SQL string concatenation (A05) and missing tenant-level authorization (A01). Correct: parameterize SQL (A05). Key reasoning: SQL injection gives full DB access bypassing all app-level controls; tenant auth is meaningless against direct DB queries.',
+    'Unrestricted file upload to public webroot directory (A06) and download endpoint missing ownership check (A01). Correct: validate uploads (A06). Key reasoning: unrestricted upload = RCE via webshell; broken download auth = data leakage, different severity class.',
+    'Typosquatted npm package with postinstall script running for 8 months (A03) and weak password policy allowing common passwords (A07). Correct: remove malware package (A03). Key reasoning: active compromise vs potential weakness; malware already running = incident response, not vuln management.',
+    'No security alerting on 500+ auth failures/min (A09) and stack traces in error responses (A10). Correct: set up alerting (A09). Key reasoning: active undetected attack vs information leakage; alert stops the attack in minutes instead of weeks.'
   ];
   const choice = picked[scenario]; const s = SCENARIOS[scenario]; const wasRight = choice === s.correct;
   try {
