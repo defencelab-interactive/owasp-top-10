@@ -17,7 +17,7 @@ Interactive HTML-based training modules covering the OWASP Top 10:2025 standard,
 | 8 | A08 — Integrity Failures | `A08_Integrity_Failures.html` |
 | 9 | A09 — Logging & Alerting Failures | `A09_Logging_Alerting_Failures.html` |
 | 10 | A10 — Exceptional Conditions | `A10_Exceptional_Conditions.html` |
-| 11 | **Capstone** — Cross-Category Prioritization | `Capstone_Prioritization.html` |
+| 11 | **Capstone** — Cross-Category Prioritization | `Security_Triage.html` |
 
 ## Usage
 

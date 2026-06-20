@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Capstone · Cross-Category Prioritization</title>
+<title>Security Triage · Cross-Category Prioritization</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -33,7 +33,7 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 </style>
 </head>
 <body>
-<div class="topbar"><span class="badge">CAP</span><span class="sep">/</span><span class="topbar-title">Capstone — Cross-Category Prioritization</span><span class="screen-lbl" id="lbl">00 / 18</span><button class="fs-btn" id="fsBtn" onclick="toggleFS()" title="Toggle fullscreen" aria-label="Toggle fullscreen"><svg id="fsIco" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,5 1,1 5,1"/><polyline points="9,1 13,1 13,5"/><polyline points="13,9 13,13 9,13"/><polyline points="5,13 1,13 1,9"/></svg><svg id="fsIcoExit" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polyline points="5,1 5,5 1,5"/><polyline points="9,5 13,5 9,1"/><polyline points="9,13 9,9 13,9"/><polyline points="1,9 5,9 5,13"/></svg></button></div>
+<div class="topbar"><span class="badge">TRIAGE</span><span class="sep">/</span><span class="topbar-title">Security Triage — Cross-Category Prioritization</span><span class="screen-lbl" id="lbl">00 / 18</span><button class="fs-btn" id="fsBtn" onclick="toggleFS()" title="Toggle fullscreen" aria-label="Toggle fullscreen"><svg id="fsIco" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,5 1,1 5,1"/><polyline points="9,1 13,1 13,5"/><polyline points="13,9 13,13 9,13"/><polyline points="5,13 1,13 1,9"/></svg><svg id="fsIcoExit" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polyline points="5,1 5,5 1,5"/><polyline points="9,5 13,5 9,1"/><polyline points="9,13 9,9 13,9"/><polyline points="1,9 5,9 5,13"/></svg></button></div>
 <div class="navstrip" id="navstrip" style="display:none"></div>
 <div class="prog"><div class="prog-fill" id="pf" style="width:0%"></div></div>
 <div class="wrap" id="wrap">
@@ -51,10 +51,10 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
       <circle cx="50" cy="55" r="6" fill="var(--accent)" opacity=".8"/>
     </svg>
   </div>
-  <span class="cv-badge">CAPSTONE</span><div class="cv-tag">OWASP Top 10 · 2025</div>
+  <span class="cv-badge">SECURITY TRIAGE</span><div class="cv-tag">OWASP Top 10 · 2025</div>
   <div class="cv-title">Which fix<br>comes first?</div>
   <div class="cv-sub">Two categories are in play. Budget for one fix. Five real tradeoffs that test your security judgment.</div>
-  <div class="cv-start"><button class="btn" onclick="go(1)">Begin Capstone →</button></div>
+  <div class="cv-start"><button class="btn" onclick="go(1)">Begin Triage →</button></div>
 </div>
 
 <!-- ══ S1: INTRO ══ -->
@@ -664,12 +664,12 @@ npm <span class="fn">ci</span> --ignore-scripts       <span class="cm"># 4. rebu
 
 <!-- ══ S18: CLOSING ══ -->
 <div class="scr" id="s34">
-  <h3>// capstone complete</h3>
+  <h3>// triage complete</h3>
   <div class="rule-card" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px 28px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px">
     <span style="font-family:var(--mono);font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.14em;font-weight:700">the leverage rule</span>
     <p style="font-size:clamp(18px,2.4vw,22px);font-weight:700;color:var(--ink);line-height:1.4;max-width:540px;margin:0">Fix the <span style="color:var(--accent)">exploit</span> before reducing the <span style="color:var(--accent)">blast radius</span>.</p>
     <p style="font-size:14px;color:var(--ink-dim);margin:0;line-height:1.55;max-width:500px">When two categories intersect, the one that's exploitable right now almost always has higher leverage. Close the open door before building the alarm. Stop the active leak before adding defense-in-depth.</p>
-    <span style="font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--adim);padding:3px 10px;border-radius:3px;border:1px solid rgba(74,90,106,.22);letter-spacing:.05em">CAPSTONE · Cross-Category Prioritization</span>
+    <span style="font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--adim);padding:3px 10px;border-radius:3px;border:1px solid rgba(74,90,106,.22);letter-spacing:.05em">SECURITY TRIAGE · Cross-Category Prioritization</span>
   </div>
   <div class="score-bar"><div class="score-num" id="finalScore">0 / 5</div><div class="score-label" id="finalLabel"></div></div>
   <p id="finalMsg"></p>
@@ -1084,7 +1084,7 @@ const WASPY_STATES = [
   {id:'suspicious',label:'Suspicious', name:'Suspicious — One Eyebrow', text:'One eyebrow raised. Flat mouth. He\'s not angry, just... professionally disappointed in your catch block.'},
   {id:'teaching', label:'Teaching',   name:'Teaching — Pointer Out', text:'Blazer + pointer stick. This is the "pay attention, I\'m only saying this once" pose. He means it.'},
   {id:'coffee',   label:'Coffee',     name:'Coffee Break — Hoodie', text:'Hoodie on, coffee in hand. Even security-conscious wasps need caffeine. He\'ll be back when your sprint starts.'},
-  {id:'capstone', label:'Capstone ✓', name:'Capstone Complete — Graduation',text:'Graduation cap + sparkles. He\'s proud of you but will never say it. The gown is rented.'}
+  {id:'capstone', label:'Triage ✓', name:'Triage Complete — Graduation',text:'Graduation cap + sparkles. He\'s proud of you but will never say it. The gown is rented.'}
 ];
 (function initShowcase() {
   const grid = document.getElementById('waspy-states-grid');
