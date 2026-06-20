@@ -61,7 +61,7 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 <div class="scr" id="s1">
   <div class="atk-header"><div class="atk-label">// the rules</div></div>
   <p style="font-size:20px;line-height:1.8">You've completed 10 modules. Each one taught a category in isolation. Production systems don't work that way — vulnerabilities overlap, resources are finite, and you can't fix everything at once.</p>
-  <p>Five scenarios follow. In each one, two OWASP categories intersect. Both fixes are real. Both matter. But you have budget for one. Pick the higher-leverage fix.</p>
+  <p>Ten scenarios follow. In each one, two OWASP categories intersect. Both fixes are real. Both matter. But you have budget for one. Pick the higher-leverage fix.</p>
   <div class="card" style="border-left:3px solid var(--accent)">
     <p style="font-size:15px;color:var(--ink-mid);margin:0;line-height:1.6"><strong style="color:var(--accent)">How this works:</strong> There are no trick questions. Both options in every scenario are defensible. The "right" answer is the one with higher leverage — the fix that reduces the most risk per unit of effort. Reasonable people can disagree. The tradeoff explanation after each choice is where the real learning happens.</p>
   </div>
@@ -563,7 +563,7 @@ req.user = {
 <span class="kw">const</span> ext = path.<span class="fn">extname</span>(file.originalname).<span class="fn">toLowerCase</span>();
 <span class="kw">if</span> (!ALLOWED.<span class="fn">has</span>(ext)) <span class="kw">return</span> res.<span class="fn">status</span>(<span class="nm">400</span>).<span class="fn">json</span>({error: <span class="st">'Type not allowed'</span>});
 <span class="kw">const</span> name = <span class="fn">crypto.randomUUID</span>() + ext;
-<span class="kw">await</span> fs.<span class="fn">writeFile</span>(<span class="st">`/var/data/files/${name}`</span>, file.buffer);  <span class="cm">// outside webroot</span></div></div></div>
+<span class="kw">await</span> fs.<span class="fn">writeFile</span>(<span class="st">`/var/data/files/${name}`</span>, file.buffer);  <span class="cm">// outside webroot, no path traversal</span></div></div></div>
   <div class="persona-row"><div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">RCE via webshell is game over. The broken download auth leaks data — but a server compromise lets them get ALL the data anyway.</div></div><div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">Moved uploads out of webroot, added type allowlist and randomized filenames. Download auth check was a follow-up PR same day.</div></div></div>
   <div class="nav"><button class="btn btn-g" onclick="go(25)">← Choice</button><button class="btn btn-p" onclick="go(27)">Scenario 9 →</button></div>
 </div>
@@ -671,9 +671,9 @@ npm <span class="fn">ci</span> --ignore-scripts       <span class="cm"># 4. rebu
     <p style="font-size:14px;color:var(--ink-dim);margin:0;line-height:1.55;max-width:500px">When two categories intersect, the one that's exploitable right now almost always has higher leverage. Close the open door before building the alarm. Stop the active leak before adding defense-in-depth.</p>
     <span style="font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--adim);padding:3px 10px;border-radius:3px;border:1px solid rgba(74,90,106,.22);letter-spacing:.05em">SECURITY TRIAGE · Cross-Category Prioritization</span>
   </div>
-  <div class="score-bar"><div class="score-num" id="finalScore">0 / 5</div><div class="score-label" id="finalLabel"></div></div>
+  <div class="score-bar"><div class="score-num" id="finalScore">0 / 10</div><div class="score-label" id="finalLabel"></div></div>
   <p id="finalMsg"></p>
-  <div class="nav"><button class="btn btn-g" onclick="go(33)">← The 10 Habits</button><button class="btn btn-fin" onclick="finish()">Complete Course ✓</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(33)">← The 10 Habits</button><button class="btn btn-g" onclick="restartTriage()">↺ Restart Triage</button><button class="btn btn-fin" onclick="finish()">Complete Course ✓</button></div>
 </div>
 
 </div>
@@ -960,6 +960,17 @@ function renderFinal(){
 }
 
 function finish(){window.parent.postMessage({type:'course-next'},'*');}
+function restartTriage(){
+  score=0;picked.fill(null);
+  for(let i=1;i<=10;i++){
+    const g=document.getElementById('ch'+i);if(g)g.querySelectorAll('.choice-card').forEach(c=>{c.className='choice-card';});
+    const rv=document.getElementById('rv'+i);if(rv){rv.className='reveal-box';rv.innerHTML='';}
+    const nb=document.getElementById('nb'+i);if(nb)nb.disabled=true;
+    const ai=document.getElementById('ai-resp-'+i);if(ai){ai.style.display='none';ai.textContent='';}
+  }
+  document.querySelectorAll('.waspy-callout').forEach(el=>el.remove());
+  go(1);
+}
 
 /* ═══ FULLSCREEN ═══ */
 function toggleFS(){if(!document.fullscreenElement&&!document.webkitFullscreenElement){const el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen).call(el);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}}
