@@ -64,11 +64,22 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
   <div class="card" style="border-left:3px solid var(--accent)">
     <p style="font-size:15px;color:var(--ink-mid);margin:0;line-height:1.6"><strong style="color:var(--accent)">How this works:</strong> There are no trick questions. Both options in every scenario are defensible. The "right" answer is the one with higher leverage — the fix that reduces the most risk per unit of effort. Reasonable people can disagree. The tradeoff explanation after each choice is where the real learning happens.</p>
   </div>
-  <div class="nav"><button class="btn btn-g" onclick="go(0)">← Cover</button><button class="btn btn-p" onclick="go(2)">Scenario 1 →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(0)">← Cover</button><button class="btn btn-p" onclick="go(2)">Meet your buddy →</button></div>
+</div>
+
+<!-- ══ S2: MEET WASPY ══ -->
+<div class="scr" id="s2" style="align-items:center;text-align:center">
+  <div id="waspy-intro-char" style="margin:8px 0"></div>
+  <h2 style="font-size:clamp(20px,3vw,26px)">This is Waspy.</h2>
+  <p style="max-width:480px;margin:0 auto">Your learning buddy for this capstone. Waspy will comment on each scenario, react to your choices, and — if you want — check your reasoning with AI.</p>
+  <div class="card" style="border-left:3px solid #d4a830;max-width:480px;margin:0 auto;text-align:left">
+    <p style="font-size:14.5px;color:var(--ink-mid);margin:0;line-height:1.55;font-style:italic">"I change outfits depending on the situation. Blazer means I'm reviewing code. Party hat means you nailed it. Frozen eyes mean I found something bad. Let's go."</p>
+  </div>
+  <div class="nav" style="justify-content:center"><button class="btn btn-p" onclick="go(3)">Scenario 1 →</button></div>
 </div>
 
 <!-- ══ SCENARIO 1: A05 + A10 ══ -->
-<div class="scr" id="s2">
+<div class="scr" id="s3">
   <div class="atk-header"><div class="atk-label">// scenario 1 of 5</div></div>
   <h2>The search endpoint that talks too much</h2>
   <p>An internal API accepts user input in a search query and passes it to a SQL backend. The input is parameterized — but the error handler is not. When a query fails, the endpoint returns detailed error messages: table names, column types, query structure. When a query targets a nonexistent table, it returns a different error than when it targets an existing table with wrong permissions.</p>
@@ -86,10 +97,10 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
   });
 }</div></div></div>
   <p style="font-size:15px;color:var(--ink-dim)">The query is parameterized (A05 injection is mitigated). But the error responses are a reconnaissance goldmine (A10 information disclosure). Two categories, one endpoint.</p>
-  <div class="nav"><button class="btn btn-g" onclick="go(1)">← Intro</button><button class="btn btn-p" onclick="go(3)">Make the call →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(1)">← Intro</button><button class="btn btn-p" onclick="go(4)">Make the call →</button></div>
 </div>
 
-<div class="scr" id="s3">
+<div class="scr" id="s4">
   <div class="atk-header"><div class="atk-label">// scenario 1</div><div class="atk-step">which fix has higher leverage?</div></div>
   <div class="choice-grid" id="ch1">
     <div class="choice-card" onclick="pick(1,0)">
@@ -104,10 +115,10 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
     </div>
   </div>
   <div class="reveal-box" id="rv1"></div>
-  <div class="nav"><button class="btn btn-g" onclick="go(2)">← Scenario</button><button class="btn btn-p" id="nb1" onclick="go(4)" disabled>See Tradeoff →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(3)">← Scenario</button><button class="btn btn-p" id="nb1" onclick="go(5)" disabled>See Tradeoff →</button></div>
 </div>
 
-<div class="scr" id="s4">
+<div class="scr" id="s5">
   <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 1</div></div>
   <p><strong>Higher leverage: fix the error responses (A10).</strong></p>
   <p>The parameterized query already blocks SQL injection — the A05 risk is mitigated. But the verbose error messages hand an attacker a map of your database on every failed request.</p>
@@ -134,11 +145,11 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
     <div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">The parameterized query buys us time. The error messages are active intelligence leakage. Fix the leak, then schedule the input validation for the next sprint.</div></div>
     <div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">Took 20 minutes. Replaced the catch block with a generic message and added structured logging. The input validation is in the backlog — it's not urgent while parameterization holds.</div></div>
   </div>
-  <div class="nav"><button class="btn btn-g" onclick="go(3)">← Choice</button><button class="btn btn-p" onclick="go(5)">Scenario 2 →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(4)">← Choice</button><button class="btn btn-p" onclick="go(6)">Scenario 2 →</button></div>
 </div>
 
 <!-- ══ SCENARIO 2: A03 + A08 ══ -->
-<div class="scr" id="s5">
+<div class="scr" id="s6">
   <div class="atk-header"><div class="atk-label">// scenario 2 of 5</div></div>
   <h2>The build server that trusts everything</h2>
   <p>A CI/CD pipeline pulls dependencies from npm without a lockfile pinned to exact hashes. The <code>package-lock.json</code> exists but isn't committed — <code>npm install</code> resolves fresh ranges on every build.</p>
@@ -159,10 +170,10 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
   }
 }</div></div></div>
   <p style="font-size:15px;color:var(--ink-dim)">Two supply chain risks: unpinned dependencies that could be swapped for malicious versions (A03), and a build environment on the same network as developer laptops — reachable via lateral movement (A08).</p>
-  <div class="nav"><button class="btn btn-g" onclick="go(4)">← Previous</button><button class="btn btn-p" onclick="go(6)">Make the call →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(5)">← Previous</button><button class="btn btn-p" onclick="go(7)">Make the call →</button></div>
 </div>
 
-<div class="scr" id="s6">
+<div class="scr" id="s7">
   <div class="atk-header"><div class="atk-label">// scenario 2</div><div class="atk-step">which fix has higher leverage?</div></div>
   <div class="choice-grid" id="ch2">
     <div class="choice-card" onclick="pick(2,0)">
@@ -177,10 +188,10 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
     </div>
   </div>
   <div class="reveal-box" id="rv2"></div>
-  <div class="nav"><button class="btn btn-g" onclick="go(5)">← Scenario</button><button class="btn btn-p" id="nb2" onclick="go(7)" disabled>See Tradeoff →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(6)">← Scenario</button><button class="btn btn-p" id="nb2" onclick="go(8)" disabled>See Tradeoff →</button></div>
 </div>
 
-<div class="scr" id="s7">
+<div class="scr" id="s8">
   <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 2</div></div>
   <p><strong>Higher leverage: isolate the build server (A08).</strong></p>
   <p>Lockfile pinning stops one attack vector — dependency substitution. But if the build server is reachable from compromised endpoints, an attacker doesn't need to poison a package. They can inject code directly into the build process, modify artifacts, or exfiltrate secrets from CI environment variables.</p>
@@ -210,11 +221,11 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
     <div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">A compromised build server is game over — it touches every artifact we ship. Lockfile pinning matters, but it only covers one supply chain vector. Isolation covers them all.</div></div>
     <div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">We moved CI to an isolated VPC with no inbound SSH. Deployments trigger via webhook, not direct access. Lockfile pinning went in the same week — it was a one-line CI change.</div></div>
   </div>
-  <div class="nav"><button class="btn btn-g" onclick="go(6)">← Choice</button><button class="btn btn-p" onclick="go(8)">Scenario 3 →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(7)">← Choice</button><button class="btn btn-p" onclick="go(9)">Scenario 3 →</button></div>
 </div>
 
 <!-- ══ SCENARIO 3: A06 + A07 ══ -->
-<div class="scr" id="s8">
+<div class="scr" id="s9">
   <div class="atk-header"><div class="atk-label">// scenario 3 of 5</div></div>
   <h2>The password reset nobody rate-limits</h2>
   <p>A SaaS application has two authentication paths. The login page uses email + password — no MFA. The password-reset flow sends a 6-digit code by email, valid for 15 minutes. There's no rate limit on reset code attempts.</p>
@@ -233,10 +244,10 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
     <p style="font-size:14px;color:var(--ink-mid);margin:0;line-height:1.5;font-family:var(--mono)">6 digits = 1,000,000 combinations · 15 min window · ~1,100 req/sec = <strong style="color:var(--red)">full keyspace in under 15 minutes</strong></p>
   </div>
   <p style="font-size:15px;color:var(--ink-dim)">The reset flow is a design flaw — a guessable code without rate limiting (A06). The login page lacks MFA (A07). Budget for one fix this quarter.</p>
-  <div class="nav"><button class="btn btn-g" onclick="go(7)">← Previous</button><button class="btn btn-p" onclick="go(9)">Make the call →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(8)">← Previous</button><button class="btn btn-p" onclick="go(10)">Make the call →</button></div>
 </div>
 
-<div class="scr" id="s9">
+<div class="scr" id="s10">
   <div class="atk-header"><div class="atk-label">// scenario 3</div><div class="atk-step">which fix has higher leverage?</div></div>
   <div class="choice-grid" id="ch3">
     <div class="choice-card" onclick="pick(3,0)">
@@ -251,10 +262,10 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
     </div>
   </div>
   <div class="reveal-box" id="rv3"></div>
-  <div class="nav"><button class="btn btn-g" onclick="go(8)">← Scenario</button><button class="btn btn-p" id="nb3" onclick="go(10)" disabled>See Tradeoff →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(9)">← Scenario</button><button class="btn btn-p" id="nb3" onclick="go(11)" disabled>See Tradeoff →</button></div>
 </div>
 
-<div class="scr" id="s10">
+<div class="scr" id="s11">
   <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 3</div></div>
   <p><strong>Higher leverage: add MFA to login (A07).</strong></p>
   <p>The login page is the primary authentication path — it's hit by credential stuffing attacks daily. MFA blocks them all, regardless of how the credentials were obtained.</p>
@@ -276,11 +287,11 @@ res.<span class="fn">json</span>({ token: <span class="fn">issueJWT</span>(user)
     <div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">MFA on login is the single highest-impact control in our entire auth stack. The reset flow is exploitable, but it's a narrower attack surface. Fix the high-traffic path first.</div></div>
     <div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">We shipped TOTP in two weeks. The reset-flow rate limit was a half-day fix — we did it in the same sprint. But if we'd had to choose, MFA first, every time.</div></div>
   </div>
-  <div class="nav"><button class="btn btn-g" onclick="go(9)">← Choice</button><button class="btn btn-p" onclick="go(11)">Scenario 4 →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(10)">← Choice</button><button class="btn btn-p" onclick="go(12)">Scenario 4 →</button></div>
 </div>
 
 <!-- ══ SCENARIO 4: A02 + A09 ══ -->
-<div class="scr" id="s11">
+<div class="scr" id="s12">
   <div class="atk-header"><div class="atk-label">// scenario 4 of 5</div></div>
   <h2>The admin panel nobody changed the password for</h2>
   <p>A monitoring dashboard (Grafana) is exposed on the internal network with default credentials. It has read access to production metrics, database connection health, and service topology. The organization also has no centralized security logging.</p>
@@ -297,10 +308,10 @@ res.<span class="fn">json</span>({ token: <span class="fn">issueJWT</span>(user)
 <span class="cm"># full database connection strings, internal hostnames,</span>
 <span class="cm"># service map — all with zero authentication effort</span></div></div></div>
   <p style="font-size:15px;color:var(--ink-dim)">Default credentials on an admin panel (A02 security misconfiguration). No security monitoring or alerting (A09 logging failures). The team can fix one this sprint.</p>
-  <div class="nav"><button class="btn btn-g" onclick="go(10)">← Previous</button><button class="btn btn-p" onclick="go(12)">Make the call →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(11)">← Previous</button><button class="btn btn-p" onclick="go(13)">Make the call →</button></div>
 </div>
 
-<div class="scr" id="s12">
+<div class="scr" id="s13">
   <div class="atk-header"><div class="atk-label">// scenario 4</div><div class="atk-step">which fix has higher leverage?</div></div>
   <div class="choice-grid" id="ch4">
     <div class="choice-card" onclick="pick(4,0)">
@@ -315,10 +326,10 @@ res.<span class="fn">json</span>({ token: <span class="fn">issueJWT</span>(user)
     </div>
   </div>
   <div class="reveal-box" id="rv4"></div>
-  <div class="nav"><button class="btn btn-g" onclick="go(11)">← Scenario</button><button class="btn btn-p" id="nb4" onclick="go(13)" disabled>See Tradeoff →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(12)">← Scenario</button><button class="btn btn-p" id="nb4" onclick="go(14)" disabled>See Tradeoff →</button></div>
 </div>
 
-<div class="scr" id="s13">
+<div class="scr" id="s14">
   <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 4</div></div>
   <p><strong>Higher leverage: change the credentials (A02).</strong></p>
   <p>Default credentials are exploitable <em>right now</em>, by anyone on the network, with zero skill required. The Grafana panel gives an attacker production connection strings and service topology — a foothold for lateral movement.</p>
@@ -342,11 +353,11 @@ admin_user = <span class="st">""</span>  <span class="cm"># no local admin at al
     <div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">This is a 5-minute fix that removes an active vulnerability. Logging infrastructure takes weeks to deploy well. We need both, but the open admin panel can't wait.</div></div>
     <div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">Changed the password in 2 minutes. Started SSO integration that afternoon. The SIEM project is in the quarterly roadmap — it's important but not the fire we need to put out today.</div></div>
   </div>
-  <div class="nav"><button class="btn btn-g" onclick="go(12)">← Choice</button><button class="btn btn-p" onclick="go(14)">Scenario 5 →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(13)">← Choice</button><button class="btn btn-p" onclick="go(15)">Scenario 5 →</button></div>
 </div>
 
 <!-- ══ SCENARIO 5: A01 + A02 ══ -->
-<div class="scr" id="s14">
+<div class="scr" id="s15">
   <div class="atk-header"><div class="atk-label">// scenario 5 of 5</div></div>
   <h2>The microservice that trusts everyone</h2>
   <p>A backend microservice accepts JWTs from the API gateway but doesn't validate the signature — it base64-decodes the payload and trusts the claims. The same service runs as <code>root</code> in its container.</p>
@@ -373,10 +384,10 @@ req.user = {
 <span class="kw">CMD</span> [<span class="st">"node"</span>, <span class="st">"server.js"</span>]</div></div></div>
   </div>
   <p style="font-size:15px;color:var(--ink-dim)">Missing JWT signature validation means anyone can forge tokens (A01 broken access control). Running as root means a container escape gives the attacker host-level access (A02 security misconfiguration). Both are real — but which one creates the vulnerability?</p>
-  <div class="nav"><button class="btn btn-g" onclick="go(13)">← Previous</button><button class="btn btn-p" onclick="go(15)">Make the call →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(14)">← Previous</button><button class="btn btn-p" onclick="go(16)">Make the call →</button></div>
 </div>
 
-<div class="scr" id="s15">
+<div class="scr" id="s16">
   <div class="atk-header"><div class="atk-label">// scenario 5</div><div class="atk-step">which fix has higher leverage?</div></div>
   <div class="choice-grid" id="ch5">
     <div class="choice-card" onclick="pick(5,0)">
@@ -391,10 +402,10 @@ req.user = {
     </div>
   </div>
   <div class="reveal-box" id="rv5"></div>
-  <div class="nav"><button class="btn btn-g" onclick="go(14)">← Scenario</button><button class="btn btn-p" id="nb5" onclick="go(16)" disabled>See Tradeoff →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(15)">← Scenario</button><button class="btn btn-p" id="nb5" onclick="go(17)" disabled>See Tradeoff →</button></div>
 </div>
 
-<div class="scr" id="s16">
+<div class="scr" id="s17">
   <div class="atk-header"><div class="atk-label">// the tradeoff</div><div class="atk-step">scenario 5</div></div>
   <p><strong>Higher leverage: validate the JWT signature (A01).</strong></p>
   <p>Without signature validation, <em>anyone</em> can forge a token with any claims. The service has no access control at all. Running as root worsens the blast radius but doesn't create the vulnerability.</p>
@@ -435,11 +446,11 @@ req.user = {
     <div class="persona p-ciso"><div class="persona-name role-ciso">🛡 security lead</div><div class="persona-text">The JWT validation is the vulnerability. Running as root is a severity multiplier. Always fix the vulnerability before reducing the blast radius — you can't contain what you can't prevent.</div></div>
     <div class="persona p-dev"><div class="persona-name role-dev">⌨ dev lead</div><div class="persona-text">Added jwt.verify() with the gateway's public key — 4 lines of code. The Dockerfile USER change was a separate PR the same day. Both shipped, but the signature check was the blocker.</div></div>
   </div>
-  <div class="nav"><button class="btn btn-g" onclick="go(15)">← Choice</button><button class="btn btn-p" onclick="go(17)">The 10 Habits →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(16)">← Choice</button><button class="btn btn-p" onclick="go(18)">The 10 Habits →</button></div>
 </div>
 
 <!-- ══ S17: 10 HABITS REFERENCE CARD ══ -->
-<div class="scr" id="s17">
+<div class="scr" id="s18">
   <h3>// the ten habits — one from each module</h3>
   <div class="habit-grid">
     <div class="habit-card"><div class="habit-badge" style="background:#1a56a0">A01</div><div class="habit-text"><strong>Check ownership, not just authentication.</strong> Every endpoint that takes a resource ID must verify the requestor owns that resource. <code>CWE-639</code></div></div>
@@ -453,11 +464,11 @@ req.user = {
     <div class="habit-card"><div class="habit-badge" style="background:#6a6a3a">A09</div><div class="habit-text"><strong>Alert on auth failures.</strong> If 50 failed logins don't trigger a page, your logging is decoration. <code>CWE-778</code></div></div>
     <div class="habit-card"><div class="habit-badge" style="background:#6a3a3a">A10</div><div class="habit-text"><strong>Audit every catch block.</strong> Does it deny or allow? If a catch block on a security path calls <code>next()</code>, it's a fail-open. <code>CWE-636</code></div></div>
   </div>
-  <div class="nav"><button class="btn btn-g" onclick="go(16)">← Scenario 5</button><button class="btn btn-p" onclick="go(18)">Finish →</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(17)">← Scenario 5</button><button class="btn btn-p" onclick="go(19)">Finish →</button></div>
 </div>
 
 <!-- ══ S18: CLOSING ══ -->
-<div class="scr" id="s18">
+<div class="scr" id="s19">
   <h3>// capstone complete</h3>
   <div class="rule-card" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px 28px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px">
     <span style="font-family:var(--mono);font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.14em;font-weight:700">the leverage rule</span>
@@ -467,7 +478,7 @@ req.user = {
   </div>
   <div class="score-bar"><div class="score-num" id="finalScore">0 / 5</div><div class="score-label" id="finalLabel"></div></div>
   <p id="finalMsg"></p>
-  <div class="nav"><button class="btn btn-g" onclick="go(17)">← The 10 Habits</button><button class="btn btn-fin" onclick="finish()">Complete Course ✓</button></div>
+  <div class="nav"><button class="btn btn-g" onclick="go(18)">← The 10 Habits</button><button class="btn btn-fin" onclick="finish()">Complete Course ✓</button></div>
 </div>
 
 </div>
@@ -703,10 +714,10 @@ function pick(scenario, choice) {
 }
 
 /* ═══ NAV ═══ */
-let cur=0;const TOTAL=18;const visited={0:true};
-const SCREEN_LABELS=['Cover','Rules','S1: Scenario','S1: Choice','S1: Tradeoff','S2: Scenario','S2: Choice','S2: Tradeoff','S3: Scenario','S3: Choice','S3: Tradeoff','S4: Scenario','S4: Choice','S4: Tradeoff','S5: Scenario','S5: Choice','S5: Tradeoff','10 Habits','Complete'];
+let cur=0;const TOTAL=19;const visited={0:true};
+const SCREEN_LABELS=['Cover','Rules','Meet Waspy','S1: Scenario','S1: Choice','S1: Tradeoff','S2: Scenario','S2: Choice','S2: Tradeoff','S3: Scenario','S3: Choice','S3: Tradeoff','S4: Scenario','S4: Choice','S4: Tradeoff','S5: Scenario','S5: Choice','S5: Tradeoff','10 Habits','Complete'];
 function buildStrip(){const strip=document.getElementById('navstrip');if(!strip)return;const sections=[{screens:[0],type:'pip-cover'},'sep',{screens:[1],type:''},'sep',{screens:[2,3,4],type:''},{screens:[5,6,7],type:''},{screens:[8,9,10],type:''},{screens:[11,12,13],type:''},{screens:[14,15,16],type:''},'sep',{screens:[17,18],type:'pip-wide'}];strip.innerHTML='';sections.forEach(sec=>{if(sec==='sep'){const s=document.createElement('div');s.className='ns-sep';strip.appendChild(s);return;}sec.screens.forEach(n=>{const pip=document.createElement('button');pip.className='ns-pip '+sec.type;if(n===cur)pip.classList.add('active');else if(visited[n])pip.classList.add('visited');pip.title=SCREEN_LABELS[n]||'';pip.onclick=()=>go(n);strip.appendChild(pip);});});}
-function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');cur=n;visited[n]=true;const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');document.getElementById('wrap').scrollTop=0;document.getElementById('pf').style.width=(n/TOTAL*100)+'%';document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;if(n===18)renderFinal();buildStrip();setTimeout(()=>renderWaspy(n),200);}
+function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');cur=n;visited[n]=true;const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');document.getElementById('wrap').scrollTop=0;document.getElementById('pf').style.width=(n/TOTAL*100)+'%';document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;if(n===19)renderFinal();buildStrip();setTimeout(()=>renderWaspy(n),200);}
 
 function renderFinal(){
   document.getElementById('finalScore').textContent=score+' / 5';
@@ -733,18 +744,19 @@ function updateFSIcon(){const isFS=!!(document.fullscreenElement||document.webki
 const WASPY_MAP = {
   0: {state:'idle', line:'Five scenarios. Two categories each. One budget.'},
   1: {state:'teaching', line:'Both options are real fixes. The question is leverage — which one removes the most risk?'},
-  2: {state:'review', line:'Parameterized query — good. But check that catch block.'},
-  3: {state:'suspicious', line:'Both are real fixes. Which one closes the active risk?', ai:true},
-  5: {state:'review', line:'Self-hosted runner on a shared VLAN. Read that pipeline config again.'},
-  6: {state:'suspicious', line:'One vector vs the whole attack surface. Think scope.', ai:true},
-  8: {state:'review', line:'Six digits, no rate limit, 15-minute window. Do the math.'},
-  9: {state:'suspicious', line:'Two auth paths, one budget. Where\'s the traffic volume?', ai:true},
-  11:{state:'review', line:'curl with default creds returns connection strings. That\'s not a pentest.'},
-  12:{state:'suspicious', line:'Detection vs prevention. Which one stops the breach that\'s already possible?', ai:true},
-  14:{state:'review', line:'atob() without verify(). That payload is entirely user-controlled.'},
-  15:{state:'suspicious', line:'The vulnerability or the blast radius. Not the same fix.', ai:true},
-  17:{state:'teaching', line:'One habit per category. CWE-mapped. Print this page.'},
-  18:{state:'capstone', line:'Ten categories. Ten habits. Now go review some code.'}
+  2: {state:'idle'},
+  3: {state:'review', line:'Parameterized query — good. But check that catch block.'},
+  4: {state:'suspicious', line:'Both are real fixes. Which one closes the active risk?', ai:true},
+  6: {state:'review', line:'Self-hosted runner on a shared VLAN. Read that pipeline config again.'},
+  7: {state:'suspicious', line:'One vector vs the whole attack surface. Think scope.', ai:true},
+  9: {state:'review', line:'Six digits, no rate limit, 15-minute window. Do the math.'},
+  10:{state:'suspicious', line:'Two auth paths, one budget. Where\'s the traffic volume?', ai:true},
+  12:{state:'review', line:'curl with default creds returns connection strings. That\'s not a pentest.'},
+  13:{state:'suspicious', line:'Detection vs prevention. Which one stops the breach that\'s already possible?', ai:true},
+  15:{state:'review', line:'atob() without verify(). That payload is entirely user-controlled.'},
+  16:{state:'suspicious', line:'The vulnerability or the blast radius. Not the same fix.', ai:true},
+  18:{state:'teaching', line:'One habit per category. CWE-mapped. Print this page.'},
+  19:{state:'capstone', line:'Ten categories. Ten habits. Now go review some code.'}
 };
 
 function renderWaspy(n) {
@@ -823,6 +835,16 @@ async function checkReasoning(scenario) {
       : 'The panel prioritized differently. See the tradeoff screen for why leverage matters here.';
   }
   btn.textContent = 'CHECKED ✓';
+}
+
+// Populate Waspy on intro screen (large version)
+const introChar = document.getElementById('waspy-intro-char');
+const idleSprite = document.getElementById('ws-idle');
+if (introChar && idleSprite) {
+  const clone = idleSprite.cloneNode(true);
+  const svg = clone.querySelector('svg');
+  if (svg) { svg.setAttribute('width','160'); svg.setAttribute('height','176'); }
+  introChar.innerHTML = clone.innerHTML;
 }
 
 buildStrip();
