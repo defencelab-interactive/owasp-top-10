@@ -28,6 +28,7 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 .fs-btn{background:none;border:1px solid var(--border);border-radius:3px;color:var(--ink-dim);cursor:pointer;padding:4px 5px;display:flex;align-items:center;justify-content:center;transition:color .12s,border-color .12s;margin-left:8px;flex-shrink:0}.fs-btn:hover{color:var(--ink);border-color:var(--border2)}html:fullscreen,html:-webkit-full-screen{background:var(--bg)}html:fullscreen body,html:-webkit-full-screen body{height:100vh}
 /* waspy animations */@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}@keyframes blink{0%,93%,100%{transform:scaleY(1)}95.5%{transform:scaleY(.06)}}@keyframes wfl{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(-20deg) scaleX(.8)}}@keyframes wfr{0%,100%{transform:rotate(8deg)}50%{transform:rotate(20deg) scaleX(.8)}}@keyframes ant{0%,100%{transform:rotate(0)}50%{transform:rotate(5deg)}}@keyframes steam{0%,100%{opacity:.15;transform:translateY(0)}50%{opacity:.3;transform:translateY(-3px)}}@keyframes confetti{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(10deg)}}@keyframes sparkle{0%,100%{opacity:.3}50%{opacity:.8}}.bob{animation:bob 3s ease-in-out infinite}.eyes{animation:blink 4.5s ease-in-out infinite}.wl{animation:wfl .14s ease-in-out infinite;transform-origin:80% 80%}.wr{animation:wfr .14s ease-in-out infinite .07s;transform-origin:20% 80%}.al{animation:ant 2.5s ease-in-out infinite;transform-origin:bottom}.ar{animation:ant 2.5s ease-in-out infinite .35s;transform-origin:bottom}.steam{animation:steam 2s ease-in-out infinite}.confetti{animation:confetti 1.5s ease-in-out infinite}.sparkle{animation:sparkle 1.8s ease-in-out infinite}
 .waspy-callout{display:flex;align-items:flex-start;gap:14px;background:linear-gradient(135deg,#1a1810 0%,#16140e 100%);border:1px solid rgba(212,168,48,.15);border-radius:12px;padding:12px 16px 12px 10px;margin-top:8px;opacity:0;transform:translateY(12px);transition:opacity .35s ease,transform .35s ease}.waspy-callout.on{opacity:1;transform:translateY(0)}.waspy-callout .waspy-char{flex-shrink:0;width:100px}.waspy-callout .waspy-bubble{flex:1;display:flex;flex-direction:column;gap:8px;justify-content:center;min-height:90px}.waspy-line{font-size:14.5px;color:rgba(220,215,205,.85);line-height:1.55;font-style:italic}.waspy-ai-box{display:flex;flex-direction:column;gap:6px}.waspy-ai-input{font-family:var(--mono);font-size:13px;color:#c8ccd8;background:rgba(0,0,0,.3);border:1px solid rgba(212,168,48,.2);border-radius:6px;padding:8px 12px;resize:none;outline:none;transition:border-color .2s}.waspy-ai-input:focus{border-color:rgba(212,168,48,.4)}.waspy-ai-input::placeholder{color:rgba(200,195,185,.3)}.waspy-ai-btn{align-self:flex-end;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:4px;border:1px solid rgba(212,168,48,.3);background:rgba(212,168,48,.1);color:#d4a830;cursor:pointer;transition:all .15s}.waspy-ai-btn:hover{background:rgba(212,168,48,.2);border-color:rgba(212,168,48,.5)}.waspy-ai-btn:disabled{opacity:.3;cursor:not-allowed}.waspy-ai-response{font-size:13px;color:rgba(220,215,205,.75);line-height:1.55;padding:8px 12px;background:rgba(212,168,48,.06);border-radius:6px;border-left:2px solid rgba(212,168,48,.3)}
+.waspy-states-grid{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.waspy-state-btn{padding:7px 13px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-dim);cursor:pointer;transition:all .15s;letter-spacing:.03em}.waspy-state-btn:hover{border-color:rgba(212,168,48,.4);color:var(--ink)}.waspy-state-btn.active{background:rgba(212,168,48,.1);border-color:rgba(212,168,48,.5);color:#d4a830}.waspy-state-desc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;min-height:56px;text-align:center}.waspy-state-name{font-family:var(--mono);font-size:12px;font-weight:700;color:#d4a830;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}.waspy-state-text{font-size:14.5px;color:var(--ink-mid);line-height:1.55}
 @media(max-width:620px){.scr{padding:12px 14px 10px}.choice-grid{grid-template-columns:1fr}.habit-grid{grid-template-columns:1fr}.persona-row{flex-direction:column}.persona::before{display:none}.waspy-callout{flex-direction:column;align-items:center;text-align:center}.waspy-callout .waspy-char{width:80px}}
 </style>
 </head>
@@ -68,14 +69,21 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 </div>
 
 <!-- ══ S2: MEET WASPY ══ -->
-<div class="scr" id="s2" style="align-items:center;text-align:center">
-  <div id="waspy-intro-char" style="margin:8px 0"></div>
-  <h2 style="font-size:clamp(20px,3vw,26px)">This is Waspy.</h2>
-  <p style="max-width:480px;margin:0 auto">Your learning buddy for this capstone. Waspy will comment on each scenario, react to your choices, and — if you want — check your reasoning with AI.</p>
-  <div class="card" style="border-left:3px solid #d4a830;max-width:480px;margin:0 auto;text-align:left">
-    <p style="font-size:14.5px;color:var(--ink-mid);margin:0;line-height:1.55;font-style:italic">"I change outfits depending on the situation. Blazer means I'm reviewing code. Party hat means you nailed it. Frozen eyes mean I found something bad. Let's go."</p>
+<div class="scr" id="s2" style="align-items:center">
+  <h3 style="text-align:center">// meet your learning buddy</h3>
+  <div style="display:flex;align-items:center;gap:24px;justify-content:center;flex-wrap:wrap">
+    <div id="waspy-showcase" style="flex-shrink:0"></div>
+    <div style="max-width:340px">
+      <h2 style="margin-bottom:6px">This is Waspy.</h2>
+      <p style="font-size:15px;line-height:1.65;color:var(--ink-mid)">Strict but supportive. Won't sugarcoat a bad catch block, but won't leave you alone with it either. He changes outfits depending on what's happening — click each state to see.</p>
+    </div>
   </div>
-  <div class="nav" style="justify-content:center"><button class="btn btn-p" onclick="go(3)">Scenario 1 →</button></div>
+  <div class="waspy-states-grid" id="waspy-states-grid"></div>
+  <div class="waspy-state-desc" id="waspy-state-desc">
+    <div class="waspy-state-name" id="ws-desc-name">← Click a state</div>
+    <div class="waspy-state-text" id="ws-desc-text">Go on, he doesn't bite. Technically he could sting, but he chooses education over violence.</div>
+  </div>
+  <div class="nav" style="justify-content:center"><button class="btn btn-p" onclick="go(3)">Enough introductions. Scenario 1 →</button></div>
 </div>
 
 <!-- ══ SCENARIO 1: A05 + A10 ══ -->
@@ -679,6 +687,37 @@ req.user = {
       <ellipse cx="84" cy="144" rx="6" ry="3.5" fill="url(#g8_capstone)" opacity=".6"/><ellipse cx="116" cy="144" rx="6" ry="3.5" fill="url(#g8_capstone)" opacity=".6"/>
     </g>
   </svg></div>
+
+<div id="ws-coffee"><svg viewBox="10 -8 180 175" width="100" height="110" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="wg7" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f7d94e"/><stop offset="100%" stop-color="#d4a020"/></linearGradient></defs>
+<g class="bob">
+<ellipse class="wl" cx="32" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+<ellipse class="wr" cx="168" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+<g class="al"><path d="M78,18 Q68,-2 58,-8" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="57" cy="-9" r="3" fill="#f7d94e"/></g>
+<g class="ar"><path d="M122,18 Q132,-2 142,-8" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="143" cy="-9" r="3" fill="#f7d94e"/></g>
+<circle cx="100" cy="58" r="48" fill="url(#wg7)"/>
+<path d="M52,45 Q100,37 148,45 L148,67 Q100,59 52,67 Z" fill="#1a1510" opacity=".88"/>
+<g class="eyes" style="transform-origin:100px 55px">
+<ellipse cx="78" cy="55" rx="13" ry="10" fill="white"/><ellipse cx="122" cy="55" rx="13" ry="10" fill="white"/>
+<ellipse cx="80" cy="54" rx="7" ry="5.5" fill="#4a6a5a"/><ellipse cx="120" cy="54" rx="7" ry="5.5" fill="#4a6a5a"/>
+<ellipse cx="80" cy="54" rx="3.5" ry="3" fill="#1a1510"/><ellipse cx="120" cy="54" rx="3.5" ry="3" fill="#1a1510"/>
+<circle cx="77" cy="52" r="2" fill="white"/><circle cx="117" cy="52" r="2" fill="white"/>
+</g>
+<ellipse cx="78" cy="54" rx="16" ry="12" fill="none" stroke="rgba(180,175,165,.5)" stroke-width="1.1"/><ellipse cx="122" cy="54" rx="16" ry="12" fill="none" stroke="rgba(180,175,165,.5)" stroke-width="1.1"/>
+<path d="M90,80 Q100,86 110,80" fill="none" stroke="#1a1510" stroke-width="2" stroke-linecap="round"/>
+<!-- Hoodie (same body size, no hood bumps) -->
+<ellipse cx="100" cy="126" rx="24" ry="18" fill="#2d2828"/>
+<line x1="93" y1="112" x2="90" y2="122" stroke="rgba(245,242,237,.1)" stroke-width="1" stroke-linecap="round"/>
+<line x1="107" y1="112" x2="110" y2="122" stroke="rgba(245,242,237,.1)" stroke-width="1" stroke-linecap="round"/>
+<!-- Coffee -->
+<path d="M142,124 Q148,120 154,124" fill="none" stroke="#2d2828" stroke-width="2.5" stroke-linecap="round"/>
+<rect x="154" y="118" width="16" height="18" rx="3" fill="#4a3a2a" stroke="#6a5a4a" stroke-width="1"/>
+<path d="M170,123 Q176,123 176,129 Q176,135 170,135" fill="none" stroke="#6a5a4a" stroke-width="1"/>
+<g class="steam"><path d="M160,114 Q158,107 162,103" fill="none" stroke="rgba(245,242,237,.2)" stroke-width="1.2" stroke-linecap="round"/></g>
+<g class="steam" style="animation-delay:.5s"><path d="M165,112 Q163,105 167,101" fill="none" stroke="rgba(245,242,237,.12)" stroke-width="1.2" stroke-linecap="round"/></g>
+<ellipse cx="84" cy="148" rx="6" ry="3.5" fill="url(#wg7)" opacity=".6"/><ellipse cx="116" cy="148" rx="6" ry="3.5" fill="url(#wg7)" opacity=".6"/>
+</g>
+</svg></div>
 </div>
 
 <script>
@@ -743,7 +782,6 @@ function updateFSIcon(){const isFS=!!(document.fullscreenElement||document.webki
 /* ═══ WASPY BUDDY ═══ */
 const WASPY_MAP = {
   0: {state:'idle', line:'Five scenarios. Two categories each. One budget.'},
-  1: {state:'teaching', line:'Both options are real fixes. The question is leverage — which one removes the most risk?'},
   2: {state:'idle'},
   3: {state:'review', line:'Parameterized query — good. But check that catch block.'},
   4: {state:'suspicious', line:'Both are real fixes. Which one closes the active risk?', ai:true},
@@ -837,15 +875,50 @@ async function checkReasoning(scenario) {
   btn.textContent = 'CHECKED ✓';
 }
 
-// Populate Waspy on intro screen (large version)
-const introChar = document.getElementById('waspy-intro-char');
-const idleSprite = document.getElementById('ws-idle');
-if (introChar && idleSprite) {
-  const clone = idleSprite.cloneNode(true);
-  const svg = clone.querySelector('svg');
-  if (svg) { svg.setAttribute('width','160'); svg.setAttribute('height','176'); }
-  introChar.innerHTML = clone.innerHTML;
-}
+// Waspy interactive showcase on s2
+const WASPY_STATES = [
+  {id:'idle',     label:'Idle',       name:'Idle — Off Duty',       text:'Just vibing. T-shirt, no opinions. Waiting for you to write something questionable.'},
+  {id:'review',   label:'Code Review',name:'Code Review — Blazer On',text:'Blazer on, blue glasses, judging your code with professional concern. If he squints — recheck your error handler.'},
+  {id:'vuln',     label:'Found a Vuln',name:'Found a Vuln — Frozen',text:'Eyes frozen wide. Red badge. He found something and he\'s not thrilled about it. That O-shaped mouth is not a smile.'},
+  {id:'ship',     label:'Ship It ✓',  name:'Ship It — Party Mode',  text:'Party hat. Confetti. Green checkmark. You nailed it. Enjoy this — it doesn\'t happen often.'},
+  {id:'suspicious',label:'Suspicious', name:'Suspicious — One Eyebrow', text:'One eyebrow raised. Flat mouth. He\'s not angry, just... professionally disappointed in your catch block.'},
+  {id:'teaching', label:'Teaching',   name:'Teaching — Pointer Out', text:'Blazer + pointer stick. This is the "pay attention, I\'m only saying this once" pose. He means it.'},
+  {id:'coffee',   label:'Coffee',     name:'Coffee Break — Hoodie', text:'Hoodie on, coffee in hand. Even security-conscious wasps need caffeine. He\'ll be back when your sprint starts.'},
+  {id:'capstone', label:'Capstone ✓', name:'Capstone Complete — Graduation',text:'Graduation cap + sparkles. He\'s proud of you but will never say it. The gown is rented.'}
+];
+(function initShowcase() {
+  const grid = document.getElementById('waspy-states-grid');
+  const showcase = document.getElementById('waspy-showcase');
+  if (!grid || !showcase) return;
+  // Show idle state initially (large)
+  const idleEl = document.getElementById('ws-idle');
+  if (idleEl) {
+    const clone = idleEl.cloneNode(true);
+    const svg = clone.querySelector('svg');
+    if (svg) { svg.setAttribute('width','140'); svg.setAttribute('height','154'); }
+    showcase.innerHTML = clone.innerHTML;
+  }
+  // Build state buttons
+  WASPY_STATES.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'waspy-state-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = s.label;
+    btn.onclick = () => {
+      grid.querySelectorAll('.waspy-state-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const spriteEl = document.getElementById('ws-' + s.id);
+      if (spriteEl) {
+        const c = spriteEl.cloneNode(true);
+        const svg = c.querySelector('svg');
+        if (svg) { svg.setAttribute('width','140'); svg.setAttribute('height','154'); }
+        showcase.innerHTML = c.innerHTML;
+      }
+      document.getElementById('ws-desc-name').textContent = s.name;
+      document.getElementById('ws-desc-text').textContent = s.text;
+    };
+    grid.appendChild(btn);
+  });
+})();
 
 buildStrip();
 </script>
