@@ -26,7 +26,9 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
 .cv-visual{position:relative;z-index:1;margin-bottom:20px;width:240px;height:180px;display:flex;align-items:center;justify-content:center}
 .cv-badge{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.1em;padding:5px 14px;border-radius:3px;z-index:2;margin-bottom:8px;color:#fff;background:var(--accent);opacity:0;animation:cvFadeUp .4s ease .6s forwards}.cv-tag{font-family:var(--mono);font-size:13px;letter-spacing:.15em;text-transform:uppercase;z-index:2;margin-bottom:6px;color:var(--accent);opacity:0;animation:cvFadeUp .4s ease .7s forwards}.cv-title{font-size:clamp(30px,5.5vw,46px);font-weight:800;color:#f0ede8;letter-spacing:-.02em;line-height:1.15;text-align:center;z-index:2;margin-bottom:4px;opacity:0;animation:cvFadeUp .4s ease .8s forwards}.cv-sub{font-size:16px;color:var(--dark-dim);text-align:center;z-index:2;line-height:1.6;max-width:480px;opacity:0;animation:cvFadeUp .4s ease 1s forwards}.cv-start{z-index:2;margin-top:24px;opacity:0;animation:cvFadeUp .4s ease 1.2s forwards}.cv-start .btn{background:var(--accent);color:#fff;padding:14px 32px;font-size:16px}
 .fs-btn{background:none;border:1px solid var(--border);border-radius:3px;color:var(--ink-dim);cursor:pointer;padding:4px 5px;display:flex;align-items:center;justify-content:center;transition:color .12s,border-color .12s;margin-left:8px;flex-shrink:0}.fs-btn:hover{color:var(--ink);border-color:var(--border2)}html:fullscreen,html:-webkit-full-screen{background:var(--bg)}html:fullscreen body,html:-webkit-full-screen body{height:100vh}
-@media(max-width:620px){.scr{padding:12px 14px 10px}.choice-grid{grid-template-columns:1fr}.habit-grid{grid-template-columns:1fr}.persona-row{flex-direction:column}.persona::before{display:none}}
+/* waspy animations */@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}@keyframes blink{0%,93%,100%{transform:scaleY(1)}95.5%{transform:scaleY(.06)}}@keyframes wfl{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(-20deg) scaleX(.8)}}@keyframes wfr{0%,100%{transform:rotate(8deg)}50%{transform:rotate(20deg) scaleX(.8)}}@keyframes ant{0%,100%{transform:rotate(0)}50%{transform:rotate(5deg)}}@keyframes steam{0%,100%{opacity:.15;transform:translateY(0)}50%{opacity:.3;transform:translateY(-3px)}}@keyframes confetti{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(10deg)}}@keyframes sparkle{0%,100%{opacity:.3}50%{opacity:.8}}.bob{animation:bob 3s ease-in-out infinite}.eyes{animation:blink 4.5s ease-in-out infinite}.wl{animation:wfl .14s ease-in-out infinite;transform-origin:80% 80%}.wr{animation:wfr .14s ease-in-out infinite .07s;transform-origin:20% 80%}.al{animation:ant 2.5s ease-in-out infinite;transform-origin:bottom}.ar{animation:ant 2.5s ease-in-out infinite .35s;transform-origin:bottom}.steam{animation:steam 2s ease-in-out infinite}.confetti{animation:confetti 1.5s ease-in-out infinite}.sparkle{animation:sparkle 1.8s ease-in-out infinite}
+.waspy-callout{display:flex;align-items:flex-start;gap:14px;background:linear-gradient(135deg,#1a1810 0%,#16140e 100%);border:1px solid rgba(212,168,48,.15);border-radius:12px;padding:12px 16px 12px 10px;margin-top:8px;opacity:0;transform:translateY(12px);transition:opacity .35s ease,transform .35s ease}.waspy-callout.on{opacity:1;transform:translateY(0)}.waspy-callout .waspy-char{flex-shrink:0;width:100px}.waspy-callout .waspy-bubble{flex:1;display:flex;flex-direction:column;gap:8px;justify-content:center;min-height:90px}.waspy-line{font-size:14.5px;color:rgba(220,215,205,.85);line-height:1.55;font-style:italic}.waspy-ai-box{display:flex;flex-direction:column;gap:6px}.waspy-ai-input{font-family:var(--mono);font-size:13px;color:#c8ccd8;background:rgba(0,0,0,.3);border:1px solid rgba(212,168,48,.2);border-radius:6px;padding:8px 12px;resize:none;outline:none;transition:border-color .2s}.waspy-ai-input:focus{border-color:rgba(212,168,48,.4)}.waspy-ai-input::placeholder{color:rgba(200,195,185,.3)}.waspy-ai-btn{align-self:flex-end;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:4px;border:1px solid rgba(212,168,48,.3);background:rgba(212,168,48,.1);color:#d4a830;cursor:pointer;transition:all .15s}.waspy-ai-btn:hover{background:rgba(212,168,48,.2);border-color:rgba(212,168,48,.5)}.waspy-ai-btn:disabled{opacity:.3;cursor:not-allowed}.waspy-ai-response{font-size:13px;color:rgba(220,215,205,.75);line-height:1.55;padding:8px 12px;background:rgba(212,168,48,.06);border-radius:6px;border-left:2px solid rgba(212,168,48,.3)}
+@media(max-width:620px){.scr{padding:12px 14px 10px}.choice-grid{grid-template-columns:1fr}.habit-grid{grid-template-columns:1fr}.persona-row{flex-direction:column}.persona::before{display:none}.waspy-callout{flex-direction:column;align-items:center;text-align:center}.waspy-callout .waspy-char{width:80px}}
 </style>
 </head>
 <body>
@@ -469,6 +471,205 @@ req.user = {
 </div>
 
 </div>
+
+<div id="waspy-sprites" style="display:none">
+<div id="ws-idle"><svg viewBox="20 -8 160 175" width="100" height="110" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="g1_idle" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f7d94e"/><stop offset="100%" stop-color="#d4a020"/></linearGradient></defs>
+    <g class="bob">
+      <ellipse class="wl" cx="32" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <ellipse class="wr" cx="168" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <g class="al"><path d="M78,18 Q68,-2 58,-8" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="57" cy="-9" r="3" fill="#f7d94e"/></g>
+      <g class="ar"><path d="M122,18 Q132,-2 142,-8" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="143" cy="-9" r="3" fill="#f7d94e"/></g>
+      <circle cx="100" cy="58" r="48" fill="url(#g1_idle)"/>
+      <path d="M52,45 Q100,37 148,45 L148,67 Q100,59 52,67 Z" fill="#1a1510" opacity=".88"/>
+      <g class="eyes" style="transform-origin:100px 54px">
+        <ellipse cx="78" cy="54" rx="13" ry="12" fill="white"/><ellipse cx="122" cy="54" rx="13" ry="12" fill="white"/>
+        <ellipse cx="80" cy="54" rx="7" ry="6.5" fill="#4a6a5a"/><ellipse cx="120" cy="54" rx="7" ry="6.5" fill="#4a6a5a"/>
+        <ellipse cx="80" cy="54" rx="3.5" ry="3.5" fill="#1a1510"/><ellipse cx="120" cy="54" rx="3.5" ry="3.5" fill="#1a1510"/>
+        <circle cx="77" cy="51" r="2.5" fill="white"/><circle cx="117" cy="51" r="2.5" fill="white"/>
+      </g>
+      <ellipse cx="78" cy="54" rx="16" ry="13" fill="none" stroke="rgba(180,175,165,.6)" stroke-width="1.1"/><ellipse cx="122" cy="54" rx="16" ry="13" fill="none" stroke="rgba(180,175,165,.6)" stroke-width="1.1"/>
+      <path d="M94,54 Q100,49 106,54" fill="none" stroke="rgba(180,175,165,.5)" stroke-width=".9"/>
+      <path d="M88,80 Q100,88 112,80" fill="none" stroke="#1a1510" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="100" cy="126" rx="24" ry="18" fill="#2a2a2e"/>
+      <text x="100" y="130" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="rgba(247,217,78,.4)">&lt;/&gt;</text>
+      <ellipse cx="84" cy="144" rx="6" ry="3.5" fill="url(#g1_idle)" opacity=".6"/><ellipse cx="116" cy="144" rx="6" ry="3.5" fill="url(#g1_idle)" opacity=".6"/>
+    </g>
+  </svg></div>
+<div id="ws-review"><svg viewBox="20 -8 160 175" width="100" height="110" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="g2_review" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f7d94e"/><stop offset="100%" stop-color="#d4a020"/></linearGradient>
+    <linearGradient id="b2_review" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2c3654"/><stop offset="100%" stop-color="#1e2840"/></linearGradient></defs>
+    <g class="bob">
+      <ellipse class="wl" cx="32" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <ellipse class="wr" cx="168" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <g class="al"><path d="M78,18 Q68,-2 58,-8" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="57" cy="-9" r="3" fill="#f7d94e"/></g>
+      <g class="ar"><path d="M122,18 Q132,-2 142,-8" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="143" cy="-9" r="3" fill="#f7d94e"/></g>
+      <circle cx="100" cy="58" r="48" fill="url(#g2_review)"/>
+      <path d="M52,45 Q100,37 148,45 L148,67 Q100,59 52,67 Z" fill="#1a1510" opacity=".88"/>
+      <g class="eyes" style="transform-origin:100px 55px">
+        <ellipse cx="78" cy="55" rx="13" ry="8" fill="white"/><ellipse cx="122" cy="55" rx="13" ry="8" fill="white"/>
+        <ellipse cx="80" cy="54" rx="7" ry="5" fill="#4a6a5a"/><ellipse cx="120" cy="54" rx="7" ry="5" fill="#4a6a5a"/>
+        <ellipse cx="80" cy="54" rx="3.5" ry="3" fill="#1a1510"/><ellipse cx="120" cy="54" rx="3.5" ry="3" fill="#1a1510"/>
+        <circle cx="77" cy="52" r="2" fill="white"/><circle cx="117" cy="52" r="2" fill="white"/>
+      </g>
+      <rect x="62" y="46" width="24" height="17" rx="4" fill="rgba(140,180,255,.08)" stroke="#8cb4ff" stroke-width="2.2"/>
+      <rect x="114" y="46" width="24" height="17" rx="4" fill="rgba(140,180,255,.08)" stroke="#8cb4ff" stroke-width="2.2"/>
+      <path d="M86,55 Q100,49 114,55" fill="none" stroke="#8cb4ff" stroke-width="1.8"/>
+      <line x1="62" y1="55" x2="52" y2="52" stroke="#8cb4ff" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="138" y1="55" x2="148" y2="52" stroke="#8cb4ff" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M92,82 L108,82" fill="none" stroke="#1a1510" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="100" cy="126" rx="24" ry="18" fill="url(#b2_review)"/>
+      <path d="M88,112 L82,109 Q78,113 80,120 L88,122" fill="#323e5a"/><path d="M112,112 L118,109 Q122,113 120,120 L112,122" fill="#323e5a"/>
+      <polygon points="88,112 100,126 112,112" fill="#f0ede8"/>
+      <polygon points="98,115 100,116 102,115 101,130 100,131 99,130" fill="#6a2a3a"/>
+      <circle cx="100" cy="137" r="1.5" fill="#3a4660"/>
+      <ellipse cx="84" cy="144" rx="6" ry="3.5" fill="url(#g2_review)" opacity=".6"/><ellipse cx="116" cy="144" rx="6" ry="3.5" fill="url(#g2_review)" opacity=".6"/>
+    </g>
+  </svg></div>
+<div id="ws-vuln"><svg viewBox="20 -8 160 175" width="100" height="110" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="g3_vuln" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f7d94e"/><stop offset="100%" stop-color="#d4a020"/></linearGradient>
+    <linearGradient id="b3_vuln" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2c3654"/><stop offset="100%" stop-color="#1e2840"/></linearGradient>
+    <filter id="gl_vuln"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <g class="bob">
+      <ellipse class="wl" cx="32" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <ellipse class="wr" cx="168" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <path d="M82,18 Q80,-2 78,-8" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="78" cy="-9" r="3" fill="#f7d94e"/>
+      <path d="M118,18 Q120,-2 122,-8" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="122" cy="-9" r="3" fill="#f7d94e"/>
+      <circle cx="100" cy="58" r="48" fill="url(#g3_vuln)"/>
+      <path d="M52,45 Q100,37 148,45 L148,67 Q100,59 52,67 Z" fill="#1a1510" opacity=".88"/>
+      <!-- No blink — frozen wide -->
+      <ellipse cx="78" cy="54" rx="14" ry="14" fill="white"/><ellipse cx="122" cy="54" rx="14" ry="14" fill="white"/>
+      <ellipse cx="80" cy="53" rx="6" ry="6" fill="#4a6a5a"/><ellipse cx="120" cy="53" rx="6" ry="6" fill="#4a6a5a"/>
+      <ellipse cx="80" cy="53" rx="3" ry="3" fill="#1a1510"/><ellipse cx="120" cy="53" rx="3" ry="3" fill="#1a1510"/>
+      <circle cx="77" cy="50" r="2.5" fill="white"/><circle cx="117" cy="50" r="2.5" fill="white"/>
+      <ellipse cx="78" cy="53" rx="16" ry="14" fill="none" stroke="rgba(180,175,165,.6)" stroke-width="1.1" transform="rotate(-3 78 53)"/>
+      <ellipse cx="122" cy="54" rx="16" ry="14" fill="none" stroke="rgba(180,175,165,.6)" stroke-width="1.1" transform="rotate(2 122 54)"/>
+      <ellipse cx="100" cy="84" rx="5" ry="5" fill="#1a1510"/>
+      <circle cx="152" cy="18" r="12" fill="#e53e3e" filter="url(#gl_vuln)"/>
+      <text x="152" y="23" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" fill="white">!</text>
+      <ellipse cx="100" cy="126" rx="24" ry="18" fill="url(#b3_vuln)"/>
+      <path d="M88,112 L82,109 Q78,113 80,120 L88,122" fill="#323e5a"/><path d="M112,112 L118,109 Q122,113 120,120 L112,122" fill="#323e5a"/>
+      <polygon points="88,112 100,126 112,112" fill="#f0ede8"/>
+      <polygon points="98,115 100,116 102,115 101,130 100,131 99,130" fill="#6a2a3a"/>
+      <ellipse cx="84" cy="144" rx="6" ry="3.5" fill="url(#g3_vuln)" opacity=".6"/><ellipse cx="116" cy="144" rx="6" ry="3.5" fill="url(#g3_vuln)" opacity=".6"/>
+    </g>
+  </svg></div>
+<div id="ws-ship"><svg viewBox="20 -16 160 183" width="100" height="110" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="g4_ship" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f7d94e"/><stop offset="100%" stop-color="#d4a020"/></linearGradient>
+    <filter id="gl4_ship"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <g class="bob">
+      <ellipse class="wl" cx="32" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <ellipse class="wr" cx="168" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <g class="al"><path d="M78,18 Q66,-4 56,-10" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="55" cy="-11" r="3" fill="#f7d94e"/></g>
+      <g class="ar"><path d="M122,18 Q134,-4 144,-10" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="145" cy="-11" r="3" fill="#f7d94e"/></g>
+      <circle cx="100" cy="58" r="48" fill="url(#g4_ship)"/>
+      <path d="M52,45 Q100,37 148,45 L148,67 Q100,59 52,67 Z" fill="#1a1510" opacity=".88"/>
+      <path d="M65,54 Q78,45 91,54" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M109,54 Q122,45 135,54" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+      <ellipse cx="78" cy="52" rx="16" ry="11" fill="none" stroke="rgba(180,175,165,.4)" stroke-width="1.1"/>
+      <ellipse cx="122" cy="52" rx="16" ry="11" fill="none" stroke="rgba(180,175,165,.4)" stroke-width="1.1"/>
+      <path d="M82,80 Q100,94 118,80" fill="none" stroke="#1a1510" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="152" cy="18" r="12" fill="#38a169" filter="url(#gl4_ship)"/>
+      <polyline points="145,18 150,23 159,13" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Party hat -->
+      <polygon points="122,14 136,-14 128,10" fill="#e53e3e"/><polygon points="122,14 136,-14 130,12" fill="#c43030"/>
+      <circle cx="136" cy="-16" r="3" fill="#f7d94e"/>
+      <!-- Confetti -->
+      <circle class="confetti" cx="48" cy="28" r="2" fill="#e53e3e" opacity=".6"/><circle class="confetti" cx="155" cy="40" r="1.5" fill="#8cb4ff" opacity=".5" style="animation-delay:.3s"/>
+      <circle class="confetti" cx="42" cy="52" r="1.5" fill="#38a169" opacity=".5" style="animation-delay:.6s"/><circle class="confetti" cx="160" cy="62" r="2" fill="#f7d94e" opacity=".5" style="animation-delay:.9s"/>
+      <ellipse cx="100" cy="126" rx="24" ry="18" fill="#2a2a2e"/>
+      <text x="100" y="130" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="rgba(247,217,78,.4)">&lt;/&gt;</text>
+      <ellipse cx="84" cy="144" rx="6" ry="3.5" fill="url(#g4_ship)" opacity=".6"/><ellipse cx="116" cy="144" rx="6" ry="3.5" fill="url(#g4_ship)" opacity=".6"/>
+    </g>
+  </svg></div>
+<div id="ws-suspicious"><svg viewBox="20 -8 160 175" width="100" height="110" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="g5_suspicious" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f7d94e"/><stop offset="100%" stop-color="#d4a020"/></linearGradient></defs>
+    <g class="bob">
+      <ellipse class="wl" cx="32" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <ellipse class="wr" cx="168" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <g class="al"><path d="M78,18 Q68,-2 58,-8" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="57" cy="-9" r="3" fill="#f7d94e"/></g>
+      <g class="ar"><path d="M122,18 Q128,-2 132,-8" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="133" cy="-9" r="2.5" fill="#f7d94e"/></g>
+      <circle cx="100" cy="58" r="48" fill="url(#g5_suspicious)"/>
+      <path d="M52,45 Q100,37 148,45 L148,67 Q100,59 52,67 Z" fill="#1a1510" opacity=".88"/>
+      <g class="eyes" style="transform-origin:100px 54px">
+        <ellipse cx="78" cy="54" rx="13" ry="12" fill="white"/><ellipse cx="122" cy="54" rx="13" ry="12" fill="white"/>
+        <ellipse cx="84" cy="54" rx="7" ry="6.5" fill="#4a6a5a"/><ellipse cx="126" cy="54" rx="7" ry="6.5" fill="#4a6a5a"/>
+        <ellipse cx="84" cy="54" rx="3.5" ry="3.5" fill="#1a1510"/><ellipse cx="126" cy="54" rx="3.5" ry="3.5" fill="#1a1510"/>
+        <circle cx="82" cy="51" r="2.5" fill="white"/><circle cx="124" cy="51" r="2.5" fill="white"/>
+      </g>
+      <ellipse cx="78" cy="57" rx="16" ry="13" fill="none" stroke="rgba(180,175,165,.6)" stroke-width="1.1"/>
+      <ellipse cx="122" cy="57" rx="16" ry="13" fill="none" stroke="rgba(180,175,165,.6)" stroke-width="1.1"/>
+      <path d="M94,57 Q100,52 106,57" fill="none" stroke="rgba(180,175,165,.5)" stroke-width=".9"/>
+      <path d="M110,38 Q122,32 138,36" fill="none" stroke="#1a1510" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M92,82 Q100,80 108,82" fill="none" stroke="#1a1510" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="100" cy="126" rx="24" ry="18" fill="#2a2a2e"/>
+      <text x="100" y="130" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="rgba(247,217,78,.4)">&lt;/&gt;</text>
+      <ellipse cx="84" cy="144" rx="6" ry="3.5" fill="url(#g5_suspicious)" opacity=".6"/><ellipse cx="116" cy="144" rx="6" ry="3.5" fill="url(#g5_suspicious)" opacity=".6"/>
+    </g>
+  </svg></div>
+<div id="ws-teaching"><svg viewBox="10 -8 180 175" width="100" height="110" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="g6_teaching" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f7d94e"/><stop offset="100%" stop-color="#d4a020"/></linearGradient>
+    <linearGradient id="b6_teaching" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2c3654"/><stop offset="100%" stop-color="#1e2840"/></linearGradient></defs>
+    <g class="bob">
+      <ellipse class="wl" cx="32" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <ellipse class="wr" cx="168" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <g class="al"><path d="M78,18 Q68,-2 58,-8" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="57" cy="-9" r="3" fill="#f7d94e"/></g>
+      <g class="ar"><path d="M122,18 Q132,-2 142,-8" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="143" cy="-9" r="3" fill="#f7d94e"/></g>
+      <circle cx="100" cy="58" r="48" fill="url(#g6_teaching)"/>
+      <path d="M52,45 Q100,37 148,45 L148,67 Q100,59 52,67 Z" fill="#1a1510" opacity=".88"/>
+      <g class="eyes" style="transform-origin:100px 54px">
+        <ellipse cx="78" cy="54" rx="13" ry="12" fill="white"/><ellipse cx="122" cy="54" rx="13" ry="12" fill="white"/>
+        <ellipse cx="80" cy="54" rx="7" ry="6.5" fill="#4a6a5a"/><ellipse cx="120" cy="54" rx="7" ry="6.5" fill="#4a6a5a"/>
+        <ellipse cx="80" cy="54" rx="3.5" ry="3.5" fill="#1a1510"/><ellipse cx="120" cy="54" rx="3.5" ry="3.5" fill="#1a1510"/>
+        <circle cx="77" cy="51" r="2.5" fill="white"/><circle cx="117" cy="51" r="2.5" fill="white"/>
+      </g>
+      <rect x="62" y="46" width="24" height="17" rx="4" fill="rgba(140,180,255,.08)" stroke="#8cb4ff" stroke-width="2.2"/>
+      <rect x="114" y="46" width="24" height="17" rx="4" fill="rgba(140,180,255,.08)" stroke="#8cb4ff" stroke-width="2.2"/>
+      <path d="M86,55 Q100,49 114,55" fill="none" stroke="#8cb4ff" stroke-width="1.8"/>
+      <line x1="62" y1="55" x2="52" y2="52" stroke="#8cb4ff" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="138" y1="55" x2="148" y2="52" stroke="#8cb4ff" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M86,80 Q100,90 114,80" fill="none" stroke="#1a1510" stroke-width="2.2" stroke-linecap="round"/>
+      <ellipse cx="100" cy="126" rx="24" ry="18" fill="url(#b6_teaching)"/>
+      <path d="M88,112 L82,109 Q78,113 80,120 L88,122" fill="#323e5a"/><path d="M112,112 L118,109 Q122,113 120,120 L112,122" fill="#323e5a"/>
+      <polygon points="88,112 100,126 112,112" fill="#f0ede8"/>
+      <polygon points="98,115 100,116 102,115 101,130 100,131 99,130" fill="#6a2a3a"/>
+      <circle cx="100" cy="137" r="1.5" fill="#3a4660"/>
+      <path d="M148,120 Q162,112 170,98" fill="none" stroke="#2c3654" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="170" cy="96" r="4" fill="url(#g6_teaching)"/>
+      <line x1="170" y1="96" x2="174" y2="84" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="84" cy="144" rx="6" ry="3.5" fill="url(#g6_teaching)" opacity=".6"/><ellipse cx="116" cy="144" rx="6" ry="3.5" fill="url(#g6_teaching)" opacity=".6"/>
+    </g>
+  </svg></div>
+<div id="ws-capstone"><svg viewBox="20 -18 160 185" width="100" height="110" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="g8_capstone" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f7d94e"/><stop offset="100%" stop-color="#d4a020"/></linearGradient></defs>
+    <g class="bob">
+      <ellipse class="wl" cx="32" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <ellipse class="wr" cx="168" cy="82" rx="14" ry="8" fill="rgba(247,217,78,.1)" stroke="rgba(247,217,78,.22)" stroke-width=".5"/>
+      <path d="M84,18 Q80,4 78,-4" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="77" cy="-5" r="3" fill="#f7d94e"/>
+      <path d="M116,18 Q120,4 122,-4" fill="none" stroke="#d4a830" stroke-width="2" stroke-linecap="round"/><circle cx="123" cy="-5" r="3" fill="#f7d94e"/>
+      <circle cx="100" cy="58" r="48" fill="url(#g8_capstone)"/>
+      <path d="M52,45 Q100,37 148,45 L148,67 Q100,59 52,67 Z" fill="#1a1510" opacity=".88"/>
+      <path d="M65,54 Q78,45 91,54" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M109,54 Q122,45 135,54" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+      <ellipse cx="78" cy="52" rx="16" ry="11" fill="none" stroke="rgba(180,175,165,.4)" stroke-width="1.1"/>
+      <ellipse cx="122" cy="52" rx="16" ry="11" fill="none" stroke="rgba(180,175,165,.4)" stroke-width="1.1"/>
+      <path d="M80,80 Q100,94 120,80" fill="none" stroke="#1a1510" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Graduation cap -->
+      <polygon points="60,18 100,6 140,18 100,26" fill="#1a1510"/>
+      <rect x="90" y="20" width="20" height="5" fill="#1a1510"/>
+      <line x1="138" y1="18" x2="150" y2="30" stroke="#d4a830" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="150" cy="32" r="2.5" fill="#d4a830"/>
+      <!-- Sparkles -->
+      <circle class="sparkle" cx="44" cy="36" r="2" fill="#f7d94e"/><circle class="sparkle" cx="158" cy="48" r="1.5" fill="#8cb4ff" style="animation-delay:.4s"/>
+      <circle class="sparkle" cx="38" cy="68" r="1.5" fill="#38a169" style="animation-delay:.8s"/>
+      <!-- Academic gown (same body size as other states) -->
+      <ellipse cx="100" cy="126" rx="24" ry="18" fill="#1a1510"/>
+      <polygon points="90,114 100,126 110,114" fill="#2a2a2e"/>
+      <ellipse cx="84" cy="144" rx="6" ry="3.5" fill="url(#g8_capstone)" opacity=".6"/><ellipse cx="116" cy="144" rx="6" ry="3.5" fill="url(#g8_capstone)" opacity=".6"/>
+    </g>
+  </svg></div>
+</div>
+
 <script>
 /* ═══ SCENARIO DATA ═══ */
 const SCENARIOS = [null,
@@ -498,13 +699,14 @@ function pick(scenario, choice) {
   rv.className = 'reveal-box on ' + (isRight ? 'fb-right' : 'fb-wrong');
   rv.innerHTML = isRight ? s.rightFb : s.wrongFb;
   document.getElementById('nb'+scenario).disabled = false;
+  updateWaspyAfterPick(scenario, isRight);
 }
 
 /* ═══ NAV ═══ */
 let cur=0;const TOTAL=18;const visited={0:true};
 const SCREEN_LABELS=['Cover','Rules','S1: Scenario','S1: Choice','S1: Tradeoff','S2: Scenario','S2: Choice','S2: Tradeoff','S3: Scenario','S3: Choice','S3: Tradeoff','S4: Scenario','S4: Choice','S4: Tradeoff','S5: Scenario','S5: Choice','S5: Tradeoff','10 Habits','Complete'];
 function buildStrip(){const strip=document.getElementById('navstrip');if(!strip)return;const sections=[{screens:[0],type:'pip-cover'},'sep',{screens:[1],type:''},'sep',{screens:[2,3,4],type:''},{screens:[5,6,7],type:''},{screens:[8,9,10],type:''},{screens:[11,12,13],type:''},{screens:[14,15,16],type:''},'sep',{screens:[17,18],type:'pip-wide'}];strip.innerHTML='';sections.forEach(sec=>{if(sec==='sep'){const s=document.createElement('div');s.className='ns-sep';strip.appendChild(s);return;}sec.screens.forEach(n=>{const pip=document.createElement('button');pip.className='ns-pip '+sec.type;if(n===cur)pip.classList.add('active');else if(visited[n])pip.classList.add('visited');pip.title=SCREEN_LABELS[n]||'';pip.onclick=()=>go(n);strip.appendChild(pip);});});}
-function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');cur=n;visited[n]=true;const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');document.getElementById('wrap').scrollTop=0;document.getElementById('pf').style.width=(n/TOTAL*100)+'%';document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;if(n===18)renderFinal();buildStrip();}
+function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');cur=n;visited[n]=true;const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');document.getElementById('wrap').scrollTop=0;document.getElementById('pf').style.width=(n/TOTAL*100)+'%';document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;if(n===18)renderFinal();buildStrip();setTimeout(()=>renderWaspy(n),200);}
 
 function renderFinal(){
   document.getElementById('finalScore').textContent=score+' / 5';
@@ -526,6 +728,102 @@ function finish(){window.parent.postMessage({type:'course-next'},'*');}
 function toggleFS(){if(!document.fullscreenElement&&!document.webkitFullscreenElement){const el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen).call(el);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}}
 document.addEventListener('fullscreenchange',updateFSIcon);document.addEventListener('webkitfullscreenchange',updateFSIcon);
 function updateFSIcon(){const isFS=!!(document.fullscreenElement||document.webkitFullscreenElement);document.getElementById('fsIco').style.display=isFS?'none':'';document.getElementById('fsIcoExit').style.display=isFS?'':'none';}
+
+/* ═══ WASPY BUDDY ═══ */
+const WASPY_MAP = {
+  0: {state:'idle', line:'Five scenarios. Two categories each. One budget.'},
+  1: {state:'teaching', line:'Both options are real fixes. The question is leverage — which one removes the most risk?'},
+  2: {state:'review', line:'Parameterized query — good. But check that catch block.'},
+  3: {state:'suspicious', line:'Both are real fixes. Which one closes the active risk?', ai:true},
+  5: {state:'review', line:'Self-hosted runner on a shared VLAN. Read that pipeline config again.'},
+  6: {state:'suspicious', line:'One vector vs the whole attack surface. Think scope.', ai:true},
+  8: {state:'review', line:'Six digits, no rate limit, 15-minute window. Do the math.'},
+  9: {state:'suspicious', line:'Two auth paths, one budget. Where\'s the traffic volume?', ai:true},
+  11:{state:'review', line:'curl with default creds returns connection strings. That\'s not a pentest.'},
+  12:{state:'suspicious', line:'Detection vs prevention. Which one stops the breach that\'s already possible?', ai:true},
+  14:{state:'review', line:'atob() without verify(). That payload is entirely user-controlled.'},
+  15:{state:'suspicious', line:'The vulnerability or the blast radius. Not the same fix.', ai:true},
+  17:{state:'teaching', line:'One habit per category. CWE-mapped. Print this page.'},
+  18:{state:'capstone', line:'Ten categories. Ten habits. Now go review some code.'}
+};
+
+function renderWaspy(n) {
+  document.querySelectorAll('.waspy-callout').forEach(el => el.remove());
+  const cfg = WASPY_MAP[n];
+  if (!cfg) return;
+  const scr = document.getElementById('s'+n);
+  if (!scr) return;
+  const nav = scr.querySelector('.nav');
+  if (!nav) return;
+  const callout = document.createElement('div');
+  callout.className = 'waspy-callout';
+  callout.id = 'waspy-active';
+  const spriteEl = document.getElementById('ws-'+cfg.state);
+  const charDiv = document.createElement('div');
+  charDiv.className = 'waspy-char';
+  charDiv.innerHTML = spriteEl ? spriteEl.innerHTML : '';
+  const bubble = document.createElement('div');
+  bubble.className = 'waspy-bubble';
+  bubble.innerHTML = '<div class="waspy-line">'+cfg.line+'</div>';
+  callout.appendChild(charDiv);
+  callout.appendChild(bubble);
+  scr.insertBefore(callout, nav);
+  requestAnimationFrame(() => { requestAnimationFrame(() => { callout.classList.add('on'); }); });
+}
+
+function updateWaspyAfterPick(scenario, isRight) {
+  const callout = document.getElementById('waspy-active');
+  if (!callout) return;
+  const charDiv = callout.querySelector('.waspy-char');
+  const bubble = callout.querySelector('.waspy-bubble');
+  const newState = isRight ? 'ship' : 'vuln';
+  const spriteEl = document.getElementById('ws-'+newState);
+  if (spriteEl && charDiv) charDiv.innerHTML = spriteEl.innerHTML;
+  const newLine = isRight
+    ? 'Good call. The higher-leverage fix first.'
+    : 'Defensible — but check the tradeoff for why the panel went the other way.';
+  let html = '<div class="waspy-line">'+newLine+'</div>';
+  html += '<div class="waspy-ai-box" id="ai-box-'+scenario+'">'
+    + '<textarea class="waspy-ai-input" id="ai-input-'+scenario+'" rows="2" placeholder="Why did you choose this fix? One sentence. (optional)"></textarea>'
+    + '<button class="waspy-ai-btn" onclick="checkReasoning('+scenario+')">Check my reasoning</button>'
+    + '<div class="waspy-ai-response" id="ai-resp-'+scenario+'" style="display:none"></div>'
+    + '</div>';
+  if (bubble) bubble.innerHTML = html;
+}
+
+async function checkReasoning(scenario) {
+  const input = document.getElementById('ai-input-'+scenario);
+  const resp = document.getElementById('ai-resp-'+scenario);
+  const btn = input.parentElement.querySelector('.waspy-ai-btn');
+  if (!input || !input.value.trim()) return;
+  btn.disabled = true; btn.textContent = 'CHECKING...';
+  resp.style.display = 'block'; resp.textContent = 'Thinking...';
+  const ctx = [null,
+    'API with parameterized SQL but verbose error messages leaking schema. Correct higher-leverage fix: fix error responses (A10 info disclosure), not add input validation (A05 defense-in-depth). Key reasoning: parameterized query already blocks injection; error messages are actively leaking right now.',
+    'CI/CD with unpinned deps (A03) on build server sharing network with dev laptops (A08). Correct: isolate build server (A08). Key reasoning: isolation removes entire lateral-movement surface; lockfile pinning blocks only one supply-chain vector.',
+    'Password reset with brute-forceable 6-digit code no rate limit (A06) and login with no MFA (A07). Correct: MFA on login (A07). Key reasoning: login is the primary auth path with highest traffic volume; reset flow is secondary.',
+    'Grafana admin panel with admin:admin default credentials (A02) and no centralized security logging (A09). Correct: change credentials (A02). Key reasoning: default creds are exploitable right now with zero skill; logging detects but doesn\'t prevent.',
+    'Microservice trusting JWT claims without signature verification (A01) running as root (A02). Correct: validate JWT signature (A01). Key reasoning: no signature = no access control at all; root = blast radius multiplier, not the vulnerability itself.'
+  ];
+  const choice = picked[scenario]; const s = SCENARIOS[scenario]; const wasRight = choice === s.correct;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:150, messages:[{role:'user',
+        content: ctx[scenario]+'\nLearner chose: '+(wasRight?'correct option':'incorrect option')
+          +'\nTheir reasoning: "'+input.value.trim()
+          +'"\nGive 1-2 sentences of feedback on their REASONING specifically. What did they understand or miss about the tradeoff? Be direct. No preamble, no "Great job".'
+      }]})
+    });
+    const data = await res.json();
+    resp.textContent = data.content?.map(c=>c.text||'').join('') || 'Could not analyze reasoning.';
+  } catch(e) {
+    resp.textContent = wasRight
+      ? 'Your choice matches the panel\'s assessment. The tradeoff screen explains the full reasoning.'
+      : 'The panel prioritized differently. See the tradeoff screen for why leverage matters here.';
+  }
+  btn.textContent = 'CHECKED ✓';
+}
 
 buildStrip();
 </script>
