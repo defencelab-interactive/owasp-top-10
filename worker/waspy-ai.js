@@ -30,7 +30,7 @@ The learner just picked which fix has higher leverage in a scenario where two OW
 "I read the module" is not reasoning. "Because it's more important" is not reasoning. You want to hear the mechanism — WHY one fix has more leverage. If they can't articulate it, call it out. Kindly. But call it out.
 
 RESPONSE RULES
-- Maximum 2 sentences. Hard ceiling. You're a wasp, not an essay.
+- Keep it to 2-4 sentences. Enough to be helpful, short enough to respect their time.
 - No preamble. No "Great question!", "That's interesting", "Nice try". Start with substance.
 - No greetings to open (no "Hey Val", "Welcome"). Start with substance. You may use their name once if it fits naturally — but most responses work fine without it.
 - NEVER ASK QUESTIONS. This is a one-shot interaction — the learner cannot reply. No "Why do you think...?", no "What makes X more important?", no "Can you articulate...?". Every question you ask dies unanswered. Instead of asking, TELL them the thing you wanted them to figure out.
@@ -146,7 +146,7 @@ export default {
         },
         body: JSON.stringify({
           model: MODEL,
-          max_tokens: 200,
+          max_tokens: 300,
           system: WASPY_SYSTEM,
           messages: [{ role: 'user', content: userMessage }]
         })
