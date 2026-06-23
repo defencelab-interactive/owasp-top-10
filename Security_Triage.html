@@ -89,8 +89,9 @@ h2{font-size:clamp(20px,2.8vw,26px);font-weight:700;color:var(--ink)}h3{font-fam
     <textarea id="waspy-intro-input" class="waspy-ai-input" rows="2" style="width:100%;margin-bottom:8px" placeholder="e.g. I'm Alex, DevOps at a fintech. Auth and crypto stuff confuses me."></textarea>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="waspy-ai-btn" onclick="saveIntro()">Save</button>
-      <span id="waspy-intro-saved" style="font-size:12px;color:rgba(212,168,48,.6);display:none">✓ Waspy will remember this</span>
+      <span id="waspy-intro-saved" style="font-size:12px;color:rgba(212,168,48,.6);display:none">✓ Remembered</span>
     </div>
+    <div id="waspy-intro-resp" style="display:none;margin-top:10px;font-size:14px;color:rgba(220,215,205,.85);line-height:1.55;font-style:italic;padding:10px 14px;background:rgba(212,168,48,.06);border-radius:6px;border-left:2px solid rgba(212,168,48,.3)"></div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(212,168,48,.08)">
       <div style="font-family:var(--mono);font-size:10px;color:rgba(200,195,185,.4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Two ways to use Waspy on each scenario:</div>
       <p style="font-size:13px;color:rgba(220,215,205,.6);line-height:1.55;margin:0"><strong style="color:#d4a830">🛡 Explain this tradeoff</strong> — Waspy teaches you the core insight. No writing needed.<br><strong style="color:#d4a830">Check my reasoning →</strong> — Write why you chose your fix. Waspy evaluates your thinking.</p>
@@ -941,11 +942,27 @@ const picked = [null,null,null,null,null,null,null,null,null,null,null];
 
 function saveIntro() {
   const input = document.getElementById('waspy-intro-input');
-  if (input && input.value.trim()) {
-    learnerContext = input.value.trim().slice(0, 300);
-    document.getElementById('waspy-intro-saved').style.display = 'inline';
-    input.disabled = true;
-  }
+  if (!input || !input.value.trim()) return;
+  learnerContext = input.value.trim().slice(0, 300);
+  input.disabled = true;
+  const saved = document.getElementById('waspy-intro-saved');
+  const respDiv = document.getElementById('waspy-intro-resp');
+  saved.style.display = 'inline';
+  if (respDiv) { respDiv.style.display = 'block'; respDiv.textContent = '...'; }
+  fetch('https://waspy-ai.vmorgun2912.workers.dev', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      scenario_context: 'Learner is introducing themselves before starting the Security Triage module (10 OWASP scenarios).',
+      learner_choice: 'n/a',
+      learner_reasoning: learnerContext,
+      mode: 'intro',
+      learner_context: learnerContext
+    })
+  }).then(r=>r.json()).then(data => {
+    if (respDiv) respDiv.textContent = data.feedback || 'Good to meet you. Let\'s get started.';
+  }).catch(() => {
+    if (respDiv) respDiv.textContent = 'Good to meet you. Ten tradeoffs ahead — let\'s see how you prioritize.';
+  });
 }
 
 function pick(scenario, choice) {
