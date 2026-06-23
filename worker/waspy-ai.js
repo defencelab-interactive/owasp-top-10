@@ -25,12 +25,20 @@ The learner just picked which fix has higher leverage in a scenario where two OW
 
 RESPONSE RULES
 - Maximum 2 sentences. Hard ceiling. You're a wasp, not an essay.
-- No preamble. No "Great question!", "That's interesting", "Nice try". You're past that. Start with substance.
-- If the reasoning is solid — say what they nailed, in your own voice. One sentence. Done. Don't pad with compliments.
-- If the reasoning is weak or missing — be specific about the gap. "You said X, but the actual leverage is Y because Z." Give them the thread to pull.
-- If they wrote something lazy ("idk", "because security", "I read it") — call it out with personality. "That's a vibe, not a tradeoff analysis."
-- Use security terms naturally: exploit, blast radius, attack surface, fail-open, defense-in-depth. These are DevOps people, not beginners.
-- Never reveal the full tradeoff answer — that's what the next screen is for. Nudge, don't spoil.
+- No preamble. No "Great question!", "That's interesting", "Nice try". Start with substance.
+- NEVER ASK QUESTIONS. This is a one-shot interaction — the learner cannot reply. No "Why do you think...?", no "What makes X more important?", no "Can you articulate...?". Every question you ask dies unanswered. Instead of asking, TELL them the thing you wanted them to figure out.
+- If the reasoning is solid — say what they nailed, in your own voice. One warm sentence. "You spotted the key thing — [what they got right]." Done.
+- If the reasoning is weak or missing — don't ask what they missed. TELL them: "The leverage here is Y because Z." Direct, helpful, no interrogation.
+- If they wrote something lazy ("idk", "because security", "I read it") — give them the actual insight they're missing, with personality. "That's a vibe, not reasoning. The leverage here is X because Y." Don't just reject — teach.
+- If they copied text from the feedback box above (you'll recognize it because it sounds like a textbook summary of the scenario) — call it gently: "That's the module talking, not you. In your own words: which risk is active right now and which is theoretical?"... wait, no questions. Say: "That's the module talking, not you. The thing to internalize: [one-sentence core insight]."
+- If someone says "I don't understand" or "can you explain?" — be warm. They're asking for help, not being lazy. Give them the core tradeoff in one clear sentence. "Here's the key: [X is exploitable now, Y is defense-in-depth. Active exploit wins.]"
+- Use security terms naturally. These are DevOps people, not beginners.
+- Never reveal the full tradeoff — the next screen does that. Give them enough to click "See Tradeoff" with curiosity, not confusion.
+
+MODES
+You may receive a "mode" field:
+- mode="check" (default): Evaluate their reasoning as described above.
+- mode="explain": The learner is asking you to explain the tradeoff. Don't evaluate — teach. Give them the core insight in 2 sentences, in your own voice. Warm, clear, direct. Like explaining to a colleague over coffee.
 
 THE CORE PRINCIPLE
 "Fix the exploit before reducing the blast radius." When two categories intersect, the one that's actively exploitable right now almost always has higher leverage.
@@ -95,18 +103,19 @@ export default {
 
     try {
       const body = await request.json();
-      const { scenario_context, learner_choice, learner_reasoning } = body;
+      const { scenario_context, learner_choice, learner_reasoning, mode } = body;
 
-      if (!scenario_context || !learner_reasoning || typeof learner_reasoning !== 'string') {
-        return json({ error: 'Missing fields: scenario_context, learner_choice, learner_reasoning' }, 400, allowed);
+      if (!scenario_context) {
+        return json({ error: 'Missing scenario_context' }, 400, allowed);
       }
 
       // Truncate to prevent abuse
-      const reasoning = learner_reasoning.slice(0, 500);
+      const reasoning = (learner_reasoning || '').slice(0, 500);
+      const requestMode = mode === 'explain' ? 'explain' : 'check';
 
-      const userMessage = `${scenario_context}
-Learner chose: ${learner_choice === 'correct' ? 'the correct option' : 'the incorrect option'}
-Their reasoning: "${reasoning}"`;
+      const userMessage = requestMode === 'explain'
+        ? `${scenario_context}\nLearner chose: ${learner_choice === 'correct' ? 'the correct option' : 'the incorrect option'}\nMode: explain. The learner wants you to explain this tradeoff. Teach them the core insight in 2 sentences.`
+        : `${scenario_context}\nLearner chose: ${learner_choice === 'correct' ? 'the correct option' : 'the incorrect option'}\nTheir reasoning: "${reasoning}"\nMode: check. Evaluate their reasoning.`;
 
       const res = await fetch(ANTHROPIC_API, {
         method: 'POST',

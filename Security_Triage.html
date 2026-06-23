@@ -1047,18 +1047,28 @@ function updateWaspyAfterPick(scenario, isRight) {
   let html = '<div class="waspy-line">'+newLine+'</div>';
   html += '<div class="waspy-ai-box" id="ai-box-'+scenario+'">'
     + '<textarea class="waspy-ai-input" id="ai-input-'+scenario+'" rows="2" placeholder="Why did you choose this fix? One sentence. (optional)"></textarea>'
-    + '<button class="waspy-ai-btn" onclick="checkReasoning('+scenario+')">Check my reasoning</button>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end">'
+    + '<button class="waspy-ai-btn" style="opacity:.7;border-color:rgba(212,168,48,.15)" onclick="checkReasoning('+scenario+',\'explain\')">Explain this tradeoff</button>'
+    + '<button class="waspy-ai-btn" onclick="checkReasoning('+scenario+',\'check\')">Check my reasoning</button>'
+    + '</div>'
     + '<div class="waspy-ai-response" id="ai-resp-'+scenario+'" style="display:none"></div>'
     + '</div>';
   if (bubble) bubble.innerHTML = html;
 }
 
-async function checkReasoning(scenario) {
+async function checkReasoning(scenario, mode) {
+  mode = mode || 'check';
   const input = document.getElementById('ai-input-'+scenario);
   const resp = document.getElementById('ai-resp-'+scenario);
-  const btn = input.parentElement.querySelector('.waspy-ai-btn');
-  if (!input || !input.value.trim()) return;
-  btn.disabled = true; btn.textContent = 'CHECKING...';
+  const btns = document.getElementById('ai-box-'+scenario).querySelectorAll('.waspy-ai-btn');
+
+  if (mode === 'check' && (!input || !input.value.trim())) {
+    resp.style.display = 'block';
+    resp.textContent = 'Write your reasoning first — even one sentence.';
+    return;
+  }
+
+  btns.forEach(b => { b.disabled = true; });
   resp.style.display = 'block'; resp.textContent = 'Thinking...';
   const ctx = [null,
     'API with parameterized SQL but verbose error messages leaking schema. Correct higher-leverage fix: fix error responses (A10 info disclosure), not add input validation (A05 defense-in-depth). Key reasoning: parameterized query already blocks injection; error messages are actively leaking right now.',
@@ -1079,17 +1089,20 @@ async function checkReasoning(scenario) {
       body: JSON.stringify({
         scenario_context: ctx[scenario],
         learner_choice: wasRight ? 'correct' : 'incorrect',
-        learner_reasoning: input.value.trim()
+        learner_reasoning: mode === 'explain' ? '' : (input ? input.value.trim() : ''),
+        mode: mode
       })
     });
     const data = await res.json();
-    resp.textContent = data.feedback || data.error || 'Could not analyze reasoning.';
+    resp.textContent = data.feedback || data.error || 'Could not get a response.';
   } catch(e) {
-    resp.textContent = wasRight
-      ? 'Right fix, but I couldn\'t check your reasoning this time. See the tradeoff screen for the full breakdown.'
-      : 'Different fix than expected. See the tradeoff screen — it explains why leverage matters here.';
+    resp.textContent = mode === 'explain'
+      ? 'Couldn\'t connect. The tradeoff screen has the full breakdown.'
+      : wasRight
+        ? 'Right fix, but couldn\'t check reasoning. See the tradeoff screen.'
+        : 'Different fix than expected. See the tradeoff screen for the breakdown.';
   }
-  btn.textContent = 'CHECKED ✓';
+  btns.forEach(b => { b.textContent = '✓'; b.disabled = true; });
 }
 
 // Waspy interactive showcase on s2
