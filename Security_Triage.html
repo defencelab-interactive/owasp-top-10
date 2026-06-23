@@ -1073,16 +1073,16 @@ async function checkReasoning(scenario) {
   ];
   const choice = picked[scenario]; const s = SCENARIOS[scenario]; const wasRight = choice === s.correct;
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://waspy-ai.defencelab.workers.dev', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:150, messages:[{role:'user',
-        content: ctx[scenario]+'\nLearner chose: '+(wasRight?'correct option':'incorrect option')
-          +'\nTheir reasoning: "'+input.value.trim()
-          +'"\nGive 1-2 sentences of feedback on their REASONING specifically. What did they understand or miss about the tradeoff? Be direct. No preamble, no "Great job".'
-      }]})
+      body: JSON.stringify({
+        scenario_context: ctx[scenario],
+        learner_choice: wasRight ? 'correct' : 'incorrect',
+        learner_reasoning: input.value.trim()
+      })
     });
     const data = await res.json();
-    resp.textContent = data.content?.map(c=>c.text||'').join('') || 'Could not analyze reasoning.';
+    resp.textContent = data.feedback || data.error || 'Could not analyze reasoning.';
   } catch(e) {
     resp.textContent = wasRight
       ? 'Your choice matches the panel\'s assessment. The tradeoff screen explains the full reasoning.'
