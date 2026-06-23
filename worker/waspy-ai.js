@@ -103,7 +103,7 @@ export default {
 
     try {
       const body = await request.json();
-      const { scenario_context, learner_choice, learner_reasoning, mode } = body;
+      const { scenario_context, learner_choice, learner_reasoning, mode, learner_context } = body;
 
       if (!scenario_context) {
         return json({ error: 'Missing scenario_context' }, 400, allowed);
@@ -111,11 +111,20 @@ export default {
 
       // Truncate to prevent abuse
       const reasoning = (learner_reasoning || '').slice(0, 500);
+      const context = (learner_context || '').slice(0, 300);
       const requestMode = mode === 'explain' ? 'explain' : 'check';
 
-      const userMessage = requestMode === 'explain'
-        ? `${scenario_context}\nLearner chose: ${learner_choice === 'correct' ? 'the correct option' : 'the incorrect option'}\nMode: explain. The learner wants you to explain this tradeoff. Teach them the core insight in 2 sentences.`
-        : `${scenario_context}\nLearner chose: ${learner_choice === 'correct' ? 'the correct option' : 'the incorrect option'}\nTheir reasoning: "${reasoning}"\nMode: check. Evaluate their reasoning.`;
+      let userMessage = '';
+      if (context) userMessage += `Learner intro: "${context}"\n`;
+      userMessage += scenario_context;
+      userMessage += `\nLearner chose: ${learner_choice === 'correct' ? 'the correct option' : 'the incorrect option'}`;
+
+      if (requestMode === 'explain') {
+        userMessage += '\nMode: explain. The learner wants you to explain this tradeoff. Teach them the core insight in 2 sentences. If you know their background from the intro, connect the explanation to their world.';
+      } else {
+        userMessage += `\nTheir reasoning: "${reasoning}"`;
+        userMessage += '\nMode: check. Evaluate their reasoning. If you know their background, reference it naturally.';
+      }
 
       const res = await fetch(ANTHROPIC_API, {
         method: 'POST',
