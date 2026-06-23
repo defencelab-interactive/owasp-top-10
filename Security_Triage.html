@@ -951,17 +951,18 @@ function buildStrip(){const strip=document.getElementById('navstrip');if(!strip)
 function go(n){if(n<0||n>TOTAL)return;const oldEl=document.getElementById('s'+cur);if(oldEl)oldEl.classList.remove('on');cur=n;visited[n]=true;const newEl=document.getElementById('s'+n);if(newEl)newEl.classList.add('on');document.getElementById('wrap').scrollTop=0;document.getElementById('pf').style.width=(n/TOTAL*100)+'%';document.getElementById('lbl').textContent=(n<10?'0':'')+n+' / '+TOTAL;if(n===34)renderFinal();buildStrip();setTimeout(()=>renderWaspy(n),200);}
 
 function renderFinal(){
-  document.getElementById('finalScore').textContent=score+' / 5';
-  const msgs=[
-    'Your prioritization diverged from the panel\'s in every scenario. That\'s worth examining — revisit the tradeoff screens to see where the reasoning differs.',
-    'Your prioritization matched the panel\'s in 1 of 5 cases. The tradeoff explanations break down the reasoning — they\'re where the real learning is.',
-    'Your prioritization matched the panel\'s in 2 of 5 cases. You\'re engaging with genuine tradeoffs. Review the ones where you diverged.',
-    'Your prioritization matched the panel\'s in 3 of 5 cases. Solid security judgment — you\'re reading intersecting risks correctly.',
-    'Your prioritization matched the panel\'s in 4 of 5 cases. Near-perfect — you consistently identified which fix had higher leverage.',
-    'Your prioritization matched the panel\'s in all 5 cases. The leverage rule is clear to you: fix the exploit before the blast radius.'
-  ];
-  document.getElementById('finalLabel').textContent = 'matched the panel';
-  document.getElementById('finalMsg').innerHTML = msgs[score];
+  document.getElementById('finalScore').textContent=score+' / 10';
+  const msg = score <= 3
+    ? 'Your prioritization diverged from the expected in most scenarios. Revisit the tradeoff screens — they break down the reasoning.'
+    : score <= 5
+    ? 'You matched the expected fix in '+score+' of 10 cases. You\'re engaging with real tradeoffs. Review the ones where you diverged.'
+    : score <= 7
+    ? 'You matched the expected fix in '+score+' of 10 cases. Solid security judgment — you\'re reading intersecting risks correctly.'
+    : score <= 9
+    ? 'You matched the expected fix in '+score+' of 10 cases. Strong instincts — you consistently found the higher-leverage fix.'
+    : 'You matched the expected fix in all 10 cases. The leverage rule is clear to you: fix the exploit before the blast radius.';
+  document.getElementById('finalLabel').textContent = score===10 ? 'perfect' : score+' of 10';
+  document.getElementById('finalMsg').innerHTML = msg;
 }
 
 function finish(){window.parent.postMessage({type:'course-next'},'*');}
@@ -1042,7 +1043,7 @@ function updateWaspyAfterPick(scenario, isRight) {
   if (spriteEl && charDiv) charDiv.innerHTML = spriteEl.innerHTML;
   const newLine = isRight
     ? 'Good call. The higher-leverage fix first.'
-    : 'Defensible — but check the tradeoff for why the panel went the other way.';
+    : 'Defensible — but check the tradeoff for why the other fix has more leverage.';
   let html = '<div class="waspy-line">'+newLine+'</div>';
   html += '<div class="waspy-ai-box" id="ai-box-'+scenario+'">'
     + '<textarea class="waspy-ai-input" id="ai-input-'+scenario+'" rows="2" placeholder="Why did you choose this fix? One sentence. (optional)"></textarea>'
@@ -1085,8 +1086,8 @@ async function checkReasoning(scenario) {
     resp.textContent = data.feedback || data.error || 'Could not analyze reasoning.';
   } catch(e) {
     resp.textContent = wasRight
-      ? 'Your choice matches the panel\'s assessment. The tradeoff screen explains the full reasoning.'
-      : 'The panel prioritized differently. See the tradeoff screen for why leverage matters here.';
+      ? 'Right fix, but I couldn\'t check your reasoning this time. See the tradeoff screen for the full breakdown.'
+      : 'Different fix than expected. See the tradeoff screen — it explains why leverage matters here.';
   }
   btn.textContent = 'CHECKED ✓';
 }
