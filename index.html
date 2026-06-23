@@ -3,37 +3,134 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OWASP Top 10:2025 — Interactive Training</title>
+<title>OWASP Top 10:2025 — Interactive Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: system-ui, -apple-system, sans-serif; background: #0a0e17; color: #e0e0e0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 3rem 1.5rem; }
-  h1 { font-size: 1.8rem; margin-bottom: .4rem; color: #fff; }
-  .subtitle { color: #888; margin-bottom: 2.5rem; font-size: .95rem; }
-  .modules { display: flex; flex-direction: column; gap: .75rem; width: 100%; max-width: 640px; }
-  a.card { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: #151b2b; border: 1px solid #1e2740; border-radius: 10px; text-decoration: none; color: #e0e0e0; transition: background .15s, border-color .15s; }
-  a.card:hover { background: #1a2238; border-color: #3b82f6; }
-  .num { font-size: .8rem; font-weight: 700; color: #3b82f6; min-width: 2.2rem; text-align: center; padding: .25rem .4rem; background: rgba(59,130,246,.12); border-radius: 6px; }
-  .label { font-size: .95rem; }
-  .footer { margin-top: 3rem; font-size: .75rem; color: #555; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0e17;--surface:#111827;--surface2:#1a2234;--border:#1e293b;--border2:#2d3a50;--ink:#f1f5f9;--ink-mid:#94a3b8;--ink-dim:#64748b;--accent:#3b82f6;--mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif}
+html{scroll-behavior:smooth}
+body{min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--sans);display:flex;flex-direction:column;align-items:center}
+.wrap{width:100%;max-width:780px;padding:0 24px}
+
+/* header */
+header{width:100%;padding:20px 0;display:flex;align-items:center;gap:12px}
+.logo{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink-dim);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;transition:color .15s}
+.logo:hover{color:var(--ink)}
+
+/* hero */
+.hero{text-align:center;padding:56px 0 48px}
+.hero-badge{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);padding:4px 14px;border-radius:4px;margin-bottom:16px}
+.hero h1{font-size:clamp(32px,5vw,48px);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.1;margin-bottom:12px}
+.hero p{font-size:17px;color:var(--ink-mid);max-width:480px;margin:0 auto;line-height:1.6}
+
+/* module cards */
+.modules{display:flex;flex-direction:column;gap:8px;padding-bottom:24px}
+a.card{display:flex;align-items:center;gap:16px;padding:18px 22px;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--ink);transition:all .15s;position:relative;overflow:hidden}
+a.card:hover{background:var(--surface2);border-color:var(--border2);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+a.card::after{content:'→';position:absolute;right:20px;font-size:18px;color:var(--ink-dim);transition:transform .15s,color .15s}
+a.card:hover::after{transform:translateX(3px);color:var(--accent)}
+.num{font-family:var(--mono);font-size:13px;font-weight:700;min-width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:8px;flex-shrink:0;letter-spacing:.04em}
+.card-body{flex:1;min-width:0;padding-right:28px}
+.card-title{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.card-desc{font-size:13px;color:var(--ink-dim);line-height:1.4}
+
+/* color accents */
+.c-intro .num{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.15)}
+.c-a01 .num{background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.2)}
+.c-a02 .num{background:rgba(74,222,128,.08);color:#4ade80;border:1px solid rgba(74,222,128,.15)}
+.c-a03 .num{background:rgba(192,132,252,.08);color:#c084fc;border:1px solid rgba(192,132,252,.15)}
+.c-a04 .num{background:rgba(251,191,36,.08);color:#fbbf24;border:1px solid rgba(251,191,36,.15)}
+.c-a05 .num{background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.2)}
+.c-a06 .num{background:rgba(248,113,113,.08);color:#f87171;border:1px solid rgba(248,113,113,.15)}
+.c-a07 .num{background:rgba(45,212,191,.08);color:#2dd4bf;border:1px solid rgba(45,212,191,.15)}
+.c-a08 .num{background:rgba(167,139,250,.08);color:#a78bfa;border:1px solid rgba(167,139,250,.15)}
+.c-a09 .num{background:rgba(163,163,38,.08);color:#a3a326;border:1px solid rgba(163,163,38,.15)}
+.c-a10 .num{background:rgba(248,113,113,.08);color:#f87171;border:1px solid rgba(248,113,113,.15)}
+
+/* triage special card */
+a.card.triage{background:linear-gradient(135deg,rgba(59,130,246,.06) 0%,rgba(139,92,246,.06) 100%);border-color:rgba(99,102,241,.2)}
+a.card.triage:hover{border-color:rgba(99,102,241,.4);box-shadow:0 4px 24px rgba(99,102,241,.15)}
+a.card.triage .num{background:rgba(99,102,241,.12);color:#818cf8;border:1px solid rgba(99,102,241,.25);font-size:10px;letter-spacing:.06em}
+
+/* sep */
+.sep{height:1px;background:var(--border);margin:12px 0}
+
+/* footer */
+footer{padding:32px 0;text-align:center;font-size:13px;color:var(--ink-dim)}
+footer a{color:var(--ink-mid);text-decoration:none;transition:color .15s}
+footer a:hover{color:var(--ink)}
+
+@media(max-width:600px){.hero{padding:36px 0 32px}a.card{padding:14px 16px;gap:12px}.num{min-width:32px;height:32px;font-size:11px}}
 </style>
 </head>
 <body>
-<h1>OWASP Top 10:2025</h1>
-<p class="subtitle">Interactive Training Modules</p>
-<div class="modules">
-  <a class="card" href="owasp_top10_intro.html"><span class="num">Intro</span><span class="label">Introduction to OWASP Top 10</span></a>
-  <a class="card" href="A01_Broken_Access_Control.html"><span class="num">A01</span><span class="label">Broken Access Control</span></a>
-  <a class="card" href="A02_Security_Misconfiguration.html"><span class="num">A02</span><span class="label">Security Misconfiguration</span></a>
-  <a class="card" href="A03_Supply_Chain_Failures.html"><span class="num">A03</span><span class="label">Supply Chain Failures</span></a>
-  <a class="card" href="A04_Cryptographic_Failures.html"><span class="num">A04</span><span class="label">Cryptographic Failures</span></a>
-  <a class="card" href="A05_Injection_enhanced.html"><span class="num">A05</span><span class="label">Injection</span></a>
-  <a class="card" href="A06_Insecure_Design.html"><span class="num">A06</span><span class="label">Insecure Design</span></a>
-  <a class="card" href="A07_Authentication_Failures.html"><span class="num">A07</span><span class="label">Authentication Failures</span></a>
-  <a class="card" href="A08_Integrity_Failures.html"><span class="num">A08</span><span class="label">Integrity Failures</span></a>
-  <a class="card" href="A09_Logging_Alerting_Failures.html"><span class="num">A09</span><span class="label">Logging &amp; Alerting Failures</span></a>
-  <a class="card" href="A10_Exceptional_Conditions.html"><span class="num">A10</span><span class="label">Exceptional Conditions</span></a>
-  <a class="card" href="Security_Triage.html"><span class="num" style="background:rgba(74,90,106,.12);color:#4a5a6a;border:1px solid #4a5a6a">TRIAGE</span><span class="label">Security Triage — Cross-Category Prioritization</span></a>
+<div class="wrap">
+<header>
+  <a href="https://defencelab.io/" class="logo">Defence Lab</a>
+</header>
+
+<div class="hero">
+  <div class="hero-badge">Interactive Course</div>
+  <h1>OWASP Top 10 : 2025</h1>
+  <p>Interactive training modules covering every category of the OWASP Top 10:2025 standard</p>
 </div>
-<p class="footer">© DefenceLab Interactive</p>
+
+<div class="modules">
+  <a class="card c-intro" href="owasp_top10_intro.html">
+    <div class="num">00</div>
+    <div class="card-body"><div class="card-title">Introduction to OWASP Top 10</div><div class="card-desc">What changed in 2025 · How the list is built</div></div>
+  </a>
+  <a class="card c-a01" href="A01_Broken_Access_Control.html">
+    <div class="num">A01</div>
+    <div class="card-body"><div class="card-title">Broken Access Control</div><div class="card-desc">IDOR · SSRF · CORS misconfig · JWT ownership checks</div></div>
+  </a>
+  <a class="card c-a02" href="A02_Security_Misconfiguration.html">
+    <div class="num">A02</div>
+    <div class="card-body"><div class="card-title">Security Misconfiguration</div><div class="card-desc">Default credentials · Open cloud storage · Debug in prod</div></div>
+  </a>
+  <a class="card c-a03" href="A03_Supply_Chain_Failures.html">
+    <div class="num">A03</div>
+    <div class="card-body"><div class="card-title">Supply Chain Failures</div><div class="card-desc">Dependency confusion · Typosquatting · xz Utils case</div></div>
+  </a>
+  <a class="card c-a04" href="A04_Cryptographic_Failures.html">
+    <div class="num">A04</div>
+    <div class="card-body"><div class="card-title">Cryptographic Failures</div><div class="card-desc">Weak hashing · Key management · TLS misconfiguration</div></div>
+  </a>
+  <a class="card c-a05" href="A05_Injection_enhanced.html">
+    <div class="num">A05</div>
+    <div class="card-body"><div class="card-title">Injection</div><div class="card-desc">SQL · OS command · OGNL · Template injection · Equifax case</div></div>
+  </a>
+  <a class="card c-a06" href="A06_Insecure_Design.html">
+    <div class="num">A06</div>
+    <div class="card-body"><div class="card-title">Insecure Design</div><div class="card-desc">Abuse cases · Business logic flaws · Missing rate limits</div></div>
+  </a>
+  <a class="card c-a07" href="A07_Authentication_Failures.html">
+    <div class="num">A07</div>
+    <div class="card-body"><div class="card-title">Authentication Failures</div><div class="card-desc">Credential stuffing · MFA bypass · 23andMe case</div></div>
+  </a>
+  <a class="card c-a08" href="A08_Integrity_Failures.html">
+    <div class="num">A08</div>
+    <div class="card-body"><div class="card-title">Integrity Failures</div><div class="card-desc">CI/CD pipeline attacks · Unsigned updates · 3CX case</div></div>
+  </a>
+  <a class="card c-a09" href="A09_Logging_Alerting_Failures.html">
+    <div class="num">A09</div>
+    <div class="card-body"><div class="card-title">Logging & Alerting Failures</div><div class="card-desc">Detection engineering · Signal vs noise · Alert fatigue</div></div>
+  </a>
+  <a class="card c-a10" href="A10_Exceptional_Conditions.html">
+    <div class="num">A10</div>
+    <div class="card-body"><div class="card-title">Exceptional Conditions</div><div class="card-desc">Fail-open · Error disclosure · Cloudflare case</div></div>
+  </a>
+
+  <div class="sep"></div>
+
+  <a class="card triage" href="Security_Triage.html">
+    <div class="num">TRIAGE</div>
+    <div class="card-body"><div class="card-title">Security Triage — Cross-Category Prioritization</div><div class="card-desc">10 scenarios · Two categories each · Which fix comes first?</div></div>
+  </a>
+</div>
+
+<footer>Built by <a href="https://defencelab.io/">Defence Lab</a></footer>
+</div>
 </body>
 </html>
