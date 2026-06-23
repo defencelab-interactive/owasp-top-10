@@ -1074,7 +1074,7 @@ async function checkReasoning(scenario) {
   ];
   const choice = picked[scenario]; const s = SCENARIOS[scenario]; const wasRight = choice === s.correct;
   try {
-    const res = await fetch('https://waspy-ai.defencelab.workers.dev', {
+    const res = await fetch('https://waspy-ai.vmorgun2912.workers.dev', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         scenario_context: ctx[scenario],
